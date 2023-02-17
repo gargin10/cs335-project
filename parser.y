@@ -112,7 +112,6 @@ ClassModifier0: ClassModifier
 ClassModifier:
     SEALED 
 |   NON_SEALED 
-|   STRICTFP
 
 TypeParameters:
     LESSER TypeParameterList LESSER
@@ -158,16 +157,14 @@ FieldDeclaration:
 |   FieldModifier0 UnannType VariableDeclaratorList SEMICOLON
 
 Modifier:
-    Annotation 
-|   PUBLIC 
-|   PROTECTED 
-|   PRIVATE
-|   ABSTRACT 
+    ABSTRACT 
 |   STATIC 
 |   FINAL 
 
 Modifier0:
-    Modifier
+    ConstructorModifier
+|   Modifier0 ConstructorModifier
+|   Modifier
 |   Modifier0 Modifier
 
 FieldModifier0: 
@@ -181,7 +178,6 @@ FieldModifier:
 MethodModifier:
     SYNCHRONIZED 
 |   NATIVE 
-|   STRICTFP
 
 MethodDeclaration:
     MethodHeader MethodBody
@@ -272,21 +268,25 @@ FormalParameterList:
 
 FormalParameter:
     UnannType VariableDeclaratorId
+|   Annotation UnannType VariableDeclaratorId
 |   VariableModifier0 UnannType VariableDeclaratorId
 |   VariableArityParameter
 
 VariableArityParameter:
     UnannType ELLIPSIS IDENTIFIER
+|   Annotation UnannType ELLIPSIS IDENTIFIER
 |   VariableModifier0 UnannType ELLIPSIS IDENTIFIER
 |   UnannType Annotation0 ELLIPSIS IDENTIFIER
+|   Annotation UnannType Annotation0 ELLIPSIS IDENTIFIER
 |   VariableModifier0 UnannType Annotation0 ELLIPSIS IDENTIFIER
 
-VariableModifier0: VariableModifier
+VariableModifier0: 
+    Annotation VariableModifier0
+|   VariableModifier
 |   VariableModifier VariableModifier0
 
 VariableModifier:
-    Annotation
-|   FINAL
+    FINAL
 
 Throws:
     THROWS ExceptionTypeList
@@ -313,14 +313,15 @@ ConstructorDeclaration:
 |   ConstructorDeclarator Throws ConstructorBody
 |   ConstructorModifier0 ConstructorDeclarator ConstructorBody
 |   ConstructorModifier0 ConstructorDeclarator Throws ConstructorBody
+|   Annotation ConstructorDeclarator ConstructorBody
+|   Annotation ConstructorDeclarator Throws ConstructorBody
 
 ConstructorModifier0: 
     ConstructorModifier
 |   ConstructorModifier ConstructorModifier0
 
 ConstructorModifier:
-    Annotation 
-|   PUBLIC 
+    PUBLIC 
 |   PROTECTED 
 |   PRIVATE
 
@@ -346,18 +347,22 @@ ConstructorBody:
 ExplicitConstructorInvocation:
     THIS BRACESTART BRACEEND SEMICOLON
 |   SUPER BRACESTART BRACEEND SEMICOLON
+|   IDENTIFIER PERIOD SUPER BRACESTART BRACEEND SEMICOLON
 |   ExpressionName PERIOD SUPER BRACESTART BRACEEND SEMICOLON
 |   Primary PERIOD SUPER BRACESTART BRACEEND SEMICOLON
 |   TypeArguments THIS BRACESTART BRACEEND SEMICOLON
 |   TypeArguments SUPER BRACESTART BRACEEND SEMICOLON
+|   IDENTIFIER PERIOD TypeArguments SUPER BRACESTART BRACEEND SEMICOLON
 |   ExpressionName PERIOD TypeArguments SUPER BRACESTART BRACEEND SEMICOLON
 |   Primary PERIOD TypeArguments SUPER BRACESTART BRACEEND SEMICOLON
 |   THIS BRACESTART ArgumentList BRACEEND SEMICOLON
 |   SUPER BRACESTART ArgumentList BRACEEND SEMICOLON
+|   IDENTIFIER PERIOD SUPER BRACESTART ArgumentList BRACEEND SEMICOLON
 |   ExpressionName PERIOD SUPER BRACESTART ArgumentList BRACEEND SEMICOLON
 |   Primary PERIOD SUPER BRACESTART ArgumentList BRACEEND SEMICOLON
 |   TypeArguments THIS BRACESTART ArgumentList BRACEEND SEMICOLON
 |   TypeArguments SUPER BRACESTART ArgumentList BRACEEND SEMICOLON
+|   IDENTIFIER PERIOD TypeArguments SUPER BRACESTART ArgumentList BRACEEND SEMICOLON
 |   ExpressionName PERIOD TypeArguments SUPER BRACESTART ArgumentList BRACEEND SEMICOLON
 |   Primary PERIOD TypeArguments SUPER BRACESTART ArgumentList BRACEEND SEMICOLON
 
@@ -449,6 +454,7 @@ RecordBodyDeclaration:
     
 CompactConstructorDeclaration:
     SimpleTypeName ConstructorBody
+|   Annotation SimpleTypeName ConstructorBody
 |   ConstructorModifier0 SimpleTypeName ConstructorBody
 
 
@@ -474,6 +480,7 @@ LocalVariableDeclarationStatement:
 
 LocalVariableDeclaration:
     LocalVariableType VariableDeclaratorList
+|   Annotation LocalVariableType VariableDeclaratorList
 |   VariableModifier0 LocalVariableType VariableDeclaratorList
 
 
@@ -678,6 +685,7 @@ CATCH BRACESTART CatchFormalParameter BRACEEND Block
 
 CatchFormalParameter:
     CatchType VariableDeclaratorId
+|   Annotation CatchType VariableDeclaratorId
 |   VariableModifier0 CatchType VariableDeclaratorId
 
 CatchType:
@@ -699,15 +707,20 @@ TryWithResourcesStatement:
 |   TRY ResourceSpecification Block Catches Finally
 
 ResourceSpecification:
-BRACESTART ResourceList BRACEEND
+    BRACESTART IDENTIFIER BRACEEND
+|   BRACESTART IDENTIFIER SEMICOLON BRACEEND
+|   BRACESTART ResourceList BRACEEND
 |   BRACESTART ResourceList SEMICOLON BRACEEND
 
 ResourceList:
-    Resource
+    IDENTIFIER SemicolonResource0
+|   Resource
 |   Resource SemicolonResource0
 
 SemicolonResource0: 
-    SEMICOLON Resource 
+    SEMICOLON IDENTIFIER 
+|   SEMICOLON IDENTIFIER SemicolonResource0
+|   SEMICOLON Resource 
 |   SEMICOLON Resource SemicolonResource0
 
 Resource:
@@ -769,7 +782,7 @@ VariableAccess:
 |   FieldAccess
 
 ExpressionName:
-    IDENTIFIER
+    IDENTIFIER PERIOD IDENTIFIER
 |   ExpressionName PERIOD IDENTIFIER
 
 FieldAccess:
@@ -811,6 +824,7 @@ SquareBrace0:
 
 ClassInstanceCreationExpression:
     UnqualifiedClassInstanceCreationExpression
+|   IDENTIFIER PERIOD UnqualifiedClassInstanceCreationExpression
 |   ExpressionName PERIOD UnqualifiedClassInstanceCreationExpression
 |   Primary PERIOD UnqualifiedClassInstanceCreationExpression
 
@@ -846,35 +860,41 @@ TypeArgumentsOrDiamond:
 |   LESSER GREATER
 
 ArrayAccess:
-    ExpressionName SQUAREBRACESTART Expression SQUAREBRACEEND
+    IDENTIFIER SQUAREBRACESTART Expression SQUAREBRACEEND
+|   ExpressionName SQUAREBRACESTART Expression SQUAREBRACEEND
 |   PrimaryNoNewArray SQUAREBRACESTART Expression SQUAREBRACEEND
 
 MethodInvocation:
     MethodNameBrace BRACEEND
 |   TypeName PERIOD IDENTIFIER BRACESTART BRACEEND
+|   IDENTIFIER PERIOD IDENTIFIER BRACESTART BRACEEND
 |   ExpressionName PERIOD IDENTIFIER BRACESTART BRACEEND
 |   Primary PERIOD IDENTIFIER BRACESTART BRACEEND
 |   SUPER PERIOD IDENTIFIER BRACESTART BRACEEND
 |   TypeName PERIOD SUPER PERIOD IDENTIFIER BRACESTART BRACEEND
 |   TypeName PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND
+|   IDENTIFIER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND
 |   ExpressionName PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND
 |   Primary PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND
 |   SUPER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND
 |   TypeName PERIOD SUPER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND
 |   MethodNameBrace ArgumentList BRACEEND
 |   TypeName PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND
+|   IDENTIFIER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   ExpressionName PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   Primary PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   SUPER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   TypeName PERIOD SUPER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   TypeName PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND
+|   IDENTIFIER PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   ExpressionName PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   Primary PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   SUPER PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND
 |   TypeName PERIOD SUPER PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND
 
 MethodNameBrace:
-    MethodName BRACESTART
+    IDENTIFIER BRACESTART
+|   MethodName BRACESTART
 
 ArgumentList:
     Expression CommaExpression0
@@ -885,13 +905,15 @@ CommaExpression0:
   
     
 MethodReference:
-    ExpressionName SCOPE IDENTIFIER
+    IDENTIFIER SCOPE IDENTIFIER
+|   ExpressionName SCOPE IDENTIFIER
 |   Primary SCOPE IDENTIFIER
 |   ReferenceType SCOPE IDENTIFIER
 |   SUPER SCOPE IDENTIFIER
 |   TypeName PERIOD SUPER SCOPE IDENTIFIER
 |   ClassType SCOPE NEW
 |   ArrayType SCOPE NEW
+|   IDENTIFIER SCOPE TypeArguments IDENTIFIER
 |   ExpressionName SCOPE TypeArguments IDENTIFIER
 |   Primary SCOPE TypeArguments IDENTIFIER
 |   ReferenceType SCOPE TypeArguments IDENTIFIER
@@ -900,10 +922,13 @@ MethodReference:
 |   ClassType SCOPE TypeArguments NEW
 
 ArrayCreationExpression:
-    NEW PrimitiveType DimExprs
+    NEW BOOLEAN DimExprs
+|   NEW PrimitiveType DimExprs
 |   NEW ClassOrInterfaceType DimExprs
+|   NEW BOOLEAN DimExprs Dims
 |   NEW PrimitiveType DimExprs Dims
 |   NEW ClassOrInterfaceType DimExprs Dims
+|   NEW BOOLEAN Dims ArrayInitializer
 |   NEW PrimitiveType Dims ArrayInitializer
 |   NEW ClassOrInterfaceType Dims ArrayInitializer
 
@@ -920,12 +945,12 @@ Expression:
 |   AssignmentExpression
 
 LambdaExpression:
-    LambdaParameters PTR LambdaBody
+    IDENTIFIER PTR LambdaBody
+|   LambdaParameters PTR LambdaBody
     
 LambdaParameters:
     BRACESTART BRACEEND
 |   BRACESTART LambdaParameterList BRACEEND
-|   IDENTIFIER
     
 LambdaParameterList:
     LambdaParameter
@@ -942,6 +967,7 @@ CommaIdentifier0:
  
 LambdaParameter:
     LambdaParameterType VariableDeclaratorId
+|   Annotation LambdaParameterType VariableDeclaratorId
 |   VariableModifier0 LambdaParameterType VariableDeclaratorId
 |   VariableArityParameter
 
@@ -958,7 +984,8 @@ AssignmentExpression:
 |  Assignment
 
 Assignment:
-   LeftHandSide AssignmentOperator Expression
+   IDENTIFIER AssignmentOperator Expression
+|  LeftHandSide AssignmentOperator Expression
 
 LeftHandSide:
    ExpressionName
@@ -1061,6 +1088,7 @@ UnaryExpressionNotPlusMinus:
 
 PostfixExpression:
     Primary
+|   IDENTIFIER
 |   ExpressionName
 |   PostIncrementExpression
 |   PostDecrementExpression
@@ -1072,7 +1100,8 @@ PostDecrementExpression:
     PostfixExpression DEC
 
 CastExpression:
-    BRACESTART PrimitiveType BRACEEND UnaryExpression
+    BRACESTART BOOLEAN BRACEEND UnaryExpression
+|   BRACESTART PrimitiveType BRACEEND UnaryExpression
 |   BRACESTART ReferenceType BRACEEND UnaryExpressionNotPlusMinus
 |   BRACESTART ReferenceType  BRACEEND LambdaExpression
 
@@ -1097,7 +1126,6 @@ CommaVariableInitializer0:
 PrimitiveType:
     NumericType
 |   Annotation0 NumericType
-|   BOOLEAN
 |   Annotation0 BOOLEAN
 
 NumericType:
@@ -1133,7 +1161,11 @@ ClassType:
 |   ClassOrInterfaceType PERIOD Annotation0 TypeIdentifier TypeArguments
 
 ArrayType:
-    PrimitiveType SQUAREBRACESTART SQUAREBRACEEND 
+    BOOLEAN SQUAREBRACESTART SQUAREBRACEEND 
+|   BOOLEAN Annotation0 SQUAREBRACESTART SQUAREBRACEEND 
+|   BOOLEAN SQUAREBRACESTART SQUAREBRACEEND Dims
+|   BOOLEAN Annotation0 SQUAREBRACESTART SQUAREBRACEEND Dims
+|   PrimitiveType SQUAREBRACESTART SQUAREBRACEEND 
 |   PrimitiveType Annotation0 SQUAREBRACESTART SQUAREBRACEEND 
 |   PrimitiveType SQUAREBRACESTART SQUAREBRACEEND Dims
 |   PrimitiveType Annotation0 SQUAREBRACESTART SQUAREBRACEEND Dims
@@ -1200,7 +1232,7 @@ ContextualExceptPRS:
     TRANSITIVE| OPEN | WITH | TO | PROVIDES | NON_SEALED | MODULE | USES | REQUIRES | OPENS | EXPORTS
 
 UnqualifiedMethodIdentifier:
-    IDENTIFIER | ContextualExceptYield
+    ContextualExceptYield
 
 TypeIdentifier:
     IDENTIFIER | ContextualExceptPRS
