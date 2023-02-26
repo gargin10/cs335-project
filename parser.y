@@ -37,7 +37,7 @@
 %type<str> StatementExpressionList EnhancedForStatement EnhancedForStatementNoShortIf BreakStatement YieldStatement ContinueStatement ReturnStatement ThrowStatement
 %type<str> SynchronizedStatement TryStatement Catches CatchClause CatchFormalParameter CatchType Finally TryWithResourcesStatement ResourceSpecification 
 %type<str> ResourceList Resource Pattern TypePattern SwitchColonLabel0 CommaCaseConstant0  SwitchBlockStatementGroup0
-%type<str> SwitchRule0  CommaStatExp0 BarClassType0 SemicolonResource0 VariableModifier0 Modifier0
+%type<str> SwitchRule0  CommaStatExp0 BarClassType0 SemicolonResource0 VariableModifier0 classmethod Classdec
 
 %type<str> NormalClassDeclaration EnumDeclaration TypeIdentifier ClassBody TypeParameters ClassExtends  ClassPermits ClassModifier RecordComponent VariableArityRecordComponent RecordComponentModifier
 %type<str> Annotation TypeParameterList TypeNames TypeName ClassBodyDeclaration ClassMemberDeclaration InstanceInitializer  RecordBodyDeclaration CompactConstructorDeclaration
@@ -46,7 +46,7 @@
 %type<str> MethodHeader MethodBody Result MethodDeclarator Throws FormalParameterList ConstructorDeclarator ConstructorBody ConstructorModifier SimpleTypeName ExplicitConstructorInvocation ExpressionName Primary ArgumentList
 %type<str> FormalParameter VariableArityParameter VariableModifier ExceptionTypeList ExceptionType EnumConstant EnumConstantModifier RecordDeclaration RecordHeader RecordBody RecordComponentList EnumBody
 
-%type<str> ClassModifier0  ConstructorModifier0 ClassBodyDeclaration0 FieldModifier0 Annotation0 MethodModifier0 
+%type<str> ClassModifier0 ClassBodyDeclaration0 FieldModifier0 Annotation0 MethodModifier0 
 %type<str> RecordComponentModifier0 RecordBodyDeclaration0 
 
 %type<str> MethodInvocation CommaExpression0 MethodReference ArrayCreationExpression
@@ -57,13 +57,15 @@
 %type<str> ArrayInitializer VariableInitializerList CommaVariableInitializer0 PrimitiveType NumericType IntegralType FloatingPointType
 %type<str> ReferenceType  ClassType ArrayType Dims TypeParameter TypeParameterModifier0 TypeParameterModifier TypeBound
 %type<str> TypeArguments TypeArgumentList CommaTypeArgument0 TypeArgument WildcardBounds
-%type<str> MethodName LeftHandSide SquareBracePeriod
+%type<str> MethodName LeftHandSide SquareBracePeriod StaticFinal0 fieldclassmethod
 %type<str> PrimaryNoNewArray ClassLiteral SquareBrace0 ClassInstanceCreationExpression UnqualifiedClassInstanceCreationExpression 
 
 %type<str> MarkerAnnotation SingleElementAnnotation CompilationUnit OrdinaryCompilationUnit TopLevelClassOrInterfaceDeclaration DotAnnotation0
 %type<str> UnannClassOrInterfaceType FieldModifier MethodModifier EnumConstantModifier0 FieldAccess ArrayAccess ClassOrInterfaceType UnqualifiedMethodIdentifier
-%type<str> VariableAccess NormalAnnotation Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace Modifier CommaElementvalue0
+%type<str> VariableAccess NormalAnnotation Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace CommaElementvalue0
+
 %%
+
 CompilationUnit:
 |   OrdinaryCompilationUnit
 
@@ -73,6 +75,8 @@ OrdinaryCompilationUnit:
 
 TopLevelClassOrInterfaceDeclaration:
     ClassDeclaration
+|   StaticFinal0 Classdec
+|   ABSTRACT Classdec
 |   SEMICOLON
 
 ClassDeclaration:
@@ -89,14 +93,6 @@ NormalClassDeclaration:
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody
 |   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody
-|   Modifier0 CLASS TypeIdentifier ClassBody
-|   Modifier0 CLASS TypeIdentifier ClassPermits ClassBody
-|   Modifier0 CLASS TypeIdentifier ClassExtends ClassBody
-|   Modifier0 CLASS TypeIdentifier ClassExtends ClassPermits ClassBody
-|   Modifier0 CLASS TypeIdentifier TypeParameters ClassBody
-|   Modifier0 CLASS TypeIdentifier TypeParameters ClassExtends ClassBody
-|   Modifier0 CLASS TypeIdentifier TypeParameters ClassPermits ClassBody
-|   Modifier0 CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody
 |   ClassModifier0 CLASS TypeIdentifier ClassBody
 |   ClassModifier0 CLASS TypeIdentifier ClassPermits ClassBody
 |   ClassModifier0 CLASS TypeIdentifier ClassExtends ClassBody
@@ -106,12 +102,32 @@ NormalClassDeclaration:
 |   ClassModifier0 CLASS TypeIdentifier TypeParameters ClassPermits ClassBody
 |   ClassModifier0 CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody
 
-ClassModifier0: ClassModifier
-|   ClassModifier ClassModifier0
+Classdec:
+    CLASS TypeIdentifier ClassBody
+|   CLASS TypeIdentifier ClassPermits ClassBody
+|   CLASS TypeIdentifier ClassExtends ClassBody
+|   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody
+|   CLASS TypeIdentifier TypeParameters ClassBody
+|   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody
+|   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody
+|   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody
+
+ClassModifier0:
+    ClassModifier
+|   ConstructorModifier
+|   ClassModifier ConstructorModifier
+|   ConstructorModifier ClassModifier
+
+StaticFinal0:
+    STATIC
+|   FINAL
+|   STATIC StaticFinal0
+|   FINAL StaticFinal0
 
 ClassModifier:
     SEALED 
 |   NON_SEALED 
+|   STRICTFP
 
 TypeParameters:
     LESSER TypeParameterList LESSER
@@ -148,43 +164,68 @@ ClassMemberDeclaration:
     FieldDeclaration
 |   MethodDeclaration
 |   ClassDeclaration
+|   StaticFinal0 fieldclassmethod
+|   StaticFinal0 ConstructorModifier
+|   ABSTRACT classmethod
+|   ConstructorModifier ABSTRACT classmethod
+|   ConstructorModifier StaticFinal0 fieldclassmethod
 |   SEMICOLON
-|   Modifier0 UnannType VariableDeclaratorList SEMICOLON
-|   Modifier0 MethodHeader MethodBody
+
+classmethod:
+    MethodHeader MethodBody
+|   UnannType MethodDeclarator
+|   UnannType MethodDeclarator Throws
+|   CLASS TypeIdentifier ClassBody
+|   CLASS TypeIdentifier ClassPermits ClassBody
+|   CLASS TypeIdentifier ClassExtends ClassBody
+|   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody
+|   CLASS TypeIdentifier TypeParameters ClassBody
+|   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody
+|   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody
+|   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody
+
+fieldclassmethod:
+    UnannType VariableDeclaratorList SEMICOLON
+|   classmethod
 
 FieldDeclaration:
     UnannType VariableDeclaratorList SEMICOLON
 |   FieldModifier0 UnannType VariableDeclaratorList SEMICOLON
-
-Modifier:
-    ABSTRACT 
-|   STATIC 
-|   FINAL 
-
-Modifier0:
-    ConstructorModifier
-|   Modifier0 ConstructorModifier
-|   Modifier
-|   Modifier0 Modifier
+|   ConstructorModifier UnannType VariableDeclaratorList SEMICOLON
+|   ConstructorModifier FieldModifier UnannType VariableDeclaratorList SEMICOLON
 
 FieldModifier0: 
     FieldModifier
-|   FieldModifier0 FieldModifier
+|   FieldModifier ConstructorModifier
 
 FieldModifier:
     TRANSIENT
 |   VOLATILE
 
 MethodModifier:
-    SYNCHRONIZED 
+    ABSTRACT
+|   SYNCHRONIZED 
 |   NATIVE 
+|   STRICTFP
 
 MethodDeclaration:
     MethodHeader MethodBody
+|   UnannType MethodDeclarator Throws
+|   UnannType MethodDeclarator
 |   MethodModifier0 MethodHeader MethodBody
+|   ConstructorModifier MethodHeader MethodBody
+|   ConstructorModifier MethodModifier MethodHeader MethodBody
+|   MethodModifier0 UnannType MethodDeclarator Throws MethodBody
+|   ConstructorModifier UnannType MethodDeclarator Throws MethodBody
+|   ConstructorModifier MethodModifier UnannType MethodDeclarator Throws MethodBody
+|   MethodModifier0 UnannType MethodDeclarator MethodBody
+|   ConstructorModifier UnannType MethodDeclarator MethodBody
+|   ConstructorModifier MethodModifier UnannType MethodDeclarator MethodBody
 
-MethodModifier0: MethodModifier
-|   MethodModifier0 MethodModifier
+
+MethodModifier0: 
+    MethodModifier
+|   MethodModifier ConstructorModifier
 
 VariableDeclaratorList:
     VariableDeclarator
@@ -234,10 +275,10 @@ UnannArrayType:
 
 
 MethodHeader:
-    Result MethodDeclarator 
+    VOID MethodDeclarator 
 |   TypeParameters Result MethodDeclarator
 |   TypeParameters Annotation0 Result MethodDeclarator
-|   Result MethodDeclarator Throws
+|   VOID MethodDeclarator Throws
 |   TypeParameters Result MethodDeclarator Throws
 |   TypeParameters Annotation0 Result MethodDeclarator Throws
 
@@ -311,14 +352,8 @@ StaticInitializer:
 ConstructorDeclaration:
     ConstructorDeclarator ConstructorBody
 |   ConstructorDeclarator Throws ConstructorBody
-|   ConstructorModifier0 ConstructorDeclarator ConstructorBody
-|   ConstructorModifier0 ConstructorDeclarator Throws ConstructorBody
-|   Annotation ConstructorDeclarator ConstructorBody
-|   Annotation ConstructorDeclarator Throws ConstructorBody
-
-ConstructorModifier0: 
-    ConstructorModifier
-|   ConstructorModifier ConstructorModifier0
+|   ConstructorModifier ConstructorDeclarator ConstructorBody
+|   ConstructorModifier ConstructorDeclarator Throws ConstructorBody
 
 ConstructorModifier:
     PUBLIC 
@@ -455,9 +490,7 @@ RecordBodyDeclaration:
 CompactConstructorDeclaration:
     SimpleTypeName ConstructorBody
 |   Annotation SimpleTypeName ConstructorBody
-|   ConstructorModifier0 SimpleTypeName ConstructorBody
-
-
+|   ConstructorModifier SimpleTypeName ConstructorBody
 
 Block: 
     CURLYBRACESTART CURLYBRACEEND 
@@ -652,17 +685,20 @@ FOR BRACESTART LocalVariableDeclaration COLON Expression BRACEEND Statement
 EnhancedForStatementNoShortIf:
 FOR BRACESTART LocalVariableDeclaration COLON Expression BRACEEND StatementNoShortIf
 
-BreakStatement: BREAK
+BreakStatement: 
+    BREAK SEMICOLON
 |   BREAK IDENTIFIER SEMICOLON
 
 YieldStatement:
 YIELD Expression SEMICOLON
 
-ContinueStatement: CONTINUE
+ContinueStatement: 
+    CONTINUE SEMICOLON
 |   CONTINUE IDENTIFIER SEMICOLON
 
-ReturnStatement: RETURN
-RETURN Expression SEMICOLON
+ReturnStatement: 
+    RETURN SEMICOLON
+|   RETURN Expression SEMICOLON
 
 ThrowStatement:
 THROW Expression SEMICOLON
@@ -993,7 +1029,7 @@ LeftHandSide:
 |  ArrayAccess
 
 AssignmentOperator:
-   EQUAL
+   ASSIGN
 |  MUL_ASSIGN
 |  DIV_ASSIGN
 |  MOD_ASSIGN
