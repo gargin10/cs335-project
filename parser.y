@@ -39,15 +39,15 @@
 %type<str> ResourceList Resource Pattern TypePattern SwitchColonLabel0 CommaCaseConstant0  SwitchBlockStatementGroup0
 %type<str> SwitchRule0  CommaStatExp0 BarClassType0 SemicolonResource0 VariableModifier0 classmethod Classdec
 
-%type<str> NormalClassDeclaration EnumDeclaration TypeIdentifier ClassBody TypeParameters ClassExtends  ClassPermits ClassModifier RecordComponent VariableArityRecordComponent RecordComponentModifier
-%type<str> Annotation TypeParameterList TypeNames TypeName ClassBodyDeclaration ClassMemberDeclaration InstanceInitializer  RecordBodyDeclaration CompactConstructorDeclaration
+%type<str> NormalClassDeclaration EnumDeclaration TypeIdentifier ClassBody TypeParameters ClassExtends  ClassPermits ClassModifier RecordComponent VariableArityRecordComponent 
+%type<str> TypeParameterList TypeNames TypeName ClassBodyDeclaration ClassMemberDeclaration InstanceInitializer  RecordBodyDeclaration CompactConstructorDeclaration
 %type<str> StaticInitializer ConstructorDeclaration FieldDeclaration MethodDeclaration ClassDeclaration  UnannType VariableDeclaratorList VariableDeclarator  EnumConstantList EnumBodyDeclarations ReceiverParameter
 %type<str> VariableDeclaratorId VariableInitializer UnannPrimitiveType UnannReferenceType UnannArrayType UnannClassType 
 %type<str> MethodHeader MethodBody Result MethodDeclarator Throws FormalParameterList ConstructorDeclarator ConstructorBody ConstructorModifier SimpleTypeName ExplicitConstructorInvocation ExpressionName Primary ArgumentList
-%type<str> FormalParameter VariableArityParameter VariableModifier ExceptionTypeList ExceptionType EnumConstant EnumConstantModifier RecordDeclaration RecordHeader RecordBody RecordComponentList EnumBody
+%type<str> FormalParameter VariableArityParameter VariableModifier ExceptionTypeList ExceptionType EnumConstant RecordDeclaration RecordHeader RecordBody RecordComponentList EnumBody
 
-%type<str> ClassModifier0 ClassBodyDeclaration0 FieldModifier0 Annotation0 MethodModifier0 
-%type<str> RecordComponentModifier0 RecordBodyDeclaration0 
+%type<str> ClassModifier0 ClassBodyDeclaration0 FieldModifier0 MethodModifier0 
+%type<str>  RecordBodyDeclaration0 NormalClassDeclaration0
 
 %type<str> MethodInvocation CommaExpression0 MethodReference ArrayCreationExpression
 %type<str> DimExprs DimExpr Expression LambdaExpression LambdaParameters LambdaParameterList CommaLambdaParameter0 CommaIdentifier0 LambdaParameter
@@ -55,14 +55,14 @@
 %type<str> ExclusiveOrExpression AndExpression EqualityExpression RelationalExpression InstanceofExpression ShiftExpression AdditiveExpression MultiplicativeExpression UnaryExpression
 %type<str> PreIncrementExpression PreDecrementExpression UnaryExpressionNotPlusMinus PostfixExpression PostIncrementExpression PostDecrementExpression CastExpression SwitchExpression
 %type<str> ArrayInitializer VariableInitializerList CommaVariableInitializer0 PrimitiveType NumericType IntegralType FloatingPointType
-%type<str> ReferenceType  ClassType ArrayType Dims TypeParameter TypeParameterModifier0 TypeParameterModifier TypeBound
+%type<str> ReferenceType  ClassType ArrayType Dims TypeParameter TypeBound
 %type<str> TypeArguments TypeArgumentList CommaTypeArgument0 TypeArgument WildcardBounds
 %type<str> MethodName LeftHandSide SquareBracePeriod StaticFinal0 fieldclassmethod
 %type<str> PrimaryNoNewArray ClassLiteral SquareBrace0 ClassInstanceCreationExpression UnqualifiedClassInstanceCreationExpression 
 
-%type<str> MarkerAnnotation SingleElementAnnotation CompilationUnit OrdinaryCompilationUnit TopLevelClassOrInterfaceDeclaration DotAnnotation0
-%type<str> UnannClassOrInterfaceType FieldModifier MethodModifier EnumConstantModifier0 FieldAccess ArrayAccess ClassOrInterfaceType UnqualifiedMethodIdentifier
-%type<str> VariableAccess NormalAnnotation Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace CommaElementvalue0
+%type<str>  CompilationUnit OrdinaryCompilationUnit TopLevelClassOrInterfaceDeclaration
+%type<str> UnannClassOrInterfaceType FieldModifier MethodModifier FieldAccess ArrayAccess ClassOrInterfaceType UnqualifiedMethodIdentifier
+%type<str> VariableAccess Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace
 
 %%
 
@@ -85,6 +85,10 @@ ClassDeclaration:
 |   RecordDeclaration
 
 NormalClassDeclaration:
+    NormalClassDeclaration0
+|   ClassModifier0 NormalClassDeclaration0
+
+NormalClassDeclaration0:
     CLASS TypeIdentifier ClassBody
 |   CLASS TypeIdentifier ClassPermits ClassBody
 |   CLASS TypeIdentifier ClassExtends ClassBody
@@ -93,14 +97,6 @@ NormalClassDeclaration:
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody
 |   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody
-|   ClassModifier0 CLASS TypeIdentifier ClassBody
-|   ClassModifier0 CLASS TypeIdentifier ClassPermits ClassBody
-|   ClassModifier0 CLASS TypeIdentifier ClassExtends ClassBody
-|   ClassModifier0 CLASS TypeIdentifier ClassExtends ClassPermits ClassBody
-|   ClassModifier0 CLASS TypeIdentifier TypeParameters ClassBody
-|   ClassModifier0 CLASS TypeIdentifier TypeParameters ClassExtends ClassBody
-|   ClassModifier0 CLASS TypeIdentifier TypeParameters ClassPermits ClassBody
-|   ClassModifier0 CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody
 
 Classdec:
     CLASS TypeIdentifier ClassBody
@@ -121,8 +117,7 @@ ClassModifier0:
 StaticFinal0:
     STATIC
 |   FINAL
-|   STATIC StaticFinal0
-|   FINAL StaticFinal0
+|   STATIC FINAL
 
 ClassModifier:
     SEALED 
@@ -202,12 +197,6 @@ FieldModifier:
     TRANSIENT
 |   VOLATILE
 
-MethodModifier:
-    ABSTRACT
-|   SYNCHRONIZED 
-|   NATIVE 
-|   STRICTFP
-
 MethodDeclaration:
     MethodHeader MethodBody
 |   UnannType MethodDeclarator Throws
@@ -226,6 +215,12 @@ MethodDeclaration:
 MethodModifier0: 
     MethodModifier
 |   MethodModifier ConstructorModifier
+|   ABSTRACT ConstructorModifier
+
+MethodModifier:
+    SYNCHRONIZED 
+|   NATIVE 
+|   STRICTFP
 
 VariableDeclaratorList:
     VariableDeclarator
@@ -253,7 +248,6 @@ UnannPrimitiveType:
 
 UnannReferenceType:
     UnannClassOrInterfaceType
-|   TypeIdentifier
 |   UnannArrayType
 
 UnannClassOrInterfaceType:
@@ -263,9 +257,7 @@ UnannClassType:
     TypeIdentifier
 |   TypeIdentifier TypeArguments
 |   UnannClassOrInterfaceType PERIOD TypeIdentifier
-|   UnannClassOrInterfaceType PERIOD Annotation0 TypeIdentifier
 |   UnannClassOrInterfaceType PERIOD TypeIdentifier TypeArguments
-|   UnannClassOrInterfaceType PERIOD Annotation0 TypeIdentifier TypeArguments
 
 UnannArrayType:
     UnannPrimitiveType Dims
@@ -277,10 +269,8 @@ UnannArrayType:
 MethodHeader:
     VOID MethodDeclarator 
 |   TypeParameters Result MethodDeclarator
-|   TypeParameters Annotation0 Result MethodDeclarator
 |   VOID MethodDeclarator Throws
 |   TypeParameters Result MethodDeclarator Throws
-|   TypeParameters Annotation0 Result MethodDeclarator Throws
 
 
 Result:
@@ -299,9 +289,7 @@ MethodDeclarator:
 
 ReceiverParameter:
     UnannType THIS
-|   Annotation0 UnannType THIS
 |   UnannType IDENTIFIER PERIOD THIS
-|   Annotation0 UnannType IDENTIFIER PERIOD THIS
 
 FormalParameterList:
     FormalParameter
@@ -309,22 +297,16 @@ FormalParameterList:
 
 FormalParameter:
     UnannType VariableDeclaratorId
-|   Annotation UnannType VariableDeclaratorId
 |   VariableModifier0 UnannType VariableDeclaratorId
 |   VariableArityParameter
 
 VariableArityParameter:
     UnannType ELLIPSIS IDENTIFIER
-|   Annotation UnannType ELLIPSIS IDENTIFIER
 |   VariableModifier0 UnannType ELLIPSIS IDENTIFIER
-|   UnannType Annotation0 ELLIPSIS IDENTIFIER
-|   Annotation UnannType Annotation0 ELLIPSIS IDENTIFIER
-|   VariableModifier0 UnannType Annotation0 ELLIPSIS IDENTIFIER
 
 VariableModifier0: 
-    Annotation VariableModifier0
-|   VariableModifier
-|   VariableModifier VariableModifier0
+    VariableModifier
+|   VariableModifier0 VariableModifier
 
 VariableModifier:
     FINAL
@@ -424,21 +406,10 @@ EnumConstant:
 |   IDENTIFIER PArgumentList
 |   IDENTIFIER ClassBody
 |   IDENTIFIER PArgumentList ClassBody
-|   EnumConstantModifier0 IDENTIFIER
-|   EnumConstantModifier0 IDENTIFIER PArgumentList
-|   EnumConstantModifier0 IDENTIFIER ClassBody
-|   EnumConstantModifier0 IDENTIFIER PArgumentList ClassBody
 
 PArgumentList:
     BRACESTART BRACEEND
 |   BRACESTART ArgumentList BRACEEND
-
-EnumConstantModifier0:
-    EnumConstantModifier
-|   EnumConstantModifier EnumConstantModifier0
-
-EnumConstantModifier:
-    Annotation
 
 EnumBodyDeclarations:
     SEMICOLON ClassBodyDeclaration0
@@ -459,21 +430,10 @@ RecordComponentList:
 
 RecordComponent:
     UnannType IDENTIFIER
-|   RecordComponentModifier0 UnannType IDENTIFIER
 |   VariableArityRecordComponent
 
 VariableArityRecordComponent:
     UnannType ELLIPSIS IDENTIFIER
-|   UnannType Annotation0 ELLIPSIS IDENTIFIER
-|   RecordComponentModifier0 UnannType ELLIPSIS IDENTIFIER
-|   RecordComponentModifier0 UnannType Annotation0 ELLIPSIS IDENTIFIER
-
-RecordComponentModifier0:
-    RecordComponentModifier
-|   RecordComponentModifier RecordComponentModifier0
-
-RecordComponentModifier:
-    Annotation
 
 RecordBody:
     CURLYBRACESTART CURLYBRACEEND
@@ -481,7 +441,7 @@ RecordBody:
 
 RecordBodyDeclaration0:
     RecordBodyDeclaration
-|   RecordBodyDeclaration RecordBodyDeclaration0
+|   RecordBodyDeclaration0 RecordBodyDeclaration
 
 RecordBodyDeclaration:
     ClassBodyDeclaration
@@ -489,7 +449,6 @@ RecordBodyDeclaration:
     
 CompactConstructorDeclaration:
     SimpleTypeName ConstructorBody
-|   Annotation SimpleTypeName ConstructorBody
 |   ConstructorModifier SimpleTypeName ConstructorBody
 
 Block: 
@@ -513,7 +472,6 @@ LocalVariableDeclarationStatement:
 
 LocalVariableDeclaration:
     LocalVariableType VariableDeclaratorList
-|   Annotation LocalVariableType VariableDeclaratorList
 |   VariableModifier0 LocalVariableType VariableDeclaratorList
 
 
@@ -596,15 +554,15 @@ SwitchBlock:
 
 SwitchRule0:
     SwitchRule
-|   SwitchRule SwitchRule0
+|   SwitchRule0 SwitchRule
 
 SwitchBlockStatementGroup0: 
     SwitchBlockStatementGroup
-|   SwitchBlockStatementGroup SwitchBlockStatementGroup0;
+|   SwitchBlockStatementGroup0 SwitchBlockStatementGroup
 
 SwitchColonLabel0:
     SwitchLabel COLON
-|   SwitchLabel COLON SwitchColonLabel0
+|   SwitchColonLabel0 SwitchLabel COLON
 
 SwitchRule:
     SwitchLabel PTR Expression SEMICOLON
@@ -616,11 +574,11 @@ SwitchLabel COLON SwitchColonLabel0 BlockStatements
 
 SwitchLabel:
     CASE CaseConstant
-|   CASE CaseConstant CommaCaseConstant0
+|   CommaCaseConstant0 CASE CaseConstant
 
 CommaCaseConstant0:
     COMMA CaseConstant
-|   COMMA CaseConstant CommaCaseConstant0
+|   CommaCaseConstant0 COMMA CaseConstant
 |   DEFAULT
 
 CaseConstant:
@@ -677,7 +635,7 @@ StatementExpressionList:
 
 CommaStatExp0: 
     COMMA StatementExpression
-|   COMMA StatementExpression CommaStatExp0
+|   CommaStatExp0 COMMA StatementExpression 
 
 EnhancedForStatement:
 FOR BRACESTART LocalVariableDeclaration COLON Expression BRACEEND Statement
@@ -721,7 +679,6 @@ CATCH BRACESTART CatchFormalParameter BRACEEND Block
 
 CatchFormalParameter:
     CatchType VariableDeclaratorId
-|   Annotation CatchType VariableDeclaratorId
 |   VariableModifier0 CatchType VariableDeclaratorId
 
 CatchType:
@@ -731,7 +688,7 @@ CatchType:
 
 BarClassType0:
     OR ClassType
-|   OR ClassType BarClassType0
+|   BarClassType0 OR ClassType 
 
 Finally:
 FINALLY Block
@@ -755,9 +712,9 @@ ResourceList:
 
 SemicolonResource0: 
     SEMICOLON IDENTIFIER 
-|   SEMICOLON IDENTIFIER SemicolonResource0
+|   SemicolonResource0 SEMICOLON IDENTIFIER 
 |   SEMICOLON Resource 
-|   SEMICOLON Resource SemicolonResource0
+|   SemicolonResource0 SEMICOLON Resource 
 
 Resource:
     LocalVariableDeclaration
@@ -770,48 +727,6 @@ TypePattern:
 LocalVariableDeclaration
 
 
-
-
-Annotation:
-   NormalAnnotation
-|  MarkerAnnotation
-|  SingleElementAnnotation
-
-NormalAnnotation:
-    AT TypeName BRACESTART ElementValuePairList BRACEEND
-|   AT TypeName BRACESTART BRACEEND
-
-MarkerAnnotation:
-    AT TypeName
-
-SingleElementAnnotation:
-    AT TypeName BRACESTART ElementValue BRACEEND
-
-ElementValuePairList:
-   ElementValuePair 
-|  ElementValuePairList COMMA ElementValuePair
-
-ElementValuePair:
-   IDENTIFIER ASSIGN ElementValue
-
-ElementValue:
-    ConditionalExpression
-|   ElementValueArrayInitializer
-|   Annotation
-
-ElementValueArrayInitializer:
-    CURLYBRACESTART COMMA CURLYBRACEEND
-|   CURLYBRACESTART CURLYBRACEEND
-|   CURLYBRACESTART ElementValueList COMMA CURLYBRACEEND
-|   CURLYBRACESTART ElementValueList CURLYBRACEEND
-
-ElementValueList:
-    ElementValue
-|   ElementValue CommaElementvalue0
-
-CommaElementvalue0:
-    COMMA ElementValue
-|   CommaElementvalue0 COMMA ElementValue
 
 VariableAccess:
     ExpressionName
@@ -856,7 +771,7 @@ SquareBracePeriod:
 
 SquareBrace0:
     SQUAREBRACESTART SQUAREBRACEEND
-|   SQUAREBRACESTART SQUAREBRACEEND SquareBrace0 
+|   SquareBrace0 SQUAREBRACESTART SQUAREBRACEEND  
 
 ClassInstanceCreationExpression:
     UnqualifiedClassInstanceCreationExpression
@@ -877,19 +792,6 @@ UnqualifiedClassInstanceCreationExpression:
 ClassOrInterfaceTypeToInstantiate:
     IDENTIFIER 
 |   IDENTIFIER TypeArgumentsOrDiamond
-|   IDENTIFIER DotAnnotation0 
-|   IDENTIFIER DotAnnotation0 TypeArgumentsOrDiamond
-|   Annotation0 IDENTIFIER 
-|   Annotation0 IDENTIFIER TypeArgumentsOrDiamond
-|   Annotation0 IDENTIFIER DotAnnotation0 
-|   Annotation0 IDENTIFIER DotAnnotation0 TypeArgumentsOrDiamond
-
-DotAnnotation0: 
-    PERIOD Annotation0 IDENTIFIER
-|   PERIOD Annotation0 IDENTIFIER DotAnnotation0
-
-Annotation0: Annotation
-|   Annotation Annotation0
     
 TypeArgumentsOrDiamond:
     TypeArguments
@@ -937,7 +839,7 @@ ArgumentList:
     
 CommaExpression0:
     COMMA Expression 
-|   COMMA Expression CommaExpression0
+|   CommaExpression0 COMMA Expression 
   
     
 MethodReference:
@@ -970,11 +872,10 @@ ArrayCreationExpression:
 
 DimExprs:
     DimExpr
-|   DimExpr DimExprs
+|   DimExprs DimExpr 
 
 DimExpr:
     SQUAREBRACESTART Expression SQUAREBRACEEND
-|   Annotation0 SQUAREBRACESTART Expression SQUAREBRACEEND
 
 Expression:
     LambdaExpression
@@ -991,19 +892,19 @@ LambdaParameters:
 LambdaParameterList:
     LambdaParameter
 |   LambdaParameter CommaLambdaParameter0
-|   CommaIdentifier0
+|   IDENTIFIER
+|   IDENTIFIER CommaIdentifier0
 
 CommaLambdaParameter0:
     COMMA LambdaParameter
-|   COMMA LambdaParameter CommaLambdaParameter0
+|   CommaLambdaParameter0 COMMA LambdaParameter 
    
 CommaIdentifier0:
-    IDENTIFIER
-|   COMMA CommaIdentifier0
+    COMMA IDENTIFIER
+|   CommaIdentifier0 COMMA IDENTIFIER 
  
 LambdaParameter:
     LambdaParameterType VariableDeclaratorId
-|   Annotation LambdaParameterType VariableDeclaratorId
 |   VariableModifier0 LambdaParameterType VariableDeclaratorId
 |   VariableArityParameter
 
@@ -1157,12 +1058,11 @@ VariableInitializerList:
     
 CommaVariableInitializer0:
     COMMA VariableInitializer
-|   COMMA VariableInitializer CommaVariableInitializer0
+|   CommaVariableInitializer0 COMMA VariableInitializer 
 
 PrimitiveType:
     NumericType
-|   Annotation0 NumericType
-|   Annotation0 BOOLEAN
+|   BOOLEAN
 
 NumericType:
     IntegralType
@@ -1188,43 +1088,25 @@ ClassOrInterfaceType:
 
 ClassType:
     TypeIdentifier
-|   Annotation0 TypeIdentifier
 |   ClassOrInterfaceType PERIOD TypeIdentifier
-|   ClassOrInterfaceType PERIOD Annotation0 TypeIdentifier
 |   TypeIdentifier TypeArguments
-|   Annotation0 TypeIdentifier TypeArguments
 |   ClassOrInterfaceType PERIOD TypeIdentifier TypeArguments
-|   ClassOrInterfaceType PERIOD Annotation0 TypeIdentifier TypeArguments
 
 ArrayType:
     BOOLEAN SQUAREBRACESTART SQUAREBRACEEND 
-|   BOOLEAN Annotation0 SQUAREBRACESTART SQUAREBRACEEND 
 |   BOOLEAN SQUAREBRACESTART SQUAREBRACEEND Dims
-|   BOOLEAN Annotation0 SQUAREBRACESTART SQUAREBRACEEND Dims
 |   PrimitiveType SQUAREBRACESTART SQUAREBRACEEND 
-|   PrimitiveType Annotation0 SQUAREBRACESTART SQUAREBRACEEND 
 |   PrimitiveType SQUAREBRACESTART SQUAREBRACEEND Dims
-|   PrimitiveType Annotation0 SQUAREBRACESTART SQUAREBRACEEND Dims
 |   ClassOrInterfaceType Dims
 
 Dims:
     SQUAREBRACESTART SQUAREBRACEEND 
-|   Annotation0 SQUAREBRACESTART SQUAREBRACEEND 
 |   SQUAREBRACESTART SQUAREBRACEEND Dims
-|   Annotation0 SQUAREBRACESTART SQUAREBRACEEND Dims
 
 TypeParameter:
     TypeIdentifier
 |   TypeIdentifier TypeBound
-|   TypeParameterModifier0 TypeIdentifier
-|   TypeParameterModifier0 TypeIdentifier TypeBound
 
-TypeParameterModifier0:
-    TypeParameterModifier
-|   TypeParameterModifier TypeParameterModifier0
-    
-TypeParameterModifier:
-    Annotation
 
 TypeBound:
     EXTENDS ClassOrInterfaceType 
@@ -1238,7 +1120,7 @@ TypeArgumentList:
     
 CommaTypeArgument0:
     COMMA TypeArgument
-|   COMMA TypeArgument CommaTypeArgument0   
+|   CommaTypeArgument0 COMMA TypeArgument    
 
 TypeArgument:
     ReferenceType
@@ -1246,9 +1128,7 @@ TypeArgument:
 
 Wildcard:
     QUESTION 
-|   Annotation0 QUESTION
 |   QUESTION WildcardBounds
-|   Annotation0 QUESTION WildcardBounds
     
 WildcardBounds:
     EXTENDS ReferenceType
