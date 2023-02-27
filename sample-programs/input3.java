@@ -1,30 +1,30 @@
-public class BubbleSort {
+public class RecordAndEnumExample {
+    
     public static void main(String[] args) {
-        int arr[] = {5, 3, 8, 1, 2};
-        System.out.print("Original array: ");
-        printArray(arr);
-        bubbleSort(arr);
-        System.out.print("Sorted array: ");
-        printArray(arr);
-    }
-
-    public static void bubbleSort(int[] arr) {
-        int n = arr.length;
-        for (int i = 0; i < n - 1; i++) {
-            for (int j = 0; j < n - i - 1; j++) {
-                if (arr[j] > arr[j + 1]) {
-                    int temp = arr[j];
-                    arr[j] = arr[j + 1];
-                    arr[j + 1] = temp;
-                }
-            }
+        
+        // Create a new record and assign values to its fields
+        Person person = new Person("John", "Doe", Gender.MALE, 30);
+        
+        // Print the record's fields
+        System.out.println("Name: " + person.firstName() + " " + person.lastName());
+        System.out.println("Gender: " + person.gender());
+        System.out.println("Age: " + person.age());
+        
+        // Use the enum to perform a conditional action
+        if (person.gender() == Gender.MALE) {
+            System.out.println(person.firstName() + " is a male.");
+        } else if (person.gender() == Gender.FEMALE) {
+            System.out.println(person.firstName() + " is a female.");
         }
     }
-
-    public static void printArray(int[] arr) {
-        for (int i = 0; i < arr.length; i++) {
-            System.out.print(arr[i] + " ");
-        }
-        System.out.println();
+    
+    // Define an enum for gender
+    public enum Gender {
+        MALE,
+        FEMALE
     }
+    
+    // Define a record for a person
+    public record Person(String firstName, String lastName, Gender gender, int age) {}
 }
+

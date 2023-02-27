@@ -1,45 +1,42 @@
-public class ArrayTest {
-    private static int[][][] matrix = new int[2][3][4];
+public class FourDimensionalArray {
 
     public static void main(String[] args) {
-        fillArray();
-        printArray();
-        System.out.println("The sum of all elements is: " + sumArray());
-    }
+        int fourDArray [][][][]  = new int[3][4][5][6];
 
-    private static void fillArray() {
-        int val = 0;
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                for (int k = 0; k < matrix[i][j].length; k++) {
-                    matrix[i][j][k] = val;
-                    val++;
+        // initialize the array with some values
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 4; j++) {
+                for (int k = 0; k < 5; k++) {
+                    for (int l = 0; l < 6; l++) {
+                        fourDArray[i][j][k][l] = i + j + k + l;
+                    }
                 }
             }
         }
-    }
 
-    private static void printArray() {
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                for (int k = 0; k < matrix[i][j].length; k++) {
-                    System.out.print(matrix[i][j][k] + " ");
+        // print the elements of the array
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 4; j++) {
+                for (int k = 0; k < 5; k++) {
+                    for (int l = 0; l < 6; l++) {
+                        System.out.println("fourDArray[" + i + "][" + j + "][" + k + "][" + l + "] = " + fourDArray[i][j][k][l]);
+                    }
                 }
-                System.out.println();
             }
-            System.out.println();
         }
-    }
 
-    private static int sumArray() {
+        // find the sum of all the elements in the array
         int sum = 0;
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                for (int k = 0; k < matrix[i][j].length; k++) {
-                    sum += matrix[i][j][k];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 4; j++) {
+                for (int k = 0; k < 5; k++) {
+                    for (int l = 0; l < 6; l++) {
+                        sum += fourDArray[i][j][k][l];
+                    }
                 }
             }
         }
-        return sum;
+        System.out.println("The sum of all the elements in the array is " + sum);
     }
 }
+
