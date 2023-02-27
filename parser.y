@@ -2,6 +2,7 @@
     #include <bits/stdc++.h>
     #include <string>
     int lines=1;
+    FILE* dotfile;
     extern "C" {
         int yyparse();
         int yylex(void);
@@ -11,92 +12,186 @@
             return 0;
         }
     }
+    char* concat(char* s1, char* s2)
+    {
+        char* ans=new char[strlen(s1)+strlen(s2)+1];
+        strcpy(ans,s1);
+        strcat(ans,s2);
+        return ans;
+    }
     using namespace std;
 
+    struct Node{
+        char* val;
+        vector<Node*> children;
+    };
+
+    struct Strval{
+        Node* node;
+        char* data;
+    };
+    Node* root;
+    Node* createNode(char* value, vector<Node*> children)
+    {
+        Node* temp= new Node();
+        temp->val=value;
+        temp->children=children;
+        return temp;
+    }
+    Node* createNode(char* value)
+    {
+        Node* temp= new Node();
+        temp->val=value;
+        return temp;
+    }
+
+    int buildTree(Node* node, int parentno, int co) 
+    {
+        if(node==NULL)
+        return co;
+
+        int nodeno=co++;
+        fprintf(dotfile," node%d [label=\"%s\"]\n",nodeno,node->val);
+        if(parentno>=0) 
+            fprintf(dotfile," node%d -> node%d\n",parentno,nodeno);
+        
+        int n=node->children.size();
+        vector<Node*> children=node->children;
+        for(int i=0;i<n;i++)
+        {
+            co=buildTree(children[i],nodeno,co);
+        }
+        return co;
+    }
 %}
 %code requires {
+    #include <bits/stdc++.h>
     #include <string>
+    #include <vector>
+    #include <cstdio>
+
+    struct Node;
+    using namespace std;
+    Node* createNode(char* value, vector<Node*> children);
+    Node* createNode(char* value);
 
 }
 %union {
-    char* str;
+    Node* node;
+    char* val;
 }
-%token<str> UNDERSCORE PACKAGE GOTO IMPLEMENTS DECIMAL_INTEGER HEX_INTEGER OCTAL_INTEGER BINARY_INTEGER DECIMAL_FLOATING HEXADECIMAL_FLOATING
-%token<str> AT PROTECTED PRIVATE ABSTRACT ELLIPSIS COMMA  OPERATOR SEPARATOR IDENTIFIER CURLYBRACESTART CURLYBRACEEND VAR SEMICOLON BRACESTART ELSE CATCH IF PERIOD 
-%token<str> QUESTION AND XOR LESSER THIS CLASS BOOLEAN VOID NEW EQUAL LITERAL
-%token<str> INSTANCEOF BYTE SHORT INT LONG CHAR FLOAT DOUBLE DEC INC NOT TILDE ADD SUB MUL DIV MOD LSHIFT RSHIFT URSHIFT LSHIFT_ASSIGN RSHIFT_ASSIGN NEQ EQ ASSIGN
-%token<str> MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN SUB_ASSIGN LEQ GEQ URSHIFT_ASSIGN AND_ASSIGN XOR_ASSIGN OR_ASSIGN SCOPE EXTENDS
-%token<str> TRY DEFAULT BRACEEND WHILE SWITCH DO FOR OR COLON RETURN THROW SYNCHRONIZED FINALLY BREAK CONTINUE PTR GREATER ASSERT SQUAREBRACESTART SQUAREBRACEEND AND_AND OR_OR
+%token<node> UNDERSCORE PACKAGE GOTO IMPLEMENTS DECIMAL_INTEGER HEX_INTEGER OCTAL_INTEGER BINARY_INTEGER DECIMAL_FLOATING HEXADECIMAL_FLOATING
+%token<node> AT PROTECTED PRIVATE ABSTRACT ELLIPSIS COMMA  OPERATOR SEPARATOR IDENTIFIER CURLYBRACESTART CURLYBRACEEND VAR SEMICOLON BRACESTART ELSE CATCH IF PERIOD 
+%token<node> QUESTION AND XOR LESSER THIS CLASS BOOLEAN VOID NEW EQUAL LITERAL
+%token<node> INSTANCEOF BYTE SHORT INT LONG CHAR FLOAT DOUBLE DEC INC NOT TILDE ADD SUB MUL DIV MOD LSHIFT RSHIFT URSHIFT LSHIFT_ASSIGN RSHIFT_ASSIGN NEQ EQ ASSIGN
+%token<node> MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN SUB_ASSIGN LEQ GEQ URSHIFT_ASSIGN AND_ASSIGN XOR_ASSIGN OR_ASSIGN SCOPE EXTENDS
+%token<node> TRY DEFAULT BRACEEND WHILE SWITCH DO FOR OR COLON RETURN THROW SYNCHRONIZED FINALLY BREAK CONTINUE PTR GREATER ASSERT SQUAREBRACESTART SQUAREBRACEEND AND_AND OR_OR
 
-%token<str> YIELD TRANSITIVE RECORD OPEN WITH TO PROVIDES NON_SEALED SEALED PERMITS MODULE USES REQUIRES OPENS EXPORTS SUPER NATIVE CONST VOLATILE STRICTFP STATIC INTERFACE FINAL TRANSIENT ENUM CASE THROWS PUBLIC IMPORT
+%token<node> YIELD TRANSITIVE RECORD OPEN WITH TO PROVIDES NON_SEALED SEALED PERMITS MODULE USES REQUIRES OPENS EXPORTS SUPER NATIVE CONST VOLATILE STRICTFP STATIC INTERFACE FINAL TRANSIENT ENUM CASE THROWS PUBLIC IMPORT
 
-%type<str> Block BlockStatements BlockStatement LocalClassOrInterfaceDeclaration LocalVariableDeclarationStatement LocalVariableDeclaration LocalVariableType
-%type<str> Statement StatementNoShortIf StatementWithoutTrailingSubstatement EmptyStatement LabeledStatement LabeledStatementNoShortIf ExpressionStatement StatementExpression
-%type<str> IfThenStatement IfThenElseStatement IfThenElseStatementNoShortIf AssertStatement SwitchStatement SwitchBlock SwitchRule SwitchBlockStatementGroup SwitchLabel CaseConstant 
-%type<str> WhileStatement WhileStatementNoShortIf DoStatement ForStatement ForStatementNoShortIf BasicForStatement BasicForStatementNoShortIf ForInit ForUpdate 
-%type<str> StatementExpressionList EnhancedForStatement EnhancedForStatementNoShortIf BreakStatement YieldStatement ContinueStatement ReturnStatement ThrowStatement
-%type<str> SynchronizedStatement TryStatement Catches CatchClause CatchFormalParameter CatchType Finally TryWithResourcesStatement ResourceSpecification 
-%type<str> ResourceList Resource Pattern TypePattern SwitchColonLabel0 CommaCaseConstant0  SwitchBlockStatementGroup0
-%type<str> SwitchRule0  CommaStatExp0 BarClassType0 SemicolonResource0 VariableModifier0 classmethod Classdec
+%type<node> Block BlockStatements BlockStatement LocalClassOrInterfaceDeclaration LocalVariableDeclarationStatement LocalVariableDeclaration LocalVariableType
+%type<node> Statement StatementNoShortIf StatementWithoutTrailingSubstatement EmptyStatement LabeledStatement LabeledStatementNoShortIf ExpressionStatement StatementExpression
+%type<node> IfThenStatement IfThenElseStatement IfThenElseStatementNoShortIf AssertStatement SwitchStatement SwitchBlock SwitchRule SwitchBlockStatementGroup SwitchLabel CaseConstant 
+%type<node> WhileStatement WhileStatementNoShortIf DoStatement ForStatement ForStatementNoShortIf BasicForStatement BasicForStatementNoShortIf ForInit ForUpdate 
+%type<node> StatementExpressionList EnhancedForStatement EnhancedForStatementNoShortIf BreakStatement YieldStatement ContinueStatement ReturnStatement ThrowStatement
+%type<node> SynchronizedStatement TryStatement Catches CatchClause CatchFormalParameter CatchType Finally TryWithResourcesStatement ResourceSpecification 
+%type<node> ResourceList Resource Pattern TypePattern SwitchColonLabel0 CommaCaseConstant0  SwitchBlockStatementGroup0
+%type<node> SwitchRule0  CommaStatExp0 BarClassType0 SemicolonResource0 VariableModifier0 classmethod Classdec
 
-%type<str> NormalClassDeclaration EnumDeclaration TypeIdentifier ClassBody TypeParameters ClassExtends  ClassPermits ClassModifier RecordComponent VariableArityRecordComponent 
-%type<str> TypeParameterList TypeNames TypeName ClassBodyDeclaration ClassMemberDeclaration InstanceInitializer  RecordBodyDeclaration CompactConstructorDeclaration
-%type<str> StaticInitializer ConstructorDeclaration FieldDeclaration MethodDeclaration ClassDeclaration  UnannType VariableDeclaratorList VariableDeclarator  EnumConstantList EnumBodyDeclarations ReceiverParameter
-%type<str> VariableDeclaratorId VariableInitializer UnannPrimitiveType UnannReferenceType UnannArrayType UnannClassType 
-%type<str> MethodHeader MethodBody Result MethodDeclarator Throws FormalParameterList ConstructorDeclarator ConstructorBody ConstructorModifier SimpleTypeName ExplicitConstructorInvocation ExpressionName Primary ArgumentList
-%type<str> FormalParameter VariableArityParameter VariableModifier ExceptionTypeList ExceptionType EnumConstant RecordDeclaration RecordHeader RecordBody RecordComponentList EnumBody
+%type<node> NormalClassDeclaration EnumDeclaration TypeIdentifier ClassBody TypeParameters ClassExtends  ClassPermits ClassModifier RecordComponent VariableArityRecordComponent 
+%type<node> TypeParameterList TypeNames TypeName ClassBodyDeclaration ClassMemberDeclaration InstanceInitializer  RecordBodyDeclaration CompactConstructorDeclaration
+%type<node> StaticInitializer ConstructorDeclaration FieldDeclaration MethodDeclaration ClassDeclaration  UnannType VariableDeclaratorList VariableDeclarator  EnumConstantList EnumBodyDeclarations ReceiverParameter
+%type<node> VariableDeclaratorId VariableInitializer UnannPrimitiveType UnannReferenceType UnannArrayType UnannClassType 
+%type<node> MethodHeader MethodBody Result MethodDeclarator Throws FormalParameterList ConstructorDeclarator ConstructorBody ConstructorModifier SimpleTypeName ExplicitConstructorInvocation ExpressionName Primary ArgumentList
+%type<node> FormalParameter VariableArityParameter VariableModifier ExceptionTypeList ExceptionType EnumConstant RecordDeclaration RecordHeader RecordBody RecordComponentList EnumBody
 
-%type<str> ClassModifier0 ClassBodyDeclaration0 FieldModifier0 MethodModifier0 
-%type<str>  RecordBodyDeclaration0 NormalClassDeclaration0
+%type<node> ClassModifier0 ClassBodyDeclaration0 FieldModifier0 MethodModifier0 
+%type<node>  RecordBodyDeclaration0 NormalClassDeclaration0
 
-%type<str> MethodInvocation CommaExpression0 MethodReference ArrayCreationExpression
-%type<str> DimExprs DimExpr Expression LambdaExpression LambdaParameters LambdaParameterList CommaLambdaParameter0 CommaIdentifier0 LambdaParameter
-%type<str> LambdaParameterType LambdaBody AssignmentExpression Assignment AssignmentOperator ConditionalExpression ConditionalOrExpression ConditionalAndExpression InclusiveOrExpression
-%type<str> ExclusiveOrExpression AndExpression EqualityExpression RelationalExpression InstanceofExpression ShiftExpression AdditiveExpression MultiplicativeExpression UnaryExpression
-%type<str> PreIncrementExpression PreDecrementExpression UnaryExpressionNotPlusMinus PostfixExpression PostIncrementExpression PostDecrementExpression CastExpression SwitchExpression
-%type<str> ArrayInitializer VariableInitializerList CommaVariableInitializer0 PrimitiveType NumericType IntegralType FloatingPointType
-%type<str> ReferenceType  ClassType ArrayType Dims TypeParameter TypeBound
-%type<str> TypeArguments TypeArgumentList CommaTypeArgument0 TypeArgument WildcardBounds
-%type<str> MethodName LeftHandSide SquareBracePeriod StaticFinal0 fieldclassmethod
-%type<str> PrimaryNoNewArray ClassLiteral SquareBrace0 ClassInstanceCreationExpression UnqualifiedClassInstanceCreationExpression 
+%type<node> MethodInvocation CommaExpression0 MethodReference ArrayCreationExpression
+%type<node> DimExprs DimExpr Expression LambdaExpression LambdaParameters LambdaParameterList CommaLambdaParameter0 CommaIdentifier0 LambdaParameter
+%type<node> LambdaParameterType LambdaBody AssignmentExpression Assignment AssignmentOperator ConditionalExpression ConditionalOrExpression ConditionalAndExpression InclusiveOrExpression
+%type<node> ExclusiveOrExpression AndExpression EqualityExpression RelationalExpression InstanceofExpression ShiftExpression AdditiveExpression MultiplicativeExpression UnaryExpression
+%type<node> PreIncrementExpression PreDecrementExpression UnaryExpressionNotPlusMinus PostfixExpression PostIncrementExpression PostDecrementExpression CastExpression SwitchExpression
+%type<node> ArrayInitializer VariableInitializerList CommaVariableInitializer0 PrimitiveType NumericType IntegralType FloatingPointType
+%type<node> ReferenceType  ClassType ArrayType Dims TypeParameter TypeBound
+%type<node> TypeArguments TypeArgumentList CommaTypeArgument0 TypeArgument WildcardBounds
+%type<node> MethodName LeftHandSide SquareBracePeriod StaticFinal0 fieldclassmethod
+%type<node> PrimaryNoNewArray ClassLiteral SquareBrace0 ClassInstanceCreationExpression UnqualifiedClassInstanceCreationExpression 
 
-%type<str>  CompilationUnit OrdinaryCompilationUnit TopLevelClassOrInterfaceDeclaration
-%type<str> UnannClassOrInterfaceType FieldModifier MethodModifier FieldAccess ArrayAccess ClassOrInterfaceType UnqualifiedMethodIdentifier
-%type<str> VariableAccess Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace
+%type<node>  CompilationUnit OrdinaryCompilationUnit TopLevelClassOrInterfaceDeclaration
+%type<node> UnannClassOrInterfaceType FieldModifier MethodModifier FieldAccess ArrayAccess ClassOrInterfaceType UnqualifiedMethodIdentifier
+%type<node> VariableAccess Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace
 
 %%
 
-CompilationUnit:
-|   OrdinaryCompilationUnit
+CompilationUnit: {  root=$$; }
+|   OrdinaryCompilationUnit {  root=$$; }
 
 OrdinaryCompilationUnit: 
-    TopLevelClassOrInterfaceDeclaration
-|   TopLevelClassOrInterfaceDeclaration OrdinaryCompilationUnit
+    TopLevelClassOrInterfaceDeclaration {  $$=$1; }
+|   TopLevelClassOrInterfaceDeclaration OrdinaryCompilationUnit {
+                                                                    vector<Node*> v{$1,$2};
+                                                                    $$=createNode("OrdinaryCompilationUnit",v);
+                                                                }
 
 TopLevelClassOrInterfaceDeclaration:
-    ClassDeclaration
-|   StaticFinal0 Classdec
-|   ABSTRACT Classdec
-|   SEMICOLON
+    ClassDeclaration {  $$=$1; }
+|   StaticFinal0 Classdec {
+                            vector<Node*> v{$1,$2};
+                            $$=createNode("TopLevelClassOrInterfaceDeclaration",v);
+                        }
+|   ABSTRACT Classdec {
+                            vector<Node*> v{$1,$2};
+                            $$=createNode("TopLevelClassOrInterfaceDeclaration",v);
+                        }
+|   SEMICOLON {  $$=$1; }
 
 ClassDeclaration:
-    NormalClassDeclaration
-|   EnumDeclaration
-|   RecordDeclaration
+    NormalClassDeclaration {  $$=$1; }
+|   EnumDeclaration {  $$=$1; }
+|   RecordDeclaration {  $$=$1; }
 
 NormalClassDeclaration:
-    NormalClassDeclaration0
-|   ClassModifier0 NormalClassDeclaration0
+    NormalClassDeclaration0 {  $$=$1; }
+|   ClassModifier0 NormalClassDeclaration0 {
+                                                vector<Node*> v{$1,$2};
+                                                $$=createNode("NormalClassDeclaration",v);
+                                            }
 
 NormalClassDeclaration0:
-    CLASS TypeIdentifier ClassBody
-|   CLASS TypeIdentifier ClassPermits ClassBody
-|   CLASS TypeIdentifier ClassExtends ClassBody
-|   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody
-|   CLASS TypeIdentifier TypeParameters ClassBody
-|   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody
-|   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody
-|   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody
+    CLASS TypeIdentifier ClassBody {
+                                        vector<Node*> v{$1,$2,$3};
+                                        $$=createNode("NormalClassDeclaration",v);
+                                    }
+|   CLASS TypeIdentifier ClassPermits ClassBody {
+                                                vector<Node*> v{$1,$2,$3,$4};
+                                                $$=createNode("NormalClassDeclaration",v);
+                                            }
+|   CLASS TypeIdentifier ClassExtends ClassBody {
+                                                vector<Node*> v{$1,$2,$3,$4};
+                                                $$=createNode("NormalClassDeclaration",v);
+                                            }
+|   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody {
+                                                vector<Node*> v{$1,$2,$3,$4,$5};
+                                                $$=createNode("NormalClassDeclaration",v);
+                                            }
+|   CLASS TypeIdentifier TypeParameters ClassBody {
+                                                vector<Node*> v{$1,$2,$3,$4};
+                                                $$=createNode("NormalClassDeclaration",v);
+                                            }
+|   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody {
+                                                vector<Node*> v{$1,$2,$3,$4,$5};
+                                                $$=createNode("NormalClassDeclaration",v);
+                                            }
+|   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody {
+                                                vector<Node*> v{$1,$2,$3,$4,$5};
+                                                $$=createNode("NormalClassDeclaration",v);
+                                            }
+|   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody {
+                                                vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                                                $$=createNode("NormalClassDeclaration",v);
+                                            }
 
 Classdec:
     CLASS TypeIdentifier ClassBody
@@ -1157,6 +1252,10 @@ TypeIdentifier:
 
 int main() {
     yydebug = 1;
+    dotfile=fopen("output.txt","w");
+    fprintf(dotfile,"digraph {\n");
     yyparse();
+    buildTree(root,-1,0);
+    fprintf(dotfile," }\n");
     return 0;
 }
