@@ -212,39 +212,39 @@ TextblockWhitespace [ \t\f]
 "::"    { yylval.node = createNode(strdup(yytext)); return(SCOPE); }
 
 
-{DecimalInteger}   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
-{HexInteger}   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
-{OctalInteger}   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
-{BinaryInteger}   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
-{DecimalFloating}   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
-{HexadecimalFloating}   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
+{DecimalInteger}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
+{HexInteger}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
+{OctalInteger}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
+{BinaryInteger}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
+{DecimalFloating}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL);}
+{HexadecimalFloating}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
 
-"true"|"false"   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
-"null"   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
+"true"|"false"   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
+"null"   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
 
 '{EscapeSequence}'|'[^"\\""\'"']?' {
-    yylval.node = createNode(strdup(yytext));
+    yylval.node = createNode(strdup(yytext),"LITERAL"); 
     return (LITERAL);
 }
 
 [a-zA-Z][a-zA-Z0-9$_]*|[_$][a-zA-Z0-9_$]+ {
-    yylval.node = createNode(strdup(yytext));
+    yylval.node = createNode(strdup(yytext),"IDENTIFIER"); 
     return (IDENTIFIER);
 }
 [ \t\n\r\f]+ {}
 
 "\""{StringCharacter}*"\"" {
-    yylval.node = createNode(strdup(yytext));
+    yylval.node = createNode(strdup(yytext),"LITERAL"); 
     return (LITERAL);
 }
 
 "\"\"\""([^\"]|(["\""][^"\""])|(["\""]["\""][^"\""]))*"\"\"\"" {
-    yylval.node = createNode(strdup(yytext));
+    yylval.node = createNode(strdup(yytext),"LITERAL"); 
     return (LITERAL);
 }
 
 "\""[^\"]*"\"" {
-    yylval.node = createNode(strdup(yytext));
+    yylval.node = createNode(strdup(yytext),"LITERAL"); 
     return (LITERAL);
 }
 

@@ -3,6 +3,7 @@
     #include <string>
     int lines=1;
     FILE* dotfile;
+    extern FILE * yyin;
     extern "C" {
         int yyparse();
         int yylex(void);
@@ -44,7 +45,17 @@
         temp->val=value;
         return temp;
     }
-
+    Node* createNode( char* lexeme, char* token)
+    {
+        Node* temp= new Node();
+        char* ans=new char[strlen(lexeme)+strlen(token)+3];
+        strcpy(ans,token);
+        strcat(ans,"(");
+        strcat(ans,lexeme);
+        strcat(ans,")");
+        temp->val=ans;
+        return temp;
+    }
     int buildTree(Node* node, int parentno, int co) 
     {
         if(node==NULL)
@@ -74,6 +85,7 @@
     using namespace std;
     Node* createNode(char* value, vector<Node*> children);
     Node* createNode(char* value);
+    Node* createNode(char* lexeme, char* token);
 
 }
 %union {
@@ -643,7 +655,6 @@ SwitchStatement:
 SwitchBlock:
     CURLYBRACESTART SwitchRule0 CURLYBRACEEND
 |   CURLYBRACESTART CURLYBRACEEND
-|   CURLYBRACESTART SwitchColonLabel0 CURLYBRACEEND
 |   CURLYBRACESTART SwitchBlockStatementGroup0 CURLYBRACEEND
 |   CURLYBRACESTART SwitchBlockStatementGroup0 SwitchColonLabel0 CURLYBRACEEND
 
@@ -665,16 +676,18 @@ SwitchRule:
 |   SwitchLabel PTR ThrowStatement
 
 SwitchBlockStatementGroup:
-SwitchLabel COLON SwitchColonLabel0 BlockStatements
+    SwitchColonLabel0 
+|   SwitchLabel COLON BlockStatements
+|   SwitchLabel COLON SwitchColonLabel0 BlockStatements
 
 SwitchLabel:
     CASE CaseConstant
 |   CommaCaseConstant0 CASE CaseConstant
+|   DEFAULT
 
 CommaCaseConstant0:
     COMMA CaseConstant
 |   CommaCaseConstant0 COMMA CaseConstant
-|   DEFAULT
 
 CaseConstant:
 ConditionalExpression
@@ -930,7 +943,8 @@ MethodNameBrace:
 |   MethodName BRACESTART
 
 ArgumentList:
-    Expression CommaExpression0
+    Expression
+|   Expression CommaExpression0
     
 CommaExpression0:
     COMMA Expression 
@@ -1250,12 +1264,14 @@ TypeIdentifier:
 
 %%
 
-int main() {
+int main(int argc, char *argv[]) {
     yydebug = 1;
+    yyin = fopen(argv[1],"r");
     dotfile=fopen("output.txt","w");
     fprintf(dotfile,"digraph {\n");
     yyparse();
     buildTree(root,-1,0);
     fprintf(dotfile," }\n");
+    fclose(yyin);
     return 0;
 }
