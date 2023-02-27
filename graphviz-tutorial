@@ -1,4 +1,0 @@
-digraph {
-    a->b->c
-    a[label="node a"]
-}
