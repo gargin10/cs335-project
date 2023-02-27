@@ -234,7 +234,7 @@ TextblockWhitespace [ \t\f]
 [ \t\n\r\f]+ {}
 
 "\""{StringCharacter}*"\"" {
-    yylval.node = createNode(strdup(yytext),"LITERAL"); 
+    yylval.node = createNode( "LITERAL" ); 
     return (LITERAL);
 }
 
