@@ -18,7 +18,7 @@ DigitOrUnderscore [_]|{Digit}
 DigitAndUnderscores {DigitOrUnderscore}+
 Digits {Digit}|{Digit}{DigitAndUnderscores}?{Digit}
 DecimalNumeral 0|{NonZeroDigit}{Digits}?|{NonZeroDigit}{Underscores}{Digits}
-DecimalInteger {Sign}?{DecimalNumeral}{IntegerSuffix}?
+DecimalInteger {DecimalNumeral}{IntegerSuffix}?
 
 HexDigit [0-9A-Fa-f]
 HexDigitOrUnderscore _|{HexDigit}
@@ -43,13 +43,13 @@ BinaryNumeral 0[bB]{BinaryDigits}
 BinaryInteger {BinaryNumeral}{IntegerSuffix}?
 
 FloatSuffix [fFdD]
-SignedInteger {Sign}?{DecimalNumeral}
+SignedInteger {DecimalNumeral}
 Exponent [eE]
-ExponentPart {Exponent}{SignedInteger}
-DecimalFloating {Sign}?{DecimalNumeral}"\."{Digits}?{ExponentPart}?{FloatSuffix}?|"\."{Digits}{ExponentPart}?{FloatSuffix}?|{Sign}?{DecimalNumeral}{ExponentPart}?{FloatSuffix}?
+ExponentPart {Exponent}{Sign}?{SignedInteger}
+DecimalFloating {DecimalNumeral}"\."{Digits}?{ExponentPart}?{FloatSuffix}?|"\."{Digits}{ExponentPart}?{FloatSuffix}?|{DecimalNumeral}{ExponentPart}?{FloatSuffix}?
 
 BinaryExponent [pP]
-BinaryExponentPart {BinaryExponent}{SignedInteger}
+BinaryExponentPart {BinaryExponent}{Sign}?{SignedInteger}
 HexSignificand {HexNumeral}"\."?|0[xX]{HexDigits}?"\."{HexDigits}
 HexadecimalFloating {HexSignificand}{BinaryExponentPart}{FloatSuffix}?
 
@@ -220,7 +220,7 @@ TextblockWhitespace [ \t\f]
 {HexadecimalFloating}   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
 
 "true"|"false"   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
-"null"   {yylval.node = createNode(strdup(yytext)); return(NULL); }
+"null"   {yylval.node = createNode(strdup(yytext)); return(LITERAL); }
 
 '{EscapeSequence}'|'[^"\\""\'"']?' {
     yylval.node = createNode(strdup(yytext));
