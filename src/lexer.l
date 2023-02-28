@@ -2,6 +2,7 @@
 %{
     #include <string>
     #include "parser.tab.h"
+    int lineno=1;
     extern "C" {
         int yylex(void);
     }
@@ -231,7 +232,8 @@ TextblockWhitespace [ \t\f]
     yylval.node = createNode(strdup(yytext),"IDENTIFIER"); 
     return (IDENTIFIER);
 }
-[ \t\n\r\f]+ {}
+[ \t\r\f]+ {}
+[\n]    {lineno++;}
 
 "\""{StringCharacter}*"\"" {
     yylval.node = createNode( "LITERAL" ); 

@@ -1,7 +1,7 @@
 %{
     #include <bits/stdc++.h>
     #include <string>
-    int lines=1;
+    extern int lineno;
     FILE* dotfile;
     extern FILE * yyin;
     extern "C" {
@@ -9,7 +9,7 @@
         int yylex(void);
         int yyerror(char* s)
         {
-            printf("ERROR: %s Line Number: %d\n",s, lines);
+            printf("ERROR: %s Line Number: %d\n",s, lineno);
             return 0;
         }
     }
@@ -2449,7 +2449,7 @@ TypeIdentifier:
 %%
 
 int main(int argc, char *argv[]) {
-    yydebug = 1;
+    // yydebug = 1;
     yyin = fopen(argv[1],"r");
     dotfile=fopen("output.txt","w");
     fprintf(dotfile,"digraph {\n");
