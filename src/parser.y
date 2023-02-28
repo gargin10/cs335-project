@@ -167,7 +167,7 @@
 
 %type<node>  CompilationUnit OrdinaryCompilationUnit TopLevelClassOrInterfaceDeclaration
 %type<node> UnannClassOrInterfaceType FieldModifier MethodModifier FieldAccess ArrayAccess ClassOrInterfaceType UnqualifiedMethodIdentifier
-%type<node> VariableAccess Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace
+%type<node> VariableAccess Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace Ptn
 
 %%
 
@@ -2461,7 +2461,14 @@ WildcardBounds:
 
 TypeName:
     TypeIdentifier
-|   IDENTIFIER PERIOD TypeIdentifier {
+|   Ptn PERIOD TypeIdentifier {
+                    vector<Node*> v{$1,$2,$3};
+                    $$=createNode( "TypeName", v );
+                } 
+
+Ptn:
+    IDENTIFIER {$$=$1;}
+|   Ptn PERIOD IDENTIFIER {
                     vector<Node*> v{$1,$2,$3};
                     $$=createNode( "TypeName", v );
                 } 
