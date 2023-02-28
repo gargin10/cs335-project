@@ -60,6 +60,33 @@
     Node* createNode( char* lexeme, char* token)
     {
         Node* temp= new Node();
+        char* lexemetemp=new char[1];
+        int f=0;
+        for(int i=0;i<strlen(lexeme);i++)
+        {
+            if(lexeme[i]=='\"')
+            {
+                int len=strlen(lexemetemp);
+                char* temp = new char[len+3];
+                strcpy(temp,lexemetemp);
+                temp[len]='\\';
+                temp[len+1]='\"';
+                temp[len+2]='\0';
+                lexemetemp=temp;
+                f=1;
+            }
+            else    
+            {
+                int len=strlen(lexemetemp);
+                char* temp = new char[len+2];
+                strcpy(temp,lexemetemp);
+                temp[len]=lexeme[i];
+                temp[len+1]='\0';
+                lexemetemp=temp;
+            }
+        }
+        if(f)
+        lexeme=lexemetemp;
         char* ans=new char[strlen(lexeme)+strlen(token)+3];
         strcpy(ans,token);
         strcat(ans,"(");
@@ -292,7 +319,10 @@ TypeNames:
                         }
 
 ClassBody:
-    CURLYBRACESTART CURLYBRACEEND { $$=NULL;}
+    CURLYBRACESTART CURLYBRACEEND {
+                           vector<Node*> v;
+                            $$=createNode( "ClassBody",v);
+                        }
 |   CURLYBRACESTART ClassBodyDeclaration0 CURLYBRACEEND {
                            vector<Node*> v{$2};
                             $$=createNode( "ClassBody",v);
@@ -733,7 +763,10 @@ SimpleTypeName:
     TypeIdentifier  { $$ = $1; }
 
 ConstructorBody:
-    CURLYBRACESTART CURLYBRACEEND {$$=NULL;}
+    CURLYBRACESTART CURLYBRACEEND {
+                        vector<Node*> v;
+                        $$=createNode( "ConstructorBody",v);
+                    }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
                         vector<Node*> v{$2};
                         $$=createNode( "ConstructorBody",v);
@@ -844,7 +877,10 @@ EnumBody:
                         vector<Node*> v{$2};
                         $$=createNode( "EnumBody",v);
                     }
-|   CURLYBRACESTART CURLYBRACEEND {$$=NULL;}
+|   CURLYBRACESTART CURLYBRACEEND {
+                        vector<Node*> v;
+                        $$=createNode( "EnumBody",v);
+                    }
 |   CURLYBRACESTART COMMA EnumBodyDeclarations CURLYBRACEEND {
                         vector<Node*> v{$2,$3};
                         $$=createNode( "EnumBody",v);
@@ -898,7 +934,8 @@ EnumConstant:
 
 PArgumentList:
     BRACESTART BRACEEND {
-                        $$=NULL;
+                        vector<Node*> v;
+                        $$=createNode( "PArgumentList",v);
                     }
 |   BRACESTART ArgumentList BRACEEND {
                         vector<Node*> v{$2};
@@ -931,7 +968,8 @@ RecordDeclaration:
 
 RecordHeader:
     BRACESTART BRACEEND {
-                        $$=NULL;
+                        vector<Node*> v;
+                        $$=createNode( "RecordHeader",v);
                     }
 |   BRACESTART RecordComponentList BRACEEND {
                         vector<Node*> v{$2};
@@ -966,7 +1004,8 @@ VariableArityRecordComponent:
 
 RecordBody:
     CURLYBRACESTART CURLYBRACEEND  {
-                        $$=NULL;
+                        vector<Node*> v;
+                        $$=createNode( "RecordBody", v );
                     }
 |   CURLYBRACESTART RecordBodyDeclaration0 CURLYBRACEEND {
                         vector<Node*> v{$2};
@@ -1974,7 +2013,8 @@ LambdaExpression:
     
 LambdaParameters:
     BRACESTART BRACEEND {
-                    $$=NULL;
+                    vector<Node*> v;
+                    $$=createNode( "LambdaParameters", v );
                 } 
 |   BRACESTART LambdaParameterList BRACEEND {
                     $$=$2;
