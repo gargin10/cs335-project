@@ -2538,11 +2538,16 @@ int main(int argc, char *argv[]) {
             output_file = 1;
             continue;
         }
+        argv[i][8] = temp;
+        if( !strcmp( argv[i], "--verbose") ){
+            yydebug = 1;
+            continue;
+        }
         printf("ERROR: Unknown option.\n");
         return -1;
     }
     if( input_file == 0 ){
-        printf("ERROR: No Input file Specified");
+        printf("ERROR: No Input file Specified.\n");
         return -1;
     }
     if( output_file == 0 ) output_file_name = "output.dot";
