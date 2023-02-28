@@ -36,7 +36,19 @@
     {
         Node* temp= new Node();
         temp->val=value;
-        temp->children=children;
+        vector<Node*> v;
+        for(int i=0;i<children.size();i++)
+        {
+            if(!children[i]->val)
+            {
+                v.insert(v.end(),children[i]->children.begin(),children[i]->children.end());
+            }
+            else
+            {
+                v.push_back(children[i]);
+            }
+        }
+        temp->children=v;
         return temp;
     }
     Node* createNode(char* value)
@@ -108,7 +120,7 @@
 %type<node> StatementExpressionList EnhancedForStatement EnhancedForStatementNoShortIf BreakStatement YieldStatement ContinueStatement ReturnStatement ThrowStatement
 %type<node> SynchronizedStatement TryStatement Catches CatchClause CatchFormalParameter CatchType Finally TryWithResourcesStatement ResourceSpecification 
 %type<node> ResourceList Resource Pattern TypePattern SwitchColonLabel0 CommaCaseConstant0  SwitchBlockStatementGroup0
-%type<node> SwitchRule0  CommaStatExp0 BarClassType0 SemicolonResource0 VariableModifier0 classmethod Classdec PArgumentList ClassOrInterfaceTypeToInstantiate
+%type<node> SwitchRule0 BarClassType0 VariableModifier0 classmethod PArgumentList ClassOrInterfaceTypeToInstantiate
 
 %type<node> NormalClassDeclaration EnumDeclaration TypeIdentifier ClassBody TypeParameters ClassExtends  ClassPermits ClassModifier RecordComponent VariableArityRecordComponent 
 %type<node> TypeParameterList TypeNames TypeName ClassBodyDeclaration ClassMemberDeclaration InstanceInitializer  RecordBodyDeclaration CompactConstructorDeclaration
@@ -120,14 +132,14 @@
 %type<node> ClassModifier0 ClassBodyDeclaration0 FieldModifier0 MethodModifier0 
 %type<node>  RecordBodyDeclaration0 NormalClassDeclaration0 TypeArgumentsOrDiamond
 
-%type<node> MethodInvocation CommaExpression0 MethodReference ArrayCreationExpression
+%type<node> MethodInvocation MethodReference ArrayCreationExpression
 %type<node> DimExprs DimExpr Expression LambdaExpression LambdaParameters LambdaParameterList CommaLambdaParameter0 CommaIdentifier0 LambdaParameter
 %type<node> LambdaParameterType LambdaBody AssignmentExpression Assignment AssignmentOperator ConditionalExpression ConditionalOrExpression ConditionalAndExpression InclusiveOrExpression
 %type<node> ExclusiveOrExpression AndExpression EqualityExpression RelationalExpression InstanceofExpression ShiftExpression AdditiveExpression MultiplicativeExpression UnaryExpression
 %type<node> PreIncrementExpression PreDecrementExpression UnaryExpressionNotPlusMinus PostfixExpression PostIncrementExpression PostDecrementExpression CastExpression SwitchExpression
-%type<node> ArrayInitializer VariableInitializerList CommaVariableInitializer0 PrimitiveType NumericType IntegralType FloatingPointType
+%type<node> ArrayInitializer VariableInitializerList PrimitiveType NumericType IntegralType FloatingPointType
 %type<node> ReferenceType  ClassType ArrayType Dims TypeParameter TypeBound
-%type<node> TypeArguments TypeArgumentList CommaTypeArgument0 TypeArgument WildcardBounds
+%type<node> TypeArguments TypeArgumentList TypeArgument WildcardBounds
 %type<node> MethodName LeftHandSide SquareBracePeriod StaticFinal0 fieldclassmethod
 %type<node> PrimaryNoNewArray ClassLiteral SquareBrace0 ClassInstanceCreationExpression UnqualifiedClassInstanceCreationExpression 
 
@@ -149,13 +161,25 @@ OrdinaryCompilationUnit:
 
 TopLevelClassOrInterfaceDeclaration:
     ClassDeclaration {  $$=$1; }
-|   StaticFinal0 Classdec {
-                            vector<Node*> v{$1,$2};
-                            $$=createNode("TopLevelClassOrInterfaceDeclaration",v);
+|   StaticFinal0 NormalClassDeclaration {
+                            vector<Node*> v{$1->children};
+                            v.insert(v.end(),$2->children.begin(),$2->children.end());
+                            $$=createNode($2->val,v);
                         }
-|   ABSTRACT Classdec {
-                            vector<Node*> v{$1, $2};
-                            $$=createNode("TopLevelClassOrInterfaceDeclaration",v);
+|   ABSTRACT NormalClassDeclaration {
+                            vector<Node*> v{$1};
+                            v.insert(v.end(),$2->children.begin(),$2->children.end());
+                            $$=createNode($2->val,v);
+                        }
+|   ConstructorModifier StaticFinal0 NormalClassDeclaration {
+                            vector<Node*> v{$1,$2};
+                            v.insert(v.end(),$3->children.begin(),$3->children.end());
+                            $$=createNode($3->val,v);
+                        }
+|   ConstructorModifier ABSTRACT NormalClassDeclaration{
+                            vector<Node*> v{$1,$2};
+                            v.insert(v.end(),$3->children.begin(),$3->children.end());
+                            $$=createNode($3->val,v);
                         }
 |   SEMICOLON {  $$=$1; }
 
@@ -165,7 +189,10 @@ ClassDeclaration:
 |   RecordDeclaration {  $$=$1; }
 
 NormalClassDeclaration:
-    NormalClassDeclaration0 {  $$=$1; }
+    NormalClassDeclaration0 { 
+                                vector<Node*> v{$1};
+                                $$=createNode("NormalClassDeclaration",v); 
+                            }
 |   ClassModifier0 NormalClassDeclaration0 {
                                                 vector<Node*> v{$1,$2};
                                                 $$=createNode("NormalClassDeclaration",v);
@@ -174,89 +201,51 @@ NormalClassDeclaration:
 NormalClassDeclaration0:
     CLASS TypeIdentifier ClassBody {
                                         vector<Node*> v{$1,$2,$3};
-                                        $$=createNode("NormalClassDeclaration0",v);
+                                        $$=createNode(NULL,v);
                                     }
 |   CLASS TypeIdentifier ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
-                                                $$=createNode("Class",v);
+                                                $$=createNode( NULL,v);
                                             }
 |   CLASS TypeIdentifier ClassExtends ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
-                                                $$=createNode("Class",v);
+                                                $$=createNode(NULL,v);
                                             }
 |   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody {
                                                vector<Node*> v{$1,$2,$3,$4,$5};
-                                                $$=createNode("Class",v);
+                                                $$=createNode( NULL,v);
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
-                                                $$=createNode("Class",v);
+                                                $$=createNode( NULL,v);
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4, $5};
-                                                $$=createNode("Class",v);
+                                                $$=createNode( NULL,v);
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4, $5};
-                                                $$=createNode("Class",v);
+                                                $$=createNode( NULL,v);
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4,$5, $6};
-                                        $$=createNode("Class",v);
-                                            }
-
-Classdec:
-    CLASS TypeIdentifier ClassBody {
-                                                vector<Node*> v{$1,$2,$3};
-                                        $$=createNode("Class",v);
-                                            }
-|   CLASS TypeIdentifier ClassPermits ClassBody {
-                                                vector<Node*> v{$1,$2,$3,$4};
-                                        $$=createNode("Class",v);
-                                            }
-|   CLASS TypeIdentifier ClassExtends ClassBody {
-                                                vector<Node*> v{$1,$2,$3,$4};
-                                        $$=createNode("Class",v);
-                                            }
-|   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody {
-                                                vector<Node*> v{$1,$2,$3,$4,$5};
-                                        $$=createNode("Class",v);
-                                            }
-|   CLASS TypeIdentifier TypeParameters ClassBody {
-                                                vector<Node*> v{$1,$2,$3,$4};
-                                        $$=createNode("Class",v);
-                                            }
-|   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody {
-                                                vector<Node*> v{$1,$2,$3,$4,$5};
-                                        $$=createNode("Class",v);
-                                            }
-|   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody {
-                                                vector<Node*> v{$1,$2,$3,$4,$5};
-                                        $$=createNode("Class",v);
-                                            }
-|   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody {
-                                                vector<Node*> v{$1,$2,$3,$4,$5,$6};
-                                        $$=createNode("Class",v);
+                                                $$=createNode( NULL,v);
                                             }
 
 ClassModifier0:
     ClassModifier { $$ = $1; }
 |   ConstructorModifier { $$ = $1; }
-|   ClassModifier ConstructorModifier {
-                                                vector<Node*> v{$1,$2};
-                                                $$=createNode( "ClassModifier0",v);
-                                            }
 |   ConstructorModifier ClassModifier {
-                                                vector<Node*> v{$1,$2};
-                                                $$=createNode( "ClassModifier0",v);
-                                            }
+                                            vector<Node*> v{$1,$2};
+                                            $$=createNode( NULL,v);
+                                        }
 
 StaticFinal0:
     STATIC { $$ = $1; }
 |   FINAL { $$ = $1; }
 |   STATIC FINAL  {
     vector<Node*> v{$1,$2};
-    $$ = createNode("StaticFinal0", v); 
+    $$ = createNode(NULL, v); 
 }
 
 ClassModifier:
@@ -266,16 +255,19 @@ ClassModifier:
 
 TypeParameters:
     LESSER TypeParameterList GREATER {
-                                                vector<Node*> v{$1,$2,$3};
-                                                $$=createNode( "TypeParameters",v);
-                                            }
+                                        vector<Node*> v{$1,$2,$3};
+                                        $$=createNode( "TypeParameters",v);
+                                    }
 
 TypeParameterList:
-    TypeParameter { $$ = $1; }
+    TypeParameter {         
+                    vector<Node*> v{$1};
+                    $$=createNode( "TypeParameterList",v); 
+                }
 |   TypeParameterList COMMA TypeParameter {
                                                 vector<Node*> v($1->children);
                                                 v.push_back($3);
-                                                $$=createNode( "TypeParameterList",v);
+                                                $$=createNode( $1->val,v);
                                             }
 
 ClassExtends:
@@ -291,28 +283,29 @@ ClassPermits:
                         }
 
 TypeNames:
-    TypeName { $$ = $1; }
+    TypeName {vector<Node*> v{$1};
+                            $$=createNode( "TypeNames",v); }
 |   TypeNames COMMA TypeName {
                            vector<Node*> v($1->children);
                             v.push_back($3);
-                            $$=createNode( "TypeNames",v);
+                            $$=createNode( $1->val,v);
                         }
 
 ClassBody:
-    CURLYBRACESTART CURLYBRACEEND {
-                            vector<Node*> v{$1,$2};
-                            $$=createNode( "ClassBody",v);
-                        }
+    CURLYBRACESTART CURLYBRACEEND { $$=NULL;}
 |   CURLYBRACESTART ClassBodyDeclaration0 CURLYBRACEEND {
-                           vector<Node*> v{$1,$2,$3};
+                           vector<Node*> v{$2};
                             $$=createNode( "ClassBody",v);
                         }
 
 ClassBodyDeclaration0: 
-    ClassBodyDeclaration  { $$ = $1; }
+    ClassBodyDeclaration  {
+                           vector<Node*> v{$1};
+                            $$=createNode( NULL,v);
+                        }
 |   ClassBodyDeclaration0 ClassBodyDeclaration {
-                            vector<Node*> v{$1,$2};
-                            $$=createNode( "ClassBodyDeclaration0",v);
+                            vector<Node*> v{$1, $2};
+                            $$=createNode( NULL,v);
                         }
 
 ClassBodyDeclaration:
@@ -326,95 +319,64 @@ ClassMemberDeclaration:
 |   MethodDeclaration { $$ = $1; }
 |   ClassDeclaration { $$ = $1; }
 |   StaticFinal0 fieldclassmethod {
-                                        vector<Node*> v{$1,$2};
-                                        $$=createNode( "ClassMemberDeclaration",v);
-                                    }
-|   StaticFinal0 ConstructorModifier {
-                                        vector<Node*> v{$1,$2};
-                                        $$=createNode( "ClassMemberDeclaration",v);
-                                    }
+                            vector<Node*> v{$1};
+                            v.insert(v.end(),$2->children.begin(),$2->children.end());
+                            $$=createNode($2->val,v);
+                        }
 |   ABSTRACT classmethod {
-                                        vector<Node*> v{$1,$2};
-                                        $$=createNode( "ClassMemberDeclaration",v);
-                                    }
+                            vector<Node*> v{$1};
+                            v.insert(v.end(),$2->children.begin(),$2->children.end());
+                            $$=createNode($2->val,v);
+                        }
 |   ConstructorModifier ABSTRACT classmethod {
-                                        vector<Node*> v{$1,$2,$3};
-                                        $$=createNode( "ClassMemberDeclaration",v);
-                                    }
-|   ConstructorModifier StaticFinal0 fieldclassmethod {
-                                        vector<Node*> v{$1,$2,$3};
-                                        $$=createNode( "ClassMemberDeclaration",v);
-                                    }
+                            vector<Node*> v{$1,$2};
+                            v.insert(v.end(),$3->children.begin(),$3->children.end());
+                            $$=createNode($3->val,v);
+                        }
+|   ConstructorModifier StaticFinal0 fieldclassmethod  {
+                            vector<Node*> v{$1,$2};
+                            v.insert(v.end(),$3->children.begin(),$3->children.end());
+                            $$=createNode($3->val,v);
+                        }
 |   SEMICOLON { $$ = $1; }
 
 classmethod:
     MethodHeader MethodBody {
-                                        vector<Node*> v{$1,$2};
-                                        $$=createNode( "classmethod",v);
-                                    }
+                                vector<Node*> v{$1,$2};
+                                $$=createNode( "MethodDeclaration",v);
+                            }
 |   UnannType MethodDeclarator {
                                         vector<Node*> v{$1,$2};
-                                        $$=createNode( "classmethod",v);
+                                        $$=createNode( "MethodDeclaration",v);
                                     }
 |   UnannType MethodDeclarator Throws {
                                         vector<Node*> v{$1,$2,$3};
-                                        $$=createNode( "classmethod",v);
+                                        $$=createNode( "MethodDeclaration",v);
                                     }
-|   CLASS TypeIdentifier ClassBody {
-                                        vector<Node*> v{$1,$2,$3};
-                                        $$=createNode( "classmethod",v);
-                                    }
-|   CLASS TypeIdentifier ClassPermits ClassBody {
-                                        vector<Node*> v{$1,$2,$3,$4};
-                                        $$=createNode( "classmethod",v);
-                                    }
-|   CLASS TypeIdentifier ClassExtends ClassBody {
-                                        vector<Node*> v{$1,$2,$3,$4};
-                                        $$=createNode( "classmethod",v);
-                                    }
-|   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody {
-                                        vector<Node*> v{$1,$2,$3,$4,$5};
-                                        $$=createNode( "classmethod",v);
-                                    }
-|   CLASS TypeIdentifier TypeParameters ClassBody {
-                                        vector<Node*> v{$1,$2,$3,$4};
-                                        $$=createNode( "classmethod",v);
-                                    }
-|   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody  {
-                                        vector<Node*> v{$1,$2,$3,$4,$5};
-                                        $$=createNode( "classmethod",v);
-                                    }
-|   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody {
-                                        vector<Node*> v{$1,$2,$3,$4,$5};
-                                        $$=createNode( "classmethod",v);
-                                    }
-|   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody {
-                                        vector<Node*> v{$1,$2,$3,$4,$5,$6};
-                                        $$=createNode( "classmethod",v);
-                                    }
+|   NormalClassDeclaration0 {$$=$1;}
 
 fieldclassmethod:
     UnannType VariableDeclaratorList SEMICOLON{
-                                        vector<Node*> v{$1,$2,$3};
-                                        $$=createNode( "fieldclassmethod",v);
+                                        vector<Node*> v{$1,$2};
+                                        $$=createNode( "FieldDeclaration",v);
                                     }
 |   classmethod { $$ = $1; }
 
 FieldDeclaration:
     UnannType VariableDeclaratorList SEMICOLON {
-                                        vector<Node*> v{$1,$2,$3};
+                                        vector<Node*> v{$1,$2};
                                         $$=createNode( "FieldDeclaration",v);
                                     }
 |   FieldModifier0 UnannType VariableDeclaratorList SEMICOLON {
-                                        vector<Node*> v{$1,$2,$3,$4};
+                                        vector<Node*> v{$1,$2,$3};
                                         $$=createNode( "FieldDeclaration",v);
                                     }
 |   ConstructorModifier UnannType VariableDeclaratorList SEMICOLON {
-                                        vector<Node*> v{$1,$2,$3,$4};
+                                        vector<Node*> v{$1,$2,$3};
                                         $$=createNode( "FieldDeclaration",v);
                                     }
 |   ConstructorModifier FieldModifier UnannType VariableDeclaratorList SEMICOLON {
-                                        vector<Node*> v{$1,$2,$3,$4,$5};
+                                        vector<Node*> v{$1,$2,$3,$4};
                                         $$=createNode( "FieldDeclaration",v);
                                     }
 
@@ -422,7 +384,7 @@ FieldModifier0:
     FieldModifier { $$ = $1; }
 |   FieldModifier ConstructorModifier {
                                         vector<Node*> v{$1,$2};
-                                        $$=createNode( "FieldModifier0",v);
+                                        $$=createNode(NULL,v);
                                     }
 
 FieldModifier:
@@ -484,11 +446,11 @@ MethodModifier0:
     MethodModifier { $$ = $1; }
 |   MethodModifier ConstructorModifier {
                                         vector<Node*> v{$1,$2};
-                                        $$=createNode( "MethodModifier0",v);
+                                        $$=createNode( NULL,v);
                                     }
 |   ABSTRACT ConstructorModifier {
                                         vector<Node*> v{$1,$2};
-                                        $$=createNode( "MethodModifier0",v);
+                                        $$=createNode( NULL,v);
                                     }
 
 MethodModifier:
@@ -497,17 +459,21 @@ MethodModifier:
 |   STRICTFP { $$ = $1; }
 
 VariableDeclaratorList:
-    VariableDeclarator { $$ = $1; }
+    VariableDeclarator {
+                            vector<Node*> v{$1};
+                            $$=createNode( "VariableDeclaratorList",v);
+                        }
 |   VariableDeclaratorList COMMA VariableDeclarator {
-                                        vector<Node*> v{$1,$2,$3};
-                                        $$=createNode( "VariableDeclaratorList",v);
-                                    }
+                                                    vector<Node*> v($1->children);
+                                                    v.push_back($3);
+                                                    $$=createNode( $1->val,v);
+                                                }
 
 VariableDeclarator:
     VariableDeclaratorId  { $$ = $1; }
 |   VariableDeclaratorId ASSIGN VariableInitializer {
                                         vector<Node*> v{$1,$3};
-                                        $$=createNode( "=",v);
+                                        $$=createNode( $2->val,v);
                                     }
 
 VariableDeclaratorId:
@@ -589,35 +555,35 @@ Result:
 
 MethodDeclarator:
     IDENTIFIER BRACESTART BRACEEND {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$1};
                         $$=createNode( "MethodDeclarator",v);
                     }
 |   IDENTIFIER BRACESTART FormalParameterList BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4};
+                        vector<Node*> v{$1,$3};
                         $$=createNode( "MethodDeclarator",v);
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$4};
                         $$=createNode( "MethodDeclarator",v);
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA FormalParameterList BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                        vector<Node*> v{$1,$3,$4,$5};
                         $$=createNode( "MethodDeclarator",v);
                     }
 |   IDENTIFIER BRACESTART BRACEEND Dims {
-                        vector<Node*> v{$1,$2,$3,$4};
+                        vector<Node*> v{$1,$4};
                         $$=createNode( "MethodDeclarator",v);
                     }
 |   IDENTIFIER BRACESTART FormalParameterList BRACEEND Dims {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$5};
                         $$=createNode( "MethodDeclarator",v);
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA BRACEEND Dims {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                        vector<Node*> v{$1,$3,$4,$6};
                         $$=createNode( "MethodDeclarator",v);
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA FormalParameterList BRACEEND Dims {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$3,$4,$5,$7};
                         $$=createNode( "MethodDeclarator",v);
                     }
 
@@ -632,10 +598,14 @@ ReceiverParameter:
                     }
 
 FormalParameterList:
-    FormalParameter { $$ = $1; }
-|   FormalParameterList COMMA FormalParameter {
-                        vector<Node*> v{$1,$2,$3};
+    FormalParameter {
+                        vector<Node*> v{$1};
                         $$=createNode( "FormalParameterList",v);
+                    }
+|   FormalParameterList COMMA FormalParameter {
+                        vector<Node*> v($1->children);
+                        v.push_back($3);
+                        $$=createNode( $1->val,v);
                     }
 
 FormalParameter:
@@ -663,7 +633,7 @@ VariableModifier0:
     VariableModifier { $$ = $1; }
 |   VariableModifier0 VariableModifier {
                         vector<Node*> v{$1,$2};
-                        $$=createNode( "VariableModifier0",v);
+                        $$=createNode( NULL,v);
                     }
 
 VariableModifier:
@@ -676,10 +646,14 @@ Throws:
                     }
 
 ExceptionTypeList:
-    ExceptionType { $$ = $1; }
+    ExceptionType {
+                    vector<Node*> v{$1};
+                    $$=createNode( "ExceptionTypeList",v);
+                }
 |   ExceptionTypeList COMMA ExceptionType {
-                        vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "ExceptionTypeList",v);
+                        vector<Node*> v($1->children);
+                        v.push_back($3);
+                        $$=createNode( $1->val,v);
                     }
 
 ExceptionType:
@@ -723,35 +697,35 @@ ConstructorModifier:
 
 ConstructorDeclarator:
     SimpleTypeName BRACESTART BRACEEND  {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$1};
                         $$=createNode( "ConstructorDeclarator",v);
                     }
 |   SimpleTypeName BRACESTART ReceiverParameter COMMA BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$4};
                         $$=createNode( "ConstructorDeclarator",v);
                     }
 |   SimpleTypeName BRACESTART FormalParameterList BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4};
+                        vector<Node*> v{$1,$3};
                         $$=createNode( "ConstructorDeclarator",v);
                     }
 |   SimpleTypeName BRACESTART ReceiverParameter COMMA FormalParameterList BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                        vector<Node*> v{$1,$3,$4,$5};
                         $$=createNode( "ConstructorDeclarator",v);
                     }
 |   TypeParameters SimpleTypeName BRACESTART BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4};
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "ConstructorDeclarator",v);
                     }
 |   TypeParameters SimpleTypeName BRACESTART ReceiverParameter COMMA BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                        vector<Node*> v{$1,$2,$4,$5};
                         $$=createNode( "ConstructorDeclarator",v);
                     }
 |   TypeParameters SimpleTypeName BRACESTART FormalParameterList BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$2,$4};
                         $$=createNode( "ConstructorDeclarator",v);
                     }
 |   TypeParameters SimpleTypeName BRACESTART ReceiverParameter COMMA FormalParameterList BRACEEND {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$2,$4,$5,$6};
                         $$=createNode( "ConstructorDeclarator",v);
                     }
 
@@ -759,7 +733,7 @@ SimpleTypeName:
     TypeIdentifier  { $$ = $1; }
 
 ConstructorBody:
-    CURLYBRACESTART CURLYBRACEEND 
+    CURLYBRACESTART CURLYBRACEEND {$$=NULL;}
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
                         vector<Node*> v{$2};
                         $$=createNode( "ConstructorBody",v);
@@ -870,7 +844,7 @@ EnumBody:
                         vector<Node*> v{$2};
                         $$=createNode( "EnumBody",v);
                     }
-|   CURLYBRACESTART CURLYBRACEEND
+|   CURLYBRACESTART CURLYBRACEEND {$$=NULL;}
 |   CURLYBRACESTART COMMA EnumBodyDeclarations CURLYBRACEEND {
                         vector<Node*> v{$2,$3};
                         $$=createNode( "EnumBody",v);
@@ -897,10 +871,14 @@ EnumBody:
                     }
 
 EnumConstantList:
-    EnumConstant { $$ = $1; }
+    EnumConstant {
+                    vector<Node*> v{$1};
+                    $$=createNode( "EnumConstantList",v);
+                }
 |   EnumConstantList COMMA EnumConstant {
-                        vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "EnumConstantList",v);
+                        vector<Node*> v($1->children);
+                        v.push_back($3);
+                        $$=createNode( $1->val,v);
                     }
 
 EnumConstant:
@@ -920,11 +898,10 @@ EnumConstant:
 
 PArgumentList:
     BRACESTART BRACEEND {
-                        vector<Node*> v{$1,$2};
-                        $$=createNode( "PArgumentList",v);
+                        $$=NULL;
                     }
 |   BRACESTART ArgumentList BRACEEND {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$2};
                         $$=createNode( "PArgumentList",v);
                     }
 
@@ -954,11 +931,10 @@ RecordDeclaration:
 
 RecordHeader:
     BRACESTART BRACEEND {
-                        vector<Node*> v{$1,$2};
-                        $$=createNode( "RecordHeader",v);
+                        $$=NULL;
                     }
 |   BRACESTART RecordComponentList BRACEEND {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$2};
                         $$=createNode( "RecordHeader",v);
                     }
 
@@ -968,8 +944,9 @@ RecordComponentList:
                         $$=createNode( "RecordComponentList",v);
                     }
 |   RecordComponentList COMMA RecordComponent {
-                        vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "RecordComponentList",v);
+                        vector<Node*> v($1->children);
+                        v.push_back($3);
+                        $$=createNode( $1->val,v);
                     }
 
 RecordComponent:
@@ -978,8 +955,7 @@ RecordComponent:
                         $$=createNode( "RecordComponent",v);
                     }
 |   VariableArityRecordComponent {
-                        vector<Node*> v{$1};
-                        $$=createNode( "RecordComponent",v);
+                        $$=$1;
                     }
 
 VariableArityRecordComponent:
@@ -990,8 +966,7 @@ VariableArityRecordComponent:
 
 RecordBody:
     CURLYBRACESTART CURLYBRACEEND  {
-                        vector<Node*> v{$1,$2};
-                        $$=createNode( "RecordBody", v );
+                        $$=NULL;
                     }
 |   CURLYBRACESTART RecordBodyDeclaration0 CURLYBRACEEND {
                         vector<Node*> v{$2};
@@ -1002,7 +977,7 @@ RecordBodyDeclaration0:
     RecordBodyDeclaration { $$ = $1; }
 |   RecordBodyDeclaration0 RecordBodyDeclaration {
                         vector<Node*> v{$1,$2};
-                        $$=createNode( "RecordBodyDeclaration0", v );
+                        $$=createNode(NULL, v );
                     }
 
 RecordBodyDeclaration:
@@ -1020,17 +995,24 @@ CompactConstructorDeclaration:
                     }
 
 Block: 
-    CURLYBRACESTART CURLYBRACEEND 
+    CURLYBRACESTART CURLYBRACEEND {
+                        vector<Node*> v;
+                        $$=createNode( "Block", v );
+                    }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
                         vector<Node*> v{$2};
                         $$=createNode( "Block", v );
                     }
 
 BlockStatements: 
-    BlockStatement { $$ = $1; }
-|   BlockStatement BlockStatements {
-                        vector<Node*> v{$1,$2};
+    BlockStatement {
+                        vector<Node*> v{$1};
                         $$=createNode( "BlockStatements", v );
+                    }
+|   BlockStatements BlockStatement {
+                        vector<Node*> v($1->children);
+                        v.push_back($2);
+                        $$=createNode( $1->val,v);
                     }
 
 BlockStatement:
@@ -1043,8 +1025,7 @@ LocalClassOrInterfaceDeclaration:
 
 LocalVariableDeclarationStatement:
     LocalVariableDeclaration SEMICOLON {
-                        vector<Node*> v{$1,$2};
-                        $$=createNode( "LocalVariableDeclarationStatement", v );
+                        $$=$1;
                     }
 
 
@@ -1093,7 +1074,8 @@ StatementWithoutTrailingSubstatement:
 |   TryStatement  { $$ = $1; }
 |   YieldStatement  { $$ = $1; }
 
-EmptyStatement: SEMICOLON  { $$ = $1; }
+EmptyStatement: SEMICOLON  { vector<Node*> v;
+                        $$=createNode( "EmptyStatement", v ); }
 
 LabeledStatement:
     IDENTIFIER COLON Statement {
@@ -1109,8 +1091,7 @@ LabeledStatementNoShortIf:
 
 ExpressionStatement:
     StatementExpression SEMICOLON   {
-                        vector<Node*> v{$1,$2};
-                        $$=createNode( "ExpressionStatement", v );
+                        $$=$1;
                     }
 
 StatementExpression:
@@ -1124,35 +1105,35 @@ StatementExpression:
 
 IfThenStatement:
     IF BRACESTART Expression BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$5};
                         $$=createNode( "IfThenStatement", v );
                     }
 
 IfThenElseStatement:
     IF BRACESTART Expression BRACEEND StatementNoShortIf ELSE Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$3,$5,$6,$7};
                         $$=createNode( "IfThenElseStatement", v );
                     }
 
 IfThenElseStatementNoShortIf:
     IF BRACESTART Expression BRACEEND StatementNoShortIf ELSE StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$3,$5,$6,$7};
                         $$=createNode( "IfThenElseStatementNoShortIf", v );
                     }
 
 AssertStatement:
     ASSERT Expression SEMICOLON {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "AssertStatement", v );
                     }
 |   ASSERT Expression COLON Expression SEMICOLON {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$2,$3,$4};
                         $$=createNode( "AssertStatement", v );
                     }
 
 SwitchStatement:
     SWITCH BRACESTART Expression BRACEEND SwitchBlock {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$5};
                         $$=createNode( "SwitchStatement", v );
                     }
 
@@ -1161,7 +1142,10 @@ SwitchBlock:
                         vector<Node*> v{$2};
                         $$=createNode( "SwitchBlock", v );
                     }
-|   CURLYBRACESTART CURLYBRACEEND
+|   CURLYBRACESTART CURLYBRACEEND {
+                        vector<Node*> v;
+                        $$=createNode( "SwitchBlock", v );
+                    }
 |   CURLYBRACESTART SwitchBlockStatementGroup0 CURLYBRACEEND {
                         vector<Node*> v{$2};
                         $$=createNode( "SwitchBlock", v );
@@ -1175,29 +1159,29 @@ SwitchRule0:
     SwitchRule  { $$ = $1; }
 |   SwitchRule0 SwitchRule {
                         vector<Node*> v{$1,$2};
-                        $$=createNode( "SwitchRule0", v );
+                        $$=createNode(NULL, v );
                     }
 
 SwitchBlockStatementGroup0: 
     SwitchBlockStatementGroup  { $$ = $1; }
 |   SwitchBlockStatementGroup0 SwitchBlockStatementGroup {
                         vector<Node*> v{$1,$2};
-                        $$=createNode( "SwitchBlockStatementGroup0", v );
+                        $$=createNode(NULL, v );
                     }
 
 SwitchColonLabel0:
     SwitchLabel COLON {
                         vector<Node*> v{$1,$2};
-                        $$=createNode( "SwitchColonLabel0", v );
+                        $$=createNode(NULL, v );
                     }
 |   SwitchColonLabel0 SwitchLabel COLON {
                         vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "SwitchColonLabel0", v );
+                        $$=createNode(NULL, v );
                     }
 
 SwitchRule:
     SwitchLabel PTR Expression SEMICOLON {
-                        vector<Node*> v{$1,$2,$3,$4};
+                        vector<Node*> v{$1,$2,$3};
                         $$=createNode( "SwitchRule", v );
                     }
 |   SwitchLabel PTR Block {
@@ -1210,7 +1194,10 @@ SwitchRule:
                     }
 
 SwitchBlockStatementGroup:
-    SwitchColonLabel0 
+    SwitchColonLabel0 {
+                        vector<Node*> v{$1};
+                        $$=createNode( "SwitchBlockStatementGroup", v );
+                    }
 |   SwitchLabel COLON BlockStatements {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "SwitchBlockStatementGroup", v );
@@ -1225,7 +1212,7 @@ SwitchLabel:
                         vector<Node*> v{$1,$2};
                         $$=createNode( "SwitchLabel", v );
                     }
-|   CommaCaseConstant0 CASE CaseConstant {
+|   CASE CaseConstant CommaCaseConstant0{
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "SwitchLabel", v );
                     }
@@ -1234,11 +1221,11 @@ SwitchLabel:
 CommaCaseConstant0:
     COMMA CaseConstant {
                         vector<Node*> v{$1,$2};
-                        $$=createNode( "CommaCaseConstant0", v );
+                        $$=createNode( NULL, v );
                     }
 |   CommaCaseConstant0 COMMA CaseConstant {
                         vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "CommaCaseConstant0", v );
+                        $$=createNode( NULL, v );
                     }
 
 CaseConstant:
@@ -1246,19 +1233,19 @@ ConditionalExpression  { $$ = $1; }
 
 WhileStatement:
 WHILE BRACESTART Expression BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$5};
                         $$=createNode( "WhileStatement", v );
                     }
 
 WhileStatementNoShortIf:
 WHILE BRACESTART Expression BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$5};
                         $$=createNode( "WhileStatementNoShortIf", v );
                     }
 
 DoStatement:
 DO Statement WHILE BRACESTART Expression BRACEEND SEMICOLON {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$2,$3,$5};
                         $$=createNode( "DoStatement", v );
                     }
 
@@ -1272,57 +1259,57 @@ ForStatementNoShortIf:
 
 BasicForStatement:
     FOR BRACESTART SEMICOLON SEMICOLON BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                        vector<Node*> v{$1,$6};
                         $$=createNode( "BasicForStatement", v );
                     }
 |   FOR BRACESTART ForInit SEMICOLON SEMICOLON BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$3,$7};
                         $$=createNode( "BasicForStatement", v );
                     }
 |   FOR BRACESTART SEMICOLON Expression SEMICOLON BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$4,$7};
                         $$=createNode( "BasicForStatement", v );
                     }
 |   FOR BRACESTART ForInit SEMICOLON Expression SEMICOLON BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8};
+                        vector<Node*> v{$1,$3,$5,$8};
                         $$=createNode( "BasicForStatement", v );
                     }
 |   FOR BRACESTART SEMICOLON SEMICOLON ForUpdate BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$5,$7};
                         $$=createNode( "BasicForStatement", v );
                     }
 |   FOR BRACESTART ForInit SEMICOLON SEMICOLON ForUpdate BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8};
+                        vector<Node*> v{$1,$3,$6,$8};
                         $$=createNode( "BasicForStatement", v );
                     }
 |   FOR BRACESTART SEMICOLON Expression SEMICOLON ForUpdate BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8};
+                        vector<Node*> v{$1,$4,$6,$8};
                         $$=createNode( "BasicForStatement", v );
                     }
 |   FOR BRACESTART ForInit SEMICOLON Expression SEMICOLON ForUpdate BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8,$9};
+                        vector<Node*> v{$1,$3,$5,$7,$9};
                         $$=createNode( "BasicForStatement", v );
                     }
 
 BasicForStatementNoShortIf:
     FOR BRACESTART SEMICOLON SEMICOLON BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                        vector<Node*> v{$1,$6};
                         $$=createNode( "BasicForStatementNoShortIf", v );
                     }
 |   FOR BRACESTART ForInit  SEMICOLON SEMICOLON BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$3,$7};
                         $$=createNode( "BasicForStatementNoShortIf", v );
                     }
 |   FOR BRACESTART SEMICOLON Expression SEMICOLON BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$4,$7};
                         $$=createNode( "BasicForStatementNoShortIf", v );
                     }
 |   FOR BRACESTART ForInit  SEMICOLON Expression SEMICOLON BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8};
+                        vector<Node*> v{$1,$3,$5,$8};
                         $$=createNode( "BasicForStatementNoShortIf", v );
                     }
 |   FOR BRACESTART SEMICOLON SEMICOLON ForUpdate BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$5,$7};
                         $$=createNode( "BasicForStatementNoShortIf", v );
                     }
 |   FOR BRACESTART ForInit  SEMICOLON SEMICOLON ForUpdate BRACEEND StatementNoShortIf  {
@@ -1330,96 +1317,99 @@ BasicForStatementNoShortIf:
                         $$=createNode( "BasicForStatementNoShortIf", v );
                     }
 |   FOR BRACESTART SEMICOLON Expression SEMICOLON ForUpdate BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8};
+                        vector<Node*> v{$1,$4,$6,$8};
                         $$=createNode( "BasicForStatementNoShortIf", v );
                     }
 |   FOR BRACESTART ForInit  SEMICOLON Expression SEMICOLON ForUpdate BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8,$9};
+                        vector<Node*> v{$1,$3,$5,$7,$9};
                         $$=createNode( "BasicForStatementNoShortIf", v );
                     }
 
 
 ForInit:
-    StatementExpressionList
-|   LocalVariableDeclaration
+    StatementExpressionList {
+                        vector<Node*> v{$1};
+                        $$=createNode( "ForInit", v );
+                    }
+|   LocalVariableDeclaration {
+                        vector<Node*> v{$1};
+                        $$=createNode( "ForInit", v );
+                    }
 
 ForUpdate:
-StatementExpressionList
+StatementExpressionList {
+                        vector<Node*> v{$1};
+                        $$=createNode( "ForUpdate", v );
+                    }
 
 StatementExpressionList:
-    StatementExpression
-|   StatementExpression CommaStatExp0 {
-                        vector<Node*> v{$1,$2};
+    StatementExpression {
+                        vector<Node*> v{$1};
                         $$=createNode( "StatementExpressionList", v );
                     }
-
-CommaStatExp0: 
-    COMMA StatementExpression {
-                        vector<Node*> v{$1,$2};
-                        $$=createNode( "CommaStatExp0", v );
-                    }
-|   CommaStatExp0 COMMA StatementExpression {
-                        vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "CommaStatExp0", v );
+|   StatementExpressionList COMMA StatementExpression {
+                        vector<Node*> v($1->children);
+                        v.push_back($3);
+                        $$=createNode( $1->val,v);
                     }
 
 EnhancedForStatement:
 FOR BRACESTART LocalVariableDeclaration COLON Expression BRACEEND Statement {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                        vector<Node*> v{$1,$3,$4,$5,$7};
                         $$=createNode( "EnhancedForStatement", v );
                     }
 
 EnhancedForStatementNoShortIf:
 FOR BRACESTART LocalVariableDeclaration COLON Expression BRACEEND StatementNoShortIf {
-                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
-                        $$=createNode( "EnhancedForStatement", v );
+                        vector<Node*> v{$1,$3,$4,$5,$7};
+                        $$=createNode( "EnhancedForStatementNoShortIf", v );
                     }
 
 BreakStatement: 
     BREAK SEMICOLON  {
-                        vector<Node*> v{$1,$2};
+                        vector<Node*> v{$1};
                         $$=createNode( "BreakStatement", v );
                     }
 |   BREAK IDENTIFIER SEMICOLON  {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "BreakStatement", v );
                     }
 
 YieldStatement:
 YIELD Expression SEMICOLON {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "YieldStatement", v );
                     }
 
 ContinueStatement: 
     CONTINUE SEMICOLON {
-                        vector<Node*> v{$1,$2};
+                        vector<Node*> v{$1};
                         $$=createNode( "ContinueStatement", v );
                     }
 |   CONTINUE IDENTIFIER SEMICOLON {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "ContinueStatement", v );
                     }
 
 ReturnStatement: 
     RETURN SEMICOLON  {
-                        vector<Node*> v{$1,$2};
+                        vector<Node*> v{$1};
                         $$=createNode( "ReturnStatement", v );
                     }
 |   RETURN Expression SEMICOLON {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "ReturnStatement", v );
                     }
 
 ThrowStatement:
 THROW Expression SEMICOLON {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "ThrowStatement", v );
                     }
 
 SynchronizedStatement:
 SYNCHRONIZED BRACESTART Expression BRACEEND Block  {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$5};
                         $$=createNode( "SynchronizedStatement", v );
                     }
 
@@ -1439,15 +1429,19 @@ TryStatement:
 |   TryWithResourcesStatement 
 
 Catches:
-    CatchClause 
-|   CatchClause Catches {
-                        vector<Node*> v{$1,$2};
-                        $$=createNode( "Catches", v );
+    CatchClause {
+                    vector<Node*> v{$1};
+                    $$=createNode( "Catches", v );
+                }
+|   Catches CatchClause{
+                        vector<Node*> v($1->children);
+                        v.push_back($2);
+                        $$=createNode( $1->val,v);
                     }
 
 CatchClause:
 CATCH BRACESTART CatchFormalParameter BRACEEND Block {
-                        vector<Node*> v{$1,$2,$3,$4,$5};
+                        vector<Node*> v{$1,$3,$5};
                         $$=createNode( "CatchClause", v );
                     }
 
@@ -1472,11 +1466,11 @@ CatchType:
 BarClassType0:
     OR ClassType {
                         vector<Node*> v{$1,$2};
-                        $$=createNode( "BarClassType0", v );
+                        $$=createNode( NULL, v );
                     }
 |   BarClassType0 OR ClassType  {
                         vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "BarClassType0", v );
+                        $$=createNode( NULL, v );
                     }
 
 Finally:
@@ -1505,50 +1499,37 @@ TryWithResourcesStatement:
 
 ResourceSpecification:
     BRACESTART IDENTIFIER BRACEEND {
-                    vector<Node*> v{$1,$2,$3};
+                    vector<Node*> v{$2};
                     $$=createNode( "ResourceSpecification", v );
                 }
 |   BRACESTART IDENTIFIER SEMICOLON BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4};
+                    vector<Node*> v{$2};
                     $$=createNode( "ResourceSpecification", v );
                 }
 |   BRACESTART ResourceList BRACEEND  {
-                    vector<Node*> v{$1,$2,$3};
+                    vector<Node*> v{$2};
                     $$=createNode( "ResourceSpecification", v );
                 }
 |   BRACESTART ResourceList SEMICOLON BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4};
+                    vector<Node*> v{$2};
                     $$=createNode( "ResourceSpecification", v );
                 }
 
 ResourceList:
-    IDENTIFIER SemicolonResource0  {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "ResourceList", v );
-                }
-|   Resource
-|   Resource SemicolonResource0 {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "ResourceList", v );
-                }
-
-SemicolonResource0: 
-    SEMICOLON IDENTIFIER {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "SemicolonResource0", v );
-                }
-|   SemicolonResource0 SEMICOLON IDENTIFIER {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "SemicolonResource0", v );
-                }
-|   SEMICOLON Resource  {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "SemicolonResource0", v );
-                }
-|   SemicolonResource0 SEMICOLON Resource {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "SemicolonResource0", v );
-                } 
+    Resource {
+                vector<Node*> v{$1};
+                $$=createNode( "ResourceList", v );
+            }
+|   ResourceList SEMICOLON IDENTIFIER {
+                        vector<Node*> v($1->children);
+                        v.push_back($3);
+                        $$=createNode( $1->val,v);
+                    }
+|   ResourceList SEMICOLON Resource  {
+                        vector<Node*> v($1->children);
+                        v.push_back($3);
+                        $$=createNode( $1->val,v);
+                    }
 
 Resource:
     LocalVariableDeclaration
@@ -1603,8 +1584,7 @@ PrimaryNoNewArray:
                     $$=createNode( "PrimaryNoNewArray", v );
                 }
 |   BRACESTART Expression BRACEEND {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "PrimaryNoNewArray", v );
+                    $$=$2;
                 }
 |   ClassInstanceCreationExpression
 |   FieldAccess
@@ -1645,17 +1625,17 @@ ClassLiteral:
 SquareBracePeriod:
     SquareBrace0 PERIOD {
                     vector<Node*> v{$1,$2};
-                    $$=createNode( "SquareBracePeriod", v );
+                    $$=createNode( NULL, v );
                 }
 
 SquareBrace0:
     SQUAREBRACESTART SQUAREBRACEEND {
                     vector<Node*> v{$1,$2};
-                    $$=createNode( "SquareBrace0", v );
+                    $$=createNode(NULL, v );
                 }
 |   SquareBrace0 SQUAREBRACESTART SQUAREBRACEEND  {
                     vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "SquareBrace0", v );
+                    $$=createNode( NULL, v );
                 } 
 
 ClassInstanceCreationExpression:
@@ -1665,8 +1645,8 @@ ClassInstanceCreationExpression:
                     $$=createNode( "ClassInstanceCreationExpression", v );
                 } 
 |   ExpressionName PERIOD UnqualifiedClassInstanceCreationExpression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( ".", v );
+                    vector<Node*> v{$1,$2,$3};
+                    $$=createNode( "ClassInstanceCreationExpression", v );
                 } 
 |   Primary PERIOD UnqualifiedClassInstanceCreationExpression {
                     vector<Node*> v{$1,$2,$3};
@@ -1675,35 +1655,35 @@ ClassInstanceCreationExpression:
 
 UnqualifiedClassInstanceCreationExpression:
     NEW ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4};
+                    vector<Node*> v{$1,$2};
                     $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND ClassBody {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
+                    vector<Node*> v{$1,$2,$5};
                     $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
+                    vector<Node*> v{$1,$2,$4};
                     $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND ClassBody {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                    vector<Node*> v{$1,$2,$4,$6};
                     $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
+                    vector<Node*> v{$1,$2,$3};
                     $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND ClassBody {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                    vector<Node*> v{$1,$2,$3,$6};
                     $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                    vector<Node*> v{$1,$2,$3,$5};
                     $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND ClassBody {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                    vector<Node*> v{$1,$2,$3,$5,$7};
                     $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
                 } 
 
@@ -1723,151 +1703,144 @@ TypeArgumentsOrDiamond:
 
 ArrayAccess:
     IDENTIFIER SQUAREBRACESTART Expression SQUAREBRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4};
-                    $$=createNode( "ArrayAccess", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "[]", v );
                 } 
 |   ExpressionName SQUAREBRACESTART Expression SQUAREBRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4};
-                    $$=createNode( "ArrayAccess", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "[]", v );
                 } 
 |   PrimaryNoNewArray SQUAREBRACESTART Expression SQUAREBRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4};
-                    $$=createNode( "ArrayAccess", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "[]", v );
                 } 
 
 MethodInvocation:
     MethodNameBrace BRACEEND {
-                    vector<Node*> v{$1,$2};
+                    vector<Node*> v{$1};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   TypeName PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   IDENTIFIER PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   ExpressionName PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   Primary PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   SUPER PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   TypeName PERIOD SUPER PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   TypeName PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   IDENTIFIER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   ExpressionName PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   Primary PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   SUPER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   TypeName PERIOD SUPER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8};
-                    $$=createNode( "MethodInvocation", v );
-                } 
-|   MethodNameBrace ArgumentList BRACEEND {
                     vector<Node*> v{$1,$2,$3};
                     $$=createNode( "MethodInvocation", v );
                 } 
-|   TypeName PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
+|   IDENTIFIER PERIOD IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   ExpressionName PERIOD IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   Primary PERIOD IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   SUPER PERIOD IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   TypeName PERIOD SUPER PERIOD IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3,$4,$5};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   TypeName PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND  {
+                    vector<Node*> v{$1,$2,$3,$4};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   IDENTIFIER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3,$4};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   ExpressionName PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3,$4};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   Primary PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3,$4};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   SUPER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
+                    vector<Node*> v{$1,$2,$3,$4};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   TypeName PERIOD SUPER PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND {
                     vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   MethodNameBrace ArgumentList BRACEEND {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "MethodInvocation", v );
+                } 
+|   TypeName PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
+                    vector<Node*> v{$1,$2,$3,$5};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   IDENTIFIER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                    vector<Node*> v{$1,$2,$3,$5};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   ExpressionName PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                    vector<Node*> v{$1,$2,$3,$5};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   Primary PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                    vector<Node*> v{$1,$2,$3,$5};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   SUPER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6};
+                    vector<Node*> v{$1,$2,$3,$5};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   TypeName PERIOD SUPER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8};
+                    vector<Node*> v{$1,$2,$3,$4,$5,$7};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   TypeName PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                    vector<Node*> v{$1,$2,$3,$4,$6};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   IDENTIFIER PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                    vector<Node*> v{$1,$2,$3,$4,$6};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   ExpressionName PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                    vector<Node*> v{$1,$2,$3,$4,$6};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   Primary PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                    vector<Node*> v{$1,$2,$3,$4,$6};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   SUPER PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
+                    vector<Node*> v{$1,$2,$3,$4,$6};
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   TypeName PERIOD SUPER PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND  {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8,$9};
+                    vector<Node*> v{$1,$2,$3,$4,$5,$6,$8};
                     $$=createNode( "MethodInvocation", v );
                 } 
 
 MethodNameBrace:
     IDENTIFIER BRACESTART {
                     vector<Node*> v{$1,$2};
-                    $$=createNode( "MethodNameBrace", v );
+                    $$=createNode(NULL, v );
                 } 
 |   MethodName BRACESTART  {
                     vector<Node*> v{$1,$2};
-                    $$=createNode( "MethodNameBrace", v );
+                    $$=createNode(NULL, v );
                 } 
 
 ArgumentList:
-    Expression
-|   Expression CommaExpression0 {
-                    vector<Node*> v{$1,$2};
+    Expression {
+                    vector<Node*> v{$1};
                     $$=createNode( "ArgumentList", v );
                 } 
-    
-CommaExpression0:
-    COMMA Expression  {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "CommaExpression0", v );
-                } 
-|   CommaExpression0 COMMA Expression  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "CommaExpression0", v );
-                } 
-  
+|   ArgumentList COMMA Expression {
+                        vector<Node*> v($1->children);
+                        v.push_back($3);
+                        $$=createNode( $1->val,v);
+                    }
     
 MethodReference: 
     IDENTIFIER SCOPE IDENTIFIER {
@@ -1970,16 +1943,19 @@ ArrayCreationExpression:
                 } 
 
 DimExprs:
-    DimExpr
+    DimExpr {
+                vector<Node*> v{$1};
+                $$=createNode( "DimExprs", v );
+            } 
 |   DimExprs DimExpr {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "DimExprs", v );
-                } 
+                        vector<Node*> v($1->children);
+                        v.push_back($2);
+                        $$=createNode( $1->val,v);
+                    }
 
 DimExpr:
     SQUAREBRACESTART Expression SQUAREBRACEEND {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "DimExpr", v );
+                    $$=$2;
                 } 
 
 Expression:
@@ -1998,12 +1974,10 @@ LambdaExpression:
     
 LambdaParameters:
     BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "LambdaParameterList", v );
+                    $$=NULL;
                 } 
 |   BRACESTART LambdaParameterList BRACEEND {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "LambdaParameterList", v );
+                    $$=$2;
                 } 
     
 LambdaParameterList:
@@ -2020,22 +1994,22 @@ LambdaParameterList:
 
 CommaLambdaParameter0:
     COMMA LambdaParameter  {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "CommaLambdaParameter0", v );
+                    vector<Node*> v{$2};
+                    $$=createNode( NULL, v );
                 } 
 |   CommaLambdaParameter0 COMMA LambdaParameter  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "CommaLambdaParameter0", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode(NULL, v );
                 } 
    
 CommaIdentifier0:
     COMMA IDENTIFIER {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "CommaIdentifier0", v );
+                    vector<Node*> v{$2};
+                    $$=createNode(NULL, v );
                 } 
 |   CommaIdentifier0 COMMA IDENTIFIER {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "CommaIdentifier0", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( NULL, v );
                 } 
  
 LambdaParameter:
@@ -2062,101 +2036,13 @@ AssignmentExpression:
 |  Assignment
 
 Assignment:
-   IDENTIFIER ASSIGN Expression {
+   IDENTIFIER AssignmentOperator Expression {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "=", v );
-                } 
-|   IDENTIFIER MUL_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "*=", v );
-                } 
-|   IDENTIFIER DIV_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "/=", v );
-                } 
-|   IDENTIFIER MOD_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "%=", v );
-                } 
-|   IDENTIFIER ADD_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "+=", v );
-                } 
-|   IDENTIFIER SUB_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "-=", v );
-                } 
-|   IDENTIFIER RSHIFT_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( ">>=", v );
-                } 
-|   IDENTIFIER LSHIFT_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "<<=", v );
-                } 
-|   IDENTIFIER AND_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "&=", v );
+                    $$=createNode( $2->val, v );
                 }
-|   IDENTIFIER XOR_ASSIGN Expression {
+|  LeftHandSide AssignmentOperator Expression {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "^=", v );
-                }
-|   IDENTIFIER OR_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "|=", v );
-                }
-|   IDENTIFIER URSHIFT_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( ">>>=", v );
-                } 
-|   LeftHandSide ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "=", v );
-                } 
-|   LeftHandSide MUL_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "*=", v );
-                } 
-|   LeftHandSide DIV_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "/=", v );
-                } 
-|   LeftHandSide MOD_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "%=", v );
-                } 
-|   LeftHandSide ADD_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "+=", v );
-                } 
-|   LeftHandSide SUB_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "-=", v );
-                } 
-|   LeftHandSide RSHIFT_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( ">>=", v );
-                } 
-|   LeftHandSide LSHIFT_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "<<=", v );
-                } 
-|   IDENTIFIER AND_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "&=", v );
-                }
-|   LeftHandSide XOR_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "^=", v );
-                }
-|   LeftHandSide OR_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( "|=", v );
-                }
-|   LeftHandSide URSHIFT_ASSIGN Expression {
-                    vector<Node*> v{$1,$3};
-                    $$=createNode( ">>>=", v );
+                    $$=createNode( $2->val, v );
                 }  
 
 LeftHandSide:
@@ -2182,141 +2068,141 @@ AssignmentOperator:
 ConditionalExpression:
     ConditionalOrExpression
 |   ConditionalOrExpression QUESTION Expression COLON ConditionalExpression {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "ConditionalExpression", v );
+                    vector<Node*> v{$1,$3,$5};
+                    $$=createNode( "?:", v );
                 } 
 |   ConditionalOrExpression QUESTION Expression COLON LambdaExpression {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "ConditionalExpression", v );
+                    vector<Node*> v{$1,$3,$5};
+                    $$=createNode( "?:", v );
                 } 
 
 ConditionalOrExpression:
     ConditionalAndExpression
 |   ConditionalOrExpression OR_OR ConditionalAndExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ConditionalOrExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( $2->val, v );
                 } 
     
 ConditionalAndExpression:
     InclusiveOrExpression
 |   ConditionalAndExpression AND_AND InclusiveOrExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ConditionalAndExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( $2->val, v );
                 } 
 
 InclusiveOrExpression:
     ExclusiveOrExpression
 |   InclusiveOrExpression OR ExclusiveOrExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "InclusiveOrExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( $2->val, v );
                 } 
 
 ExclusiveOrExpression:
     AndExpression
 |   ExclusiveOrExpression XOR AndExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ExclusiveOrExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( $2->val, v );
                 } 
 
 AndExpression:
     EqualityExpression
 |   AndExpression AND EqualityExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "AndExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( $2->val, v );
                 } 
 
 EqualityExpression:
     RelationalExpression
 |   EqualityExpression EQUAL RelationalExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "EqualityExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( $2->val, v );
                 } 
 |   EqualityExpression NEQ RelationalExpression  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "EqualityExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( $2->val, v );
                 } 
 
 RelationalExpression:
     ShiftExpression
 |   RelationalExpression LESSER ShiftExpression  {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "<", v );
+                    $$=createNode($2->val, v );
                 } 
 |   RelationalExpression GREATER ShiftExpression  {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( ">", v );
+                    $$=createNode($2->val, v );
                 } 
 |   RelationalExpression LEQ ShiftExpression  {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "<=", v );
+                    $$=createNode($2->val, v );
                 } 
 |   RelationalExpression GEQ ShiftExpression  {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( ">=", v );
+                    $$=createNode($2->val, v );
                 } 
 |   InstanceofExpression
 
 InstanceofExpression:
     RelationalExpression INSTANCEOF ReferenceType  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "InstanceofExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode($2->val, v );
                 } 
 |   RelationalExpression INSTANCEOF Pattern {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "InstanceofExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode($2->val, v );
                 } 
 
 ShiftExpression:
     AdditiveExpression
 |   ShiftExpression LSHIFT AdditiveExpression {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "<<", v );
+                    $$=createNode($2->val, v );
                 } 
 |   ShiftExpression RSHIFT AdditiveExpression {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( ">>", v );
+                    $$=createNode($2->val, v );
                 } 
 |   ShiftExpression URSHIFT AdditiveExpression {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( ">>>", v );
+                    $$=createNode($2->val, v );
                 } 
 
 AdditiveExpression:
     MultiplicativeExpression
 |   AdditiveExpression ADD MultiplicativeExpression {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "+", v );
+                    $$=createNode($2->val, v );
                 } 
 |   AdditiveExpression SUB MultiplicativeExpression  {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "-", v );
+                    $$=createNode($2->val, v );
                 } 
 
 MultiplicativeExpression:
     UnaryExpression
 |   MultiplicativeExpression MUL UnaryExpression  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "MultiplicativeExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode($2->val, v );
                 } 
 |   MultiplicativeExpression DIV UnaryExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "MultiplicativeExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode($2->val, v );
                 } 
 |   MultiplicativeExpression MOD UnaryExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "MultiplicativeExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode($2->val, v );
                 } 
 
 UnaryExpression:
     PreIncrementExpression
 |   PreDecrementExpression
 |   ADD UnaryExpression {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "UnaryExpression", v );
+                    vector<Node*> v{$2};
+                    $$=createNode( $1->val, v );
                 } 
 |   SUB UnaryExpression {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "UnaryExpression", v );
+                    vector<Node*> v{$2};
+                    $$=createNode( $1->val, v );
                 } 
 |   UnaryExpressionNotPlusMinus
 
@@ -2334,8 +2220,14 @@ PreDecrementExpression:
 
 UnaryExpressionNotPlusMinus:
     PostfixExpression
-|   TILDE UnaryExpression
-|   NOT UnaryExpression
+|   TILDE UnaryExpression {
+                    vector<Node*> v{$2};
+                    $$=createNode( $1->val, v );
+                } 
+|   NOT UnaryExpression {
+                    vector<Node*> v{$2};
+                    $$=createNode( $1->val, v );
+                } 
 |   CastExpression
 |   SwitchExpression
 
@@ -2360,31 +2252,34 @@ PostDecrementExpression:
 
 CastExpression:
     BRACESTART BOOLEAN BRACEEND UnaryExpression {
-                    vector<Node*> v{$1,$2,$3,$4};
+                    vector<Node*> v{$2,$4};
                     $$=createNode( "CastExpression", v );
                 } 
 |   BRACESTART PrimitiveType BRACEEND UnaryExpression {
-                    vector<Node*> v{$1,$2,$3,$4};
+                    vector<Node*> v{$2,$4};
                     $$=createNode( "CastExpression", v );
                 } 
 |   BRACESTART ReferenceType BRACEEND UnaryExpressionNotPlusMinus {
-                    vector<Node*> v{$1,$2,$3,$4};
+                    vector<Node*> v{$2,$4};
                     $$=createNode( "CastExpression", v );
                 } 
 |   BRACESTART ReferenceType  BRACEEND LambdaExpression {
-                    vector<Node*> v{$1,$2,$3,$4};
+                    vector<Node*> v{$2,$4};
                     $$=createNode( "CastExpression", v );
                 } 
 
 SwitchExpression:
     SWITCH BRACESTART Expression BRACEEND SwitchBlock {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
+                    vector<Node*> v{$1,$3,$5};
                     $$=createNode( "SwitchExpression", v );
                 } 
     
 
 ArrayInitializer:
-    CURLYBRACESTART CURLYBRACEEND 
+    CURLYBRACESTART CURLYBRACEEND {
+                    vector<Node*> v;
+                    $$=createNode( "ArrayInitializer", v );
+                } 
 |   CURLYBRACESTART VariableInitializerList CURLYBRACEEND  {
                     vector<Node*> v{$2};
                     $$=createNode( "ArrayInitializer", v );
@@ -2399,18 +2294,15 @@ ArrayInitializer:
                 } 
     
 VariableInitializerList:
-    VariableInitializer
-|   VariableInitializer CommaVariableInitializer0 {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "VariableInitializerList", v );
-                } 
-    
-CommaVariableInitializer0:
-    COMMA VariableInitializer
-|   CommaVariableInitializer0 COMMA VariableInitializer  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "CommaVariableInitializer0", v );
-                } 
+    VariableInitializer {
+                            vector<Node*> v{$1};
+                            $$=createNode( "VariableInitializerList", v );
+                        } 
+|   VariableInitializerList COMMA VariableInitializer {
+                                                        vector<Node*> v($1->children);
+                                                        v.push_back($3);
+                                                        $$=createNode( $1->val,v);
+                                                    }
 
 PrimitiveType:
     NumericType
@@ -2454,20 +2346,12 @@ ClassType:
                 } 
 
 ArrayType:
-    BOOLEAN SQUAREBRACESTART SQUAREBRACEEND  {
-                    vector<Node*> v{$1,$2,$3};
+    BOOLEAN Dims  {
+                    vector<Node*> v{$1,$2};
                     $$=createNode( "ArrayType", v );
                 } 
-|   BOOLEAN SQUAREBRACESTART SQUAREBRACEEND Dims  {
-                    vector<Node*> v{$1,$2,$3,$4};
-                    $$=createNode( "ArrayType", v );
-                } 
-|   PrimitiveType SQUAREBRACESTART SQUAREBRACEEND   {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ArrayType", v );
-                } 
-|   PrimitiveType SQUAREBRACESTART SQUAREBRACEEND Dims  {
-                    vector<Node*> v{$1,$2,$3,$4};
+|   PrimitiveType Dims   {
+                    vector<Node*> v{$1,$2};
                     $$=createNode( "ArrayType", v );
                 } 
 |   ClassOrInterfaceType Dims  {
@@ -2477,13 +2361,15 @@ ArrayType:
 
 Dims:
     SQUAREBRACESTART SQUAREBRACEEND   {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "Dims", v );
-                } 
+                                            vector<Node*> v;
+                                            v.push_back(createNode("[]"));
+                                            $$=createNode( "Dims", v );
+                                        }
 |   SQUAREBRACESTART SQUAREBRACEEND Dims {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "Dims", v );
-                } 
+                                            vector<Node*> v($3->children);
+                                            v.push_back(createNode("[]"));
+                                            $$=createNode( "Dims", v );
+                                        }
 
 TypeParameter:
     TypeIdentifier
@@ -2506,21 +2392,16 @@ TypeArguments:
                 } 
 
 TypeArgumentList:
-    TypeArgument
-|   TypeArgument CommaTypeArgument0 {
-                    vector<Node*> v{$1,$2};
+    TypeArgument {
+                    vector<Node*> v{$1};
                     $$=createNode( "TypeArgumentList", v );
                 } 
+|   TypeArgumentList COMMA TypeArgument {
+                                            vector<Node*> v($1->children);
+                                            v.push_back($3);
+                                            $$=createNode( $1->val,v);
+                                        }
     
-CommaTypeArgument0:
-    COMMA TypeArgument {
-                    vector<Node*> v{$1,$2};
-                    $$=createNode( "CommaTypeArgument0", v );
-                } 
-|   CommaTypeArgument0 COMMA TypeArgument     {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "CommaTypeArgument0", v );
-                } 
 
 TypeArgument:
     ReferenceType
