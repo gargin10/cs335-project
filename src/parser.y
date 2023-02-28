@@ -9,7 +9,7 @@
         int yylex(void);
         int yyerror(char* s)
         {
-            printf("ERROR: %s Line Number: %d\n",s,lines);
+            printf("ERROR: %s Line Number: %d\n",s, lines);
             return 0;
         }
     }
@@ -506,8 +506,8 @@ VariableDeclaratorList:
 VariableDeclarator:
     VariableDeclaratorId  { $$ = $1; }
 |   VariableDeclaratorId ASSIGN VariableInitializer {
-                                        vector<Node*> v{$1,$2,$3};
-                                        $$=createNode( "VariableDeclarator",v);
+                                        vector<Node*> v{$1,$3};
+                                        $$=createNode( "=",v);
                                     }
 
 VariableDeclaratorId:
@@ -1665,8 +1665,8 @@ ClassInstanceCreationExpression:
                     $$=createNode( "ClassInstanceCreationExpression", v );
                 } 
 |   ExpressionName PERIOD UnqualifiedClassInstanceCreationExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ClassInstanceCreationExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ".", v );
                 } 
 |   Primary PERIOD UnqualifiedClassInstanceCreationExpression {
                     vector<Node*> v{$1,$2,$3};
@@ -2062,14 +2062,102 @@ AssignmentExpression:
 |  Assignment
 
 Assignment:
-   IDENTIFIER AssignmentOperator Expression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "Assignment", v );
+   IDENTIFIER ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "=", v );
                 } 
-|  LeftHandSide AssignmentOperator Expression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "Assignment", v );
+|   IDENTIFIER MUL_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "*=", v );
                 } 
+|   IDENTIFIER DIV_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "/=", v );
+                } 
+|   IDENTIFIER MOD_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "%=", v );
+                } 
+|   IDENTIFIER ADD_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "+=", v );
+                } 
+|   IDENTIFIER SUB_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "-=", v );
+                } 
+|   IDENTIFIER RSHIFT_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ">>=", v );
+                } 
+|   IDENTIFIER LSHIFT_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "<<=", v );
+                } 
+|   IDENTIFIER AND_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "&=", v );
+                }
+|   IDENTIFIER XOR_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "^=", v );
+                }
+|   IDENTIFIER OR_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "|=", v );
+                }
+|   IDENTIFIER URSHIFT_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ">>>=", v );
+                } 
+|   LeftHandSide ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "=", v );
+                } 
+|   LeftHandSide MUL_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "*=", v );
+                } 
+|   LeftHandSide DIV_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "/=", v );
+                } 
+|   LeftHandSide MOD_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "%=", v );
+                } 
+|   LeftHandSide ADD_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "+=", v );
+                } 
+|   LeftHandSide SUB_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "-=", v );
+                } 
+|   LeftHandSide RSHIFT_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ">>=", v );
+                } 
+|   LeftHandSide LSHIFT_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "<<=", v );
+                } 
+|   IDENTIFIER AND_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "&=", v );
+                }
+|   LeftHandSide XOR_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "^=", v );
+                }
+|   LeftHandSide OR_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "|=", v );
+                }
+|   LeftHandSide URSHIFT_ASSIGN Expression {
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ">>>=", v );
+                }  
 
 LeftHandSide:
    ExpressionName
@@ -2151,20 +2239,20 @@ EqualityExpression:
 RelationalExpression:
     ShiftExpression
 |   RelationalExpression LESSER ShiftExpression  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "RelationalExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "<", v );
                 } 
 |   RelationalExpression GREATER ShiftExpression  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "RelationalExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ">", v );
                 } 
 |   RelationalExpression LEQ ShiftExpression  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "RelationalExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "<=", v );
                 } 
 |   RelationalExpression GEQ ShiftExpression  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "RelationalExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ">=", v );
                 } 
 |   InstanceofExpression
 
@@ -2181,27 +2269,27 @@ InstanceofExpression:
 ShiftExpression:
     AdditiveExpression
 |   ShiftExpression LSHIFT AdditiveExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ShiftExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "<<", v );
                 } 
 |   ShiftExpression RSHIFT AdditiveExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ShiftExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ">>", v );
                 } 
 |   ShiftExpression URSHIFT AdditiveExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ShiftExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( ">>>", v );
                 } 
 
 AdditiveExpression:
     MultiplicativeExpression
 |   AdditiveExpression ADD MultiplicativeExpression {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "AdditiveExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "+", v );
                 } 
 |   AdditiveExpression SUB MultiplicativeExpression  {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "AdditiveExpression", v );
+                    vector<Node*> v{$1,$3};
+                    $$=createNode( "-", v );
                 } 
 
 MultiplicativeExpression:

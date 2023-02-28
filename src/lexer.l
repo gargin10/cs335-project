@@ -249,7 +249,7 @@ TextblockWhitespace [ \t\f]
 }
 
 . {
-    printf("Error: Illegal token Line number:%d\n",yylineno);
+    printf("Error: Illegal token Line number:%d\n", yylineno);
 }
 %%
 
