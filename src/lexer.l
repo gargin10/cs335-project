@@ -64,7 +64,7 @@ TextblockWhitespace [ \t\f]
 
 %%
 
-"_"             {yylval.node = createNode(strdup(yytext)); return(UNDERSCORE); }
+"_"             {yylval.node = createNode("UNDERSCORE"); return(UNDERSCORE); }
 "abstract"      {yylval.node = createNode(strdup(yytext)); return(ABSTRACT); }
 "continue"      {yylval.node = createNode(strdup(yytext)); return(CONTINUE); }
 "while"         {yylval.node = createNode(strdup(yytext)); return(WHILE); }
@@ -236,7 +236,7 @@ TextblockWhitespace [ \t\f]
 [\n]    {lineno++;}
 
 "\""{StringCharacter}*"\"" {
-    yylval.node = createNode( "LITERAL" ); 
+    yylval.node = createNode( strdup(yytext),"LITERAL" ); 
     return (LITERAL);
 }
 
