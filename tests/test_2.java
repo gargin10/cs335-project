@@ -1,22 +1,31 @@
-public class Calculator {
-    private static int matrixA[][] = {{1, 2, 3}, {4, 5, 6}};
-    private static int matrixB[][] = {{7, 8}, {9, 10}, {11, 12}};
+public class LambdaTest {
 
     public static void main(String[] args) {
-        int sum = 0;
-        for (int i = 0; i < matrixA.length; i++) {
-            for (int j = 0; j < matrixB[0].length; j++) {
-                for (int k = 0; k < matrixB.length; k++) {
-                    sum += matrixA[i][k] * matrixB[k][j];
-                }
-            }
-        }
-        System.out.println("The product of the two matrices is:");
-        for (int i = 0; i < matrixA.length; i++) {
-            for (int j = 0; j < matrixB[0].length; j++) {
-                System.out.print(sum + " ");
-            }
-            System.out.println();
-        }
+        
+        List<String> words = Arrays.asList("apple", "banana", "cherry", "date", "elderberry");
+        
+        // filter words that start with "a"
+        List<String> aWords = words.stream()
+                                   .filter(word -> word.startsWith("a"))
+                                   .toList();
+        System.out.println(aWords); // prints ["apple"]
+        
+        // transform words to uppercase
+        List<String> upperCaseWords = words.stream()
+                                           .map(String::toUpperCase)
+                                           .toList();
+        System.out.println(upperCaseWords); // prints ["APPLE", "BANANA", "CHERRY", "DATE", "ELDERBERRY"]
+        
+        // sort words by length
+        List<String> sortedWords = words.stream()
+                                        .sorted((s1, s2) -> s1.length() - s2.length())
+                                        .toList();
+        System.out.println(sortedWords); // prints ["date", "apple", "banana", "cherry", "elderberry"]
+        
+        // count words that end with "y"
+        long yWordsCount = words.stream()
+                                .filter(word -> word.endsWith("y"))
+                                .count();
+        System.out.println(yWordsCount); // prints 2
     }
 }
