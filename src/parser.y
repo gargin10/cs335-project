@@ -57,43 +57,38 @@
         temp->val=value;
         return temp;
     }
+    void str_replace(char *target, const char *needle, const char *replacement)
+    {
+        char buffer[1024] = { 0 };
+        char *insert_point = &buffer[0];
+        const char *tmp = target;
+        size_t needle_len = strlen(needle);
+        size_t repl_len = strlen(replacement);
+        while (1) {
+            const char *p = strstr(tmp, needle);
+            if (p == NULL) {
+                strcpy(insert_point, tmp);
+                break;
+            }
+            memcpy(insert_point, tmp, p - tmp);
+            insert_point += p - tmp;
+            memcpy(insert_point, replacement, repl_len);
+            insert_point += repl_len;
+            tmp = p + needle_len;
+        }
+        strcpy(target, buffer);
+    }
     Node* createNode( char* lexeme, char* token)
     {
-        Node* temp= new Node();
-        char* lexemetemp=new char[1];
-        int f=0;
-        for(int i=0;i<strlen(lexeme);i++)
-        {
-            if(lexeme[i]=='\"')
-            {
-                int len=strlen(lexemetemp);
-                char* temp = new char[len+3];
-                strcpy(temp,lexemetemp);
-                temp[len]='\\';
-                temp[len+1]='\"';
-                temp[len+2]='\0';
-                lexemetemp=temp;
-                f=1;
-            }
-            else    
-            {
-                int len=strlen(lexemetemp);
-                char* temp = new char[len+2];
-                strcpy(temp,lexemetemp);
-                temp[len]=lexeme[i];
-                temp[len+1]='\0';
-                lexemetemp=temp;
-            }
-        }
-        if(f)
-        lexeme=lexemetemp;
+        Node* temp1= new Node();
+        str_replace(lexeme,"\"","\\\"");
         char* ans=new char[strlen(lexeme)+strlen(token)+3];
         strcpy(ans,token);
         strcat(ans,"(");
         strcat(ans,lexeme);
         strcat(ans,")");
-        temp->val=ans;
-        return temp;
+        temp1->val=ans;
+        return temp1;
     }
     int buildTree(Node* node, int parentno, int co) 
     {
@@ -2489,9 +2484,71 @@ TypeIdentifier:
 %%
 
 int main(int argc, char *argv[]) {
+    int input_file = 0, output_file = 0;
+    char *input_file_name, *output_file_name;
+    if( argc == 1 ){
+        printf("ERROR: No input file/options specified.\n\tUse --help to get more info\n");
+        return -1;
+    }
+    for( int i = 1 ; i < argc ; i++ ){
+        if( input_file == 1 && argv[i][0] != '-' ){
+            printf("ERROR: More than 1 input file not allowed.\n");
+            return -1;
+        } 
+        if( argv[i][0] != '-' ){
+            input_file = 1;
+            input_file_name = argv[i];
+            continue;
+        }
+        if( !strcmp(argv[i], "--help") ) {
+            if( argc > i+1 ){
+                printf("ERROR: No manual entry for ./myASTGenerator%s\n", argv[i+1]);
+                return -1;
+            }
+            printf("usage: ./myASTGenerator [options] file\n");
+            printf("Options:\n");
+            printf("--help                To print this message.\n"); 
+            printf("--input=<file name>   You can use it to specify the input file name.\n");
+            printf("                      By default, the name of the input file can be specified directly.\n");
+            printf("--output=<file name>  You can use it to specify the output file name.\n");
+            printf("                      By default, the name of the output file is 'output.dot'\n");
+            printf("Do not use --input=<file name> flag if you specify the input file name directly.\n");
+            return 0;
+        }
+        char temp = argv[i][7];
+        argv[i][7] = '\0';
+        if( !strcmp( argv[i], "--input") ){
+            if( input_file == 1 ){
+                printf("ERROR: More than 1 input file not allowed.\n");
+                return -1;
+            }
+            input_file = 1;
+            input_file_name = argv[i]+8;
+            continue;
+        }
+        argv[i][7] = temp;
+        temp = argv[i][8];
+        argv[i][8] = '\0';
+        if( !strcmp( argv[i], "--output") ){
+            if( output_file == 1 ){
+                printf("ERROR: More than 1 output file not allowed.\n");
+                return -1;
+            }
+            output_file_name = argv[i]+9;
+            output_file = 1;
+            continue;
+        }
+        printf("ERROR: Unknown option.\n");
+        return -1;
+    }
+    if( input_file == 0 ){
+        printf("ERROR: No Input file Specified");
+        return -1;
+    }
+    if( output_file == 0 ) output_file_name = "output.dot";
     // yydebug = 1;
-    yyin = fopen(argv[1],"r");
-    dotfile=fopen("output.txt","w");
+    yyin = fopen(input_file_name,"r");
+    dotfile = fopen(output_file_name,"w");
     fprintf(dotfile,"digraph {\n");
     yyparse();
     buildTree(root,-1,0);
