@@ -2508,11 +2508,12 @@ int main(int argc, char *argv[]) {
             printf("usage: ./myASTGenerator [options] file\n");
             printf("Options:\n");
             printf("--help                To print this message.\n"); 
-            printf("--input=<file name>   You can use it to specify the input file name.\n");
+            printf("--input=<file name>   To specify the input file name.\n");
             printf("                      By default, the name of the input file can be specified directly.\n");
-            printf("--output=<file name>  You can use it to specify the output file name.\n");
+            printf("--output=<file name>  To specify the output file name.\n");
             printf("                      By default, the name of the output file is 'output.dot'\n");
-            printf("Do not use --input=<file name> flag if you specify the input file name directly.\n");
+            printf("Do not use --input=<file name> flag if you have specified the input file name directly.\n");
+            printf("--verbose             It outputs the stack trace.\n"); 
             return 0;
         }
         char temp = argv[i][7];
@@ -2551,7 +2552,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     if( output_file == 0 ) output_file_name = "output.dot";
-    // yydebug = 1;
     yyin = fopen(input_file_name,"r");
     dotfile = fopen(output_file_name,"w");
     fprintf(dotfile,"digraph {\n");
