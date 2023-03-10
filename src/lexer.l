@@ -138,7 +138,11 @@ TextblockWhitespace [ \t\f]
 "/*" {
         int c;
         for ( ; ; ){
-            while ( (c = yyinput()) != '*' && c != EOF ) ;
+            while ( (c = yyinput()) != '*' && c != EOF ) 
+            {
+                if(c == '\n')
+                    lineno++;
+            };
             if ( c == '*' ){
                 while( (c = yyinput()) == '*' ) ;
                 if ( c == '/' ) break;
@@ -154,7 +158,10 @@ TextblockWhitespace [ \t\f]
     int c;
     for( ; ; ){
         while( ( c = yyinput() ) != '\n' && c != EOF ) ;
-        if( c == '\n' ) break;
+        if( c == '\n' ) {
+            lineno++;
+            break;
+        }
         if( c == EOF )
          printf("EOF between Comments");
     }
