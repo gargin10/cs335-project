@@ -167,7 +167,8 @@
 
 %type<node>  CompilationUnit OrdinaryCompilationUnit TopLevelClassOrInterfaceDeclaration
 %type<node> UnannClassOrInterfaceType FieldModifier MethodModifier FieldAccess ArrayAccess ClassOrInterfaceType UnqualifiedMethodIdentifier
-%type<node> VariableAccess Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace Ptn
+%type<node> VariableAccess Wildcard ContextualExceptYield ContextualExceptPRS MethodNameBrace
+%type<node> ImportDeclaration SingleTypeImportDeclaration TypeImportOnDemandDeclaration SingleStaticImportDeclaration StaticImportOnDemandDeclaration PackageOrTypeName
 
 %%
 
@@ -176,10 +177,55 @@ CompilationUnit: {  root=$$; }
 
 OrdinaryCompilationUnit: 
     TopLevelClassOrInterfaceDeclaration {  $$ = $1; }
-|   TopLevelClassOrInterfaceDeclaration OrdinaryCompilationUnit {
+    |   TopLevelClassOrInterfaceDeclaration OrdinaryCompilationUnit {
                                                                     vector<Node*> v{$1,$2};
                                                                     $$=createNode("OrdinaryCompilationUnit",v);
                                                                 }
+
+|   TopLevelClassOrInterfaceDeclaration ImportDeclaration {
+                                                                    vector<Node*> v{$1,$2};
+                                                                    $$=createNode("OrdinaryCompilationUnit",v);
+                                                                }
+
+|   TopLevelClassOrInterfaceDeclaration ImportDeclaration OrdinaryCompilationUnit {
+                                                                    vector<Node*> v{$1,$2,$3};
+                                                                    $$=createNode("OrdinaryCompilationUnit",v);
+                                                                }
+
+ImportDeclaration:
+    SingleTypeImportDeclaration { $$=$1;}
+|   TypeImportOnDemandDeclaration { $$=$1;}
+|   SingleStaticImportDeclaration { $$=$1;}
+|   StaticImportOnDemandDeclaration { $$=$1;}
+
+SingleTypeImportDeclaration:
+    IMPORT TypeName SEMICOLON {
+                                    vector<Node*> v{$1,$2};
+                                    $$=createNode("SingleTypeImportDeclaration",v);
+                                }
+
+TypeImportOnDemandDeclaration:
+    IMPORT IDENTIFIER PERIOD MUL SEMICOLON {
+                                    vector<Node*> v{$1,$2,$3,$4};
+                                    $$=createNode("TypeImportOnDemandDeclaration",v);
+                                }
+|   IMPORT PackageOrTypeName PERIOD MUL SEMICOLON {
+                                    vector<Node*> v{$1,$2,$3,$4};
+                                    $$=createNode("TypeImportOnDemandDeclaration",v);
+                                }
+
+
+SingleStaticImportDeclaration:
+    IMPORT STATIC TypeName PERIOD IDENTIFIER SEMICOLON {
+                                    vector<Node*> v{$1,$2,$3,$4,$5};
+                                    $$=createNode("SingleStaticImportDeclaration",v);
+                                }
+
+StaticImportOnDemandDeclaration:
+    IMPORT STATIC TypeName PERIOD MUL SEMICOLON {
+                                    vector<Node*> v{$1,$2,$3,$4,$5};
+                                    $$=createNode("StaticImportOnDemandDeclaration",v);
+                                }
 
 TopLevelClassOrInterfaceDeclaration:
     ClassDeclaration {  $$=$1; }
@@ -2011,6 +2057,9 @@ LambdaParameters:
                     vector<Node*> v;
                     $$=createNode( "LambdaParameters", v );
                 } 
+|   BRACESTART IDENTIFIER BRACEEND {
+                    $$=$2;
+                } 
 |   BRACESTART LambdaParameterList BRACEEND {
                     $$=$2;
                 } 
@@ -2021,7 +2070,6 @@ LambdaParameterList:
                     vector<Node*> v{$1,$2};
                     $$=createNode( "LambdaParameterList", v );
                 } 
-|   IDENTIFIER
 |   IDENTIFIER CommaIdentifier0 {
                     vector<Node*> v{$1,$2};
                     $$=createNode( "LambdaParameterList", v );
@@ -2461,14 +2509,21 @@ WildcardBounds:
 
 TypeName:
     TypeIdentifier
-|   Ptn PERIOD TypeIdentifier {
+|   IDENTIFIER PERIOD TypeIdentifier {
+                    vector<Node*> v{$1,$2,$3};
+                    $$=createNode( "TypeName", v );
+                } 
+|   PackageOrTypeName PERIOD TypeIdentifier {
                     vector<Node*> v{$1,$2,$3};
                     $$=createNode( "TypeName", v );
                 } 
 
-Ptn:
-    IDENTIFIER {$$=$1;}
-|   Ptn PERIOD IDENTIFIER {
+PackageOrTypeName:
+    IDENTIFIER PERIOD IDENTIFIER {
+                    vector<Node*> v{$1,$2,$3};
+                    $$=createNode( "TypeName", v );
+                } 
+|   PackageOrTypeName PERIOD IDENTIFIER {
                     vector<Node*> v{$1,$2,$3};
                     $$=createNode( "TypeName", v );
                 } 
