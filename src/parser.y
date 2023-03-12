@@ -73,7 +73,7 @@
 %type<node> PreIncrementExpression PreDecrementExpression UnaryExpressionNotPlusMinus PostfixExpression PostIncrementExpression PostDecrementExpression CastExpression SwitchExpression
 %type<node> ArrayInitializer VariableInitializerList PrimitiveType NumericType IntegralType FloatingPointType
 %type<node> ReferenceType  ClassType ArrayType Dims TypeParameter TypeBound
-%type<node> TypeArguments TypeArgumentList TypeArgument WildcardBounds
+%type<node> TypeArguments TypeArgumentList TypeArgument WildcardBounds TopLevelClassOrInterfaceDeclaration0 ImportDeclaration0
 %type<node> MethodName LeftHandSide SquareBracePeriod StaticFinal0 fieldclassmethod
 %type<node> PrimaryNoNewArray ClassLiteral SquareBrace0 ClassInstanceCreationExpression UnqualifiedClassInstanceCreationExpression 
 
@@ -88,21 +88,40 @@ CompilationUnit: {  root=$$; }
 |   OrdinaryCompilationUnit {  root=$$; }
 
 OrdinaryCompilationUnit: 
-    TopLevelClassOrInterfaceDeclaration {  $$ = $1; }
-    |   TopLevelClassOrInterfaceDeclaration OrdinaryCompilationUnit {
-                                                                    vector<Node*> v{$1,$2};
-                                                                    $$=createNode("OrdinaryCompilationUnit",v);
-                                                                }
+    TopLevelClassOrInterfaceDeclaration0 {
+                                            vector<Node*> v{$1};
+                                            $$=createNode("OrdinaryCompilationUnit",v);
+                                        }
+|   ImportDeclaration0 {
+                            vector<Node*> v{$1};
+                            $$=createNode("OrdinaryCompilationUnit",v);
+                        }
+|   ImportDeclaration0 TopLevelClassOrInterfaceDeclaration0  {
+                                                                vector<Node*> v{$1,$2};
+                                                                $$=createNode("OrdinaryCompilationUnit",v);
+                                                            }
 
-|   TopLevelClassOrInterfaceDeclaration ImportDeclaration {
-                                                                    vector<Node*> v{$1,$2};
-                                                                    $$=createNode("OrdinaryCompilationUnit",v);
-                                                                }
+ImportDeclaration0:
+    ImportDeclaration {
+                        vector<Node*> v{$1};
+                        $$=createNode("ImportDeclaration",v);
+                    }
+|   ImportDeclaration0 ImportDeclaration {
+                                            vector<Node*> v($1->children);
+                                            v.push_back($2);
+                                            $$=createNode( $1->val,v);
+                                        }
 
-|   TopLevelClassOrInterfaceDeclaration ImportDeclaration OrdinaryCompilationUnit {
-                                                                    vector<Node*> v{$1,$2,$3};
-                                                                    $$=createNode("OrdinaryCompilationUnit",v);
-                                                                }
+TopLevelClassOrInterfaceDeclaration0:
+    TopLevelClassOrInterfaceDeclaration {
+                        vector<Node*> v{$1};
+                        $$=createNode("TopLevelClassOrInterfaceDeclaration",v);
+                    }
+|   TopLevelClassOrInterfaceDeclaration0 TopLevelClassOrInterfaceDeclaration {
+                           vector<Node*> v($1->children);
+                            v.push_back($2);
+                            $$=createNode( $1->val,v);
+                        }
 
 ImportDeclaration:
     SingleTypeImportDeclaration { $$=$1;}
