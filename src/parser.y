@@ -5,6 +5,7 @@
     
     extern int lineno;
     FILE* dotfile;
+    FILE* symbolfile;
     extern FILE * yyin;
     extern "C" {
         int yyparse();
@@ -17,14 +18,8 @@
     }
     
     Node* root;
+    SymbolTable* curr;
     using namespace std;
-    char* concat(char* s1, char* s2)
-    {
-        char* ans=new char[strlen(s1)+strlen(s2)+1];
-        strcpy(ans,s1);
-        strcat(ans,s2);
-        return ans;
-    }
     
 %}
 %code requires {
@@ -84,8 +79,8 @@
 
 %%
 
-CompilationUnit: {  root=$$; }
-|   OrdinaryCompilationUnit {  root=$$; }
+CompilationUnit: {  $$->symbol_table = new SymbolTable(NULL); root=$$; curr=root->symbol_table;}
+|   OrdinaryCompilationUnit {  $$=$1; $$->symbol_table = new SymbolTable(NULL); root=$$; curr=root->symbol_table;}
 
 OrdinaryCompilationUnit: 
     TopLevelClassOrInterfaceDeclaration0 {
@@ -201,34 +196,42 @@ NormalClassDeclaration0:
     CLASS TypeIdentifier ClassBody {
                                         vector<Node*> v{$1,$2,$3};
                                         $$=createNode(NULL,v);
+                                        $$->addEntry($2->entries,"class");
                                     }
 |   CLASS TypeIdentifier ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
                                                 $$=createNode( NULL,v);
+                                                $$->addEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier ClassExtends ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
                                                 $$=createNode(NULL,v);
+                                                $$->addEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody {
                                                vector<Node*> v{$1,$2,$3,$4,$5};
                                                 $$=createNode( NULL,v);
+                                                $$->addEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
                                                 $$=createNode( NULL,v);
+                                                $$->addEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4, $5};
                                                 $$=createNode( NULL,v);
+                                                $$->addEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4, $5};
                                                 $$=createNode( NULL,v);
+                                                $$->addEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4,$5, $6};
                                                 $$=createNode( NULL,v);
+                                                $$->addEntry($2->entries,"class");
                                             }
 
 ClassModifier0:
@@ -294,10 +297,13 @@ ClassBody:
     CURLYBRACESTART CURLYBRACEEND {
                            vector<Node*> v;
                             $$=createNode( "ClassBody",v);
+                            $$->symbol_table = new SymbolTable();
                         }
 |   CURLYBRACESTART ClassBodyDeclaration0 CURLYBRACEEND {
                            vector<Node*> v{$2};
                             $$=createNode( "ClassBody",v);
+                            $$->symbol_table = new SymbolTable();
+                            $$->symbol_table->insert($2->entries);
                         }
 
 ClassBodyDeclaration0: 
@@ -2472,7 +2478,12 @@ UnqualifiedMethodIdentifier:
     ContextualExceptYield
 
 TypeIdentifier:
-    IDENTIFIER | ContextualExceptPRS
+    IDENTIFIER {
+        $$=$1; 
+        SymbolEntry* entry = new SymbolEntry($$->token, $$->lexeme);
+        $$->entries.push_back(entry);
+    }
+|    ContextualExceptPRS
 
 %%
 
@@ -2546,11 +2557,13 @@ int main(int argc, char *argv[]) {
     }
     if( output_file == 0 ) output_file_name = "output.dot";
     yyin = fopen(input_file_name,"r");
-    dotfile = fopen(output_file_name,"w");
-    fprintf(dotfile,"digraph {\n");
+    // dotfile = fopen(output_file_name,"w");
+    // fprintf(dotfile,"digraph {\n");
     yyparse();
-    buildTree(dotfile,root,-1,0);
-    fprintf(dotfile," }\n");
+    ofstream ofs(output_file_name);
+    displaySymbolTable(ofs,root);
+    // buildTree(dotfile,root,-1,0);
+    // fprintf(dotfile," }\n");
     fclose(yyin);
     return 0;
 }

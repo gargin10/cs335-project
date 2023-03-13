@@ -35,10 +35,9 @@ public:
         this->offset=0;
     }
 
-    void display()
+    void display(std::ofstream& ofs)
     {
-        cout<< this->lexeme<<"\t"<<this->token <<"\t"<< this->type << "\t"
-            << this->line_number << "\t" << this->size <<"\t" << this->offset;
+        ofs<< this->lexeme<<"\t"<<this->token <<"\t"<< this->type << "\t"
+                    << this->line_number << "\t" << this->size <<"\t" << this->offset<<"\n";    
     }
-
 };

@@ -13,6 +13,10 @@ public:
     map<string, SymbolEntry*> entries;
     SymbolTable* parent;
 
+    SymbolTable()
+    {
+
+    }
     SymbolTable(SymbolTable* parent)
     {
         this->parent=parent;
@@ -23,6 +27,13 @@ public:
         entries[lexeme]=entry;
     }
 
+    void insert(vector<SymbolEntry*> entries)
+    {
+        for(auto ele:entries)
+        {
+            this->entries[ele->lexeme]=ele;
+        }
+    }
     SymbolEntry* lookup(string lexeme)
     {
         SymbolTable* temp= this;
@@ -38,15 +49,15 @@ public:
         return NULL;
     }
 
-    void display()
+    void display(std::ofstream& ofs)
     {
         for(auto ele: entries)
         {
-            ele.second->display();
-            cout<<"\n";
+            ele.second->display(ofs);
+            ofs<<"\n";
         }
-        cout<<"\n";
-        if(parent)
-            parent->display();
+        ofs<<"\n";
+        // if(parent)
+        //     parent->display(outputfile);
     }
 };

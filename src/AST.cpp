@@ -1,10 +1,28 @@
 #include <bits/stdc++.h>
+#include "SymbolTable.cpp"
+#include "SymbolEntry.cpp"
+
 using namespace std;
 
 struct Node{
     char* val;
+    string lexeme;
+    string token;
+    SymbolTable* symbol_table;
+    vector<SymbolEntry*> entries;
     vector<Node*> children;
+
+    void addEntry(vector<SymbolEntry*> entries, string type)
+    {
+        for(auto ele: entries)
+        {
+            ele->type=type;
+            this->entries.push_back(ele);
+        }
+    }
 };
+
+
 
 void str_replace(char *target, const char *needle, const char *replacement)
 {
@@ -32,6 +50,8 @@ Node* createNode(char* value, vector<Node*> children)
 {
     Node* temp= new Node();
     temp->val=value;
+    temp->lexeme="";
+    temp->token="";
     vector<Node*> v;
     for(int i=0;i<children.size();i++)
     {
@@ -51,6 +71,8 @@ Node* createNode(char* value)
 {
     Node* temp= new Node();
     temp->val=value;
+    temp->lexeme=value;
+    temp->token=value;
     return temp;
 }
 
@@ -64,6 +86,8 @@ Node* createNode( char* lexeme, char* token)
     strcat(ans,lexeme);
     strcat(ans,")");
     temp1->val=ans;
+    temp1->lexeme=lexeme;
+    temp1->token=token;
     return temp1;
 }
 int buildTree(FILE* dotfile, Node* node, int parentno, int co) 
@@ -83,4 +107,26 @@ int buildTree(FILE* dotfile, Node* node, int parentno, int co)
         co=buildTree(dotfile,children[i],nodeno,co);
     }
     return co;
+}
+
+void displaySymbolTable(std::ofstream& ofs, Node* node)
+{
+    if(node==NULL)
+    return;
+
+    if(node->symbol_table)
+    {    
+        node->symbol_table->display(ofs);
+    }
+    for(auto ele: node->entries)
+    {
+        ele->display(ofs);
+    }
+    int n=node->children.size();
+    vector<Node*> children=node->children;
+    for(int i=0;i<n;i++)
+    {
+        displaySymbolTable(ofs,children[i]);
+    }
+    return;
 }
