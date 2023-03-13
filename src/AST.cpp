@@ -20,6 +20,25 @@ struct Node{
             this->entries.push_back(ele);
         }
     }
+
+    void addEntries(vector<Node*> v)
+    {
+        for(auto node: v)
+        {
+            for(auto ele: node->entries)
+            {
+                if(ele->type !="temp")
+                this->entries.push_back(ele);
+            }
+        }
+    }
+
+    void moveEntries()
+    {
+        this->symbol_table->insert(this->entries);
+        vector<SymbolEntry*> temp;
+        this->entries=temp;
+    }
 };
 
 
@@ -65,6 +84,7 @@ Node* createNode(char* value, vector<Node*> children)
         }
     }
     temp->children=v;
+    temp->addEntries(v);
     return temp;
 }
 Node* createNode(char* value)
@@ -118,10 +138,10 @@ void displaySymbolTable(std::ofstream& ofs, Node* node)
     {    
         node->symbol_table->display(ofs);
     }
-    for(auto ele: node->entries)
-    {
-        ele->display(ofs);
-    }
+    // for(auto ele: node->entries)
+    // {
+    //     ele->display(ofs);
+    // }
     int n=node->children.size();
     vector<Node*> children=node->children;
     for(int i=0;i<n;i++)

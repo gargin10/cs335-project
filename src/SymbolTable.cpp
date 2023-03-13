@@ -17,11 +17,6 @@ public:
     {
 
     }
-    SymbolTable(SymbolTable* parent)
-    {
-        this->parent=parent;
-    }
-
     void insert(string lexeme, SymbolEntry* entry)
     {
         entries[lexeme]=entry;
@@ -59,5 +54,10 @@ public:
         ofs<<"\n";
         // if(parent)
         //     parent->display(outputfile);
+    }
+
+    void setChild(SymbolTable* child)
+    {
+        child->parent=this;
     }
 };

@@ -5,7 +5,6 @@
     
     extern int lineno;
     FILE* dotfile;
-    FILE* symbolfile;
     extern FILE * yyin;
     extern "C" {
         int yyparse();
@@ -79,8 +78,19 @@
 
 %%
 
-CompilationUnit: {  $$->symbol_table = new SymbolTable(NULL); root=$$; curr=root->symbol_table;}
-|   OrdinaryCompilationUnit {  $$=$1; $$->symbol_table = new SymbolTable(NULL); root=$$; curr=root->symbol_table;}
+CompilationUnit: {  
+                    $$->symbol_table = new SymbolTable(); 
+                    $$->moveEntries();
+                    root=$$;
+                    curr=root->symbol_table;
+                }
+|   OrdinaryCompilationUnit {  
+                                $$=$1; 
+                                $$->symbol_table = new SymbolTable();
+                                $$->moveEntries(); 
+                                root=$$; 
+                                curr=root->symbol_table;
+                            }
 
 OrdinaryCompilationUnit: 
     TopLevelClassOrInterfaceDeclaration0 {
@@ -2481,6 +2491,7 @@ TypeIdentifier:
     IDENTIFIER {
         $$=$1; 
         SymbolEntry* entry = new SymbolEntry($$->token, $$->lexeme);
+        entry->type="temp";
         $$->entries.push_back(entry);
     }
 |    ContextualExceptPRS
@@ -2557,13 +2568,13 @@ int main(int argc, char *argv[]) {
     }
     if( output_file == 0 ) output_file_name = "output.dot";
     yyin = fopen(input_file_name,"r");
-    // dotfile = fopen(output_file_name,"w");
-    // fprintf(dotfile,"digraph {\n");
+    dotfile = fopen(output_file_name,"w");
+    fprintf(dotfile,"digraph {\n");
     yyparse();
-    ofstream ofs(output_file_name);
+    ofstream ofs("symbol_table.txt");
     displaySymbolTable(ofs,root);
-    // buildTree(dotfile,root,-1,0);
-    // fprintf(dotfile," }\n");
+    buildTree(dotfile,root,-1,0);
+    fprintf(dotfile," }\n");
     fclose(yyin);
     return 0;
 }
