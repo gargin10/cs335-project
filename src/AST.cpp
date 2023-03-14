@@ -8,36 +8,81 @@ struct Node{
     char* val;
     string lexeme;
     string token;
+
+    string tempval;
+    SymbolEntry* tempentry;
+    vector<string> tempargs;
+
     SymbolTable* symbol_table;
     vector<SymbolEntry*> entries;
     vector<Node*> children;
 
-    void addEntry(vector<SymbolEntry*> entries, string type)
+    void addTypeEntry(vector<SymbolEntry*> entries, string type)
     {
         for(auto ele: entries)
         {
             ele->type=type;
+            ele->temp=false;
             this->entries.push_back(ele);
         }
     }
+    void addReturntypeEntry(vector<SymbolEntry*> entries, string returntype)
+    {
+        for(auto ele: entries)
+        {
+            ele->type=returntype;
+            ele->temp=false;
+            this->entries.push_back(ele);
+        }
+    }
+    void addReturntypeEntry(SymbolEntry* entry, string returntype)
+    {
+        assert(entry!=NULL);
+        // cout<<"Tempentry:"<<"\n";
+        // cout<< entry->lexeme<<"\t"<<entry->token <<"\t"<< entry->type << "\t"
+        //             << entry->line_number << "\t" << entry->size <<"\t" << entry->offset<<"\n";  
 
-    void addEntries(vector<Node*> v)
+        entry->type=returntype;
+        entry->temp=false;
+        // cout<< entry->lexeme<<"\t"<<entry->token <<"\t"<< entry->type << "\t"
+        //             << entry->line_number << "\t" << entry->size <<"\t" << entry->offset<<"\n";  
+
+        this->entries.push_back(entry);
+    }
+
+    void pushEntriestoUSTE(vector<Node*> v)
     {
         for(auto node: v)
         {
             for(auto ele: node->entries)
             {
-                if(ele->type !="temp")
                 this->entries.push_back(ele);
             }
         }
     }
 
+    void addEntriestoST(vector<SymbolEntry*> childentries)
+    {
+        this->symbol_table->insert(childentries);
+    }
+
     void moveEntries()
     {
+        assert(this->symbol_table!=NULL);
         this->symbol_table->insert(this->entries);
         vector<SymbolEntry*> temp;
         this->entries=temp;
+    }
+
+    void setChildren()
+    {
+        for(auto node: this->children)
+        {
+            if(node->symbol_table)
+            {
+                this->symbol_table->setChild(node->symbol_table);
+            }
+        }
     }
 };
 
@@ -84,7 +129,7 @@ Node* createNode(char* value, vector<Node*> children)
         }
     }
     temp->children=v;
-    temp->addEntries(v);
+    temp->pushEntriestoUSTE(v);
     return temp;
 }
 Node* createNode(char* value)
@@ -129,24 +174,35 @@ int buildTree(FILE* dotfile, Node* node, int parentno, int co)
     return co;
 }
 
-void displaySymbolTable(std::ofstream& ofs, Node* node)
+void displaySymbolTable(std::ofstream& ofs, Node* node,Node* parent)
 {
     if(node==NULL)
     return;
 
-    if(node->symbol_table)
+    
+    if(node->symbol_table && (!parent || node->symbol_table!=parent->symbol_table))
     {    
+        ofs <<"SymbolTable:"<<"\n";
         node->symbol_table->display(ofs);
+        ofs<<"\n";
     }
+    // if(node->tempentry)
+    // {
+    //     ofs<<"Tempentry:"<<"\n";
+    //     node->tempentry->display(ofs);
+    // }
+    
+    // ofs<<"Nodeentries:"<<"\n";
     // for(auto ele: node->entries)
     // {
     //     ele->display(ofs);
     // }
+    // ofs<<"\n";
     int n=node->children.size();
     vector<Node*> children=node->children;
     for(int i=0;i<n;i++)
     {
-        displaySymbolTable(ofs,children[i]);
+        displaySymbolTable(ofs,children[i],node);
     }
     return;
 }

@@ -12,23 +12,30 @@ public:
 
     map<string, SymbolEntry*> entries;
     SymbolTable* parent;
+    string scope;
 
     SymbolTable()
     {
 
     }
+    SymbolTable(string scope)
+    {
+        this->scope=scope;
+    }
     void insert(string lexeme, SymbolEntry* entry)
     {
-        entries[lexeme]=entry;
+        entries[entry->hash()]=entry;
     }
 
     void insert(vector<SymbolEntry*> entries)
     {
         for(auto ele:entries)
         {
-            this->entries[ele->lexeme]=ele;
+            if(!ele->temp)
+            this->entries[ele->hash()]=ele;
         }
     }
+
     SymbolEntry* lookup(string lexeme)
     {
         SymbolTable* temp= this;
@@ -46,10 +53,10 @@ public:
 
     void display(std::ofstream& ofs)
     {
-        for(auto ele: entries)
+        ofs << "Scope : "<<this->scope<<"\n";
+        for(auto [_, entry]: entries)
         {
-            ele.second->display(ofs);
-            ofs<<"\n";
+            entry->display(ofs);
         }
         ofs<<"\n";
         // if(parent)
@@ -58,6 +65,7 @@ public:
 
     void setChild(SymbolTable* child)
     {
+        if(child!=NULL)
         child->parent=this;
     }
 };
