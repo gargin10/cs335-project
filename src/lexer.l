@@ -243,13 +243,6 @@ TextblockWhitespace [ \t\f]
 [ \t\r\f]+ {}
 [\n]    {lineno++;}
 
- /*
-"\""{StringCharacter}*"\"" {
-    yylval.node = createNode( strdup(yytext),"LITERAL" ); 
-    return (LITERAL);
-}
- */
-
  /* Text Block String*/
 ["]["]["] {
     int c; string s = "";
@@ -327,13 +320,6 @@ TextblockWhitespace [ \t\f]
     yylval.node = createNode( strdup(s.c_str()),"LITERAL"); 
     return (LITERAL);
 }
-
- /*
-"\""[^\"]*"\"" {
-    yylval.node = createNode(strdup(yytext),"LITERAL"); 
-    return (LITERAL);
-}
- */
 
 . {
     printf("Error: Illegal token Line number:%d\n", lineno);
