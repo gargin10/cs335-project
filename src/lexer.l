@@ -243,23 +243,100 @@ TextblockWhitespace [ \t\f]
 [ \t\r\f]+ {}
 [\n]    {lineno++;}
 
+ /*
 "\""{StringCharacter}*"\"" {
     yylval.node = createNode( strdup(yytext),"LITERAL" ); 
     return (LITERAL);
 }
+ */
 
-"\"\"\""([^\"]|(["\""][^"\""])|(["\""]["\""][^"\""]))*"\"\"\"" {
-    yylval.node = createNode(strdup(yytext),"LITERAL"); 
+ /* Text Block String*/
+["]["]["] {
+    int c; string s = "";
+    for( ; ; ){
+        while( ( c = yyinput() ) != '"' && c != EOF ){
+            if( c == '\n' ){
+                lineno++;
+            }
+            s += c;
+        }
+        if( c == '\n' ){
+            lineno++;
+        }
+        if( c == EOF ){
+            printf("Error: EOF in string.\n");
+            return -1;
+        }
+        if( (c = yyinput()) == '"' ){
+            if( (c = yyinput()) == '"' ) break;
+            else { 
+                if( c == '\n' ){
+                    lineno++;
+                }
+                if( c == EOF ){
+                    printf("EOF inside the Text Block at line \n");
+                    return -1;
+                }
+                s += '"';
+                s += '"';
+                s += c;
+                continue;
+            }
+        } else {
+            if( c == '\n' ){
+                lineno++;
+            }
+            if( c == EOF ){
+                printf("EOF inside the Text Block at line \n");
+                return -1;
+            }
+            s += '"';
+            s += c;
+            continue;
+        }
+        if( c == '\n' ){
+            lineno++;
+        }
+        if( c == EOF ){
+            printf("EOF inside the Text Block at line \n");
+            return -1;
+        }
+    }
+
+    yylval.node = createNode( strdup(s.c_str()),"LITERAL"); 
     return (LITERAL);
 }
 
+ /* String Character */
+"\"" {
+    int c; string s = "";
+    for( ; ; ){
+        while( ( c = yyinput() ) != '"' && c != EOF ){
+            if( c == '\n' ){
+                printf("Error: Illegal Syntax %d\n", lineno);
+                return -1;
+            }
+            s += c;
+        }
+        if( c == '"' ) break;
+        if( c == EOF ){
+            printf("Error: EOF between string %d\n", lineno);
+            return -1;
+        }
+    }
+    yylval.node = createNode( strdup(s.c_str()),"LITERAL"); 
+    return (LITERAL);
+}
+
+ /*
 "\""[^\"]*"\"" {
     yylval.node = createNode(strdup(yytext),"LITERAL"); 
     return (LITERAL);
 }
+ */
 
 . {
-    printf("Error: Illegal token Line number:%d\n", yylineno);
+    printf("Error: Illegal token Line number:%d\n", lineno);
 }
 %%
 

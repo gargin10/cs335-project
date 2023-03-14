@@ -1,0 +1,14 @@
+SymbolTable:
+Scope : CompilationUnit
+OperatorExample	IDENTIFIER	class	0	0	0	
+
+
+SymbolTable:
+Scope : OperatorExample
+
+
+SymbolTable:
+Scope : main
+args	IDENTIFIER		0	0	0	
+
+
