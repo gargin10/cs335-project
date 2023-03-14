@@ -1,14 +1,53 @@
 SymbolTable:
 Scope : CompilationUnit
-OperatorExample	IDENTIFIER	class	0	0	0	
+ArraySum	IDENTIFIER	class	0	0	0	
 
 
 SymbolTable:
-Scope : OperatorExample
+Scope : ArraySum
+addNumbers	IDENTIFIER	int	0	0	0	int	2	int int 
 
 
 SymbolTable:
 Scope : main
 args	IDENTIFIER		0	0	0	
+
+
+SymbolTable:
+Scope : Block
+
+
+SymbolTable:
+Scope : Block
+
+
+SymbolTable:
+Scope : Block
+
+
+SymbolTable:
+Scope : Block
+
+
+SymbolTable:
+Scope : Block
+
+
+SymbolTable:
+Scope : Block
+
+
+SymbolTable:
+Scope : Block
+
+
+SymbolTable:
+Scope : Block
+
+
+SymbolTable:
+Scope : addNumbers
+a	IDENTIFIER	int	0	0	0	
+b	IDENTIFIER	int	0	0	0	
 
 

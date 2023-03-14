@@ -237,7 +237,7 @@ TextblockWhitespace [ \t\f]
 }
 
 [a-zA-Z][a-zA-Z0-9$_]*|[_$][a-zA-Z0-9_$]+ {
-    yylval.node = createNode(strdup(yytext),"IDENTIFIER"); 
+    yylval.node = createNode(strdup(yytext),"IDENTIFIER", lineno); 
     return (IDENTIFIER);
 }
 [ \t\r\f]+ {}
@@ -257,7 +257,7 @@ TextblockWhitespace [ \t\f]
             lineno++;
         }
         if( c == EOF ){
-            printf("Error: EOF in string.\n");
+            // printf("Error: EOF in string.\n");
             return -1;
         }
         if( (c = yyinput()) == '"' ){
@@ -267,7 +267,7 @@ TextblockWhitespace [ \t\f]
                     lineno++;
                 }
                 if( c == EOF ){
-                    printf("EOF inside the Text Block at line \n");
+                    // printf("EOF inside the Text Block at line \n");
                     return -1;
                 }
                 s += '"';
@@ -280,7 +280,7 @@ TextblockWhitespace [ \t\f]
                 lineno++;
             }
             if( c == EOF ){
-                printf("EOF inside the Text Block at line \n");
+                // printf("EOF inside the Text Block at line \n");
                 return -1;
             }
             s += '"';
@@ -291,7 +291,7 @@ TextblockWhitespace [ \t\f]
             lineno++;
         }
         if( c == EOF ){
-            printf("EOF inside the Text Block at line \n");
+            // printf("EOF inside the Text Block at line \n");
             return -1;
         }
     }
@@ -306,14 +306,14 @@ TextblockWhitespace [ \t\f]
     for( ; ; ){
         while( ( c = yyinput() ) != '"' && c != EOF ){
             if( c == '\n' ){
-                printf("Error: Illegal Syntax %d\n", lineno);
+                // printf("Error: Illegal Syntax %d\n", lineno);
                 return -1;
             }
             s += c;
         }
         if( c == '"' ) break;
         if( c == EOF ){
-            printf("Error: EOF between string %d\n", lineno);
+             // printf("Error: EOF between string %d\n", lineno);
             return -1;
         }
     }

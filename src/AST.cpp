@@ -8,6 +8,7 @@ struct Node{
     char* val;
     string lexeme;
     string token;
+    int lineno;
 
     string tempval;
     SymbolEntry* tempentry;
@@ -141,6 +142,16 @@ Node* createNode(char* value)
     return temp;
 }
 
+// Node* createNode(char* value, int lineno)
+// {
+//     Node* temp= new Node();
+//     temp->val=value;
+//     temp->lexeme=value;
+//     temp->token=value;
+//     temp->lineno = lineno; 
+//     return temp;
+// }
+
 Node* createNode( char* lexeme, char* token)
 {
     Node* temp1= new Node();
@@ -155,6 +166,23 @@ Node* createNode( char* lexeme, char* token)
     temp1->token=token;
     return temp1;
 }
+
+Node* createNode( char* lexeme, char* token, int lineno)
+{
+    Node* temp1= new Node();
+    str_replace(lexeme,"\"","\\\"");
+    char* ans=new char[strlen(lexeme)+strlen(token)+3];
+    strcpy(ans,token);
+    strcat(ans,"(");
+    strcat(ans,lexeme);
+    strcat(ans,")");
+    temp1->val=ans;
+    temp1->lexeme=lexeme;
+    temp1->token=token;
+    temp1->lineno=lineno;
+    return temp1;
+}
+
 int buildTree(FILE* dotfile, Node* node, int parentno, int co) 
 {
     if(node==NULL)
