@@ -88,6 +88,15 @@ struct Node{
 };
 
 
+void display(SymbolTable* curr, std::ofstream& ofs)
+{
+    assert(curr!=NULL);
+    curr->display(ofs);
+    for(auto ele:curr->children)
+    {
+        display(ele,ofs);
+    }
+}
 
 void str_replace(char *target, const char *needle, const char *replacement)
 {
@@ -115,8 +124,12 @@ Node* createNode(char* value, vector<Node*> children)
 {
     Node* temp= new Node();
     temp->val=value;
-    temp->lexeme="";
-    temp->token="";
+    if(value)
+    {
+        temp->lexeme=value;
+        temp->token=value;
+    }
+    
     vector<Node*> v;
     for(int i=0;i<children.size();i++)
     {
@@ -141,16 +154,6 @@ Node* createNode(char* value)
     temp->token=value;
     return temp;
 }
-
-// Node* createNode(char* value, int lineno)
-// {
-//     Node* temp= new Node();
-//     temp->val=value;
-//     temp->lexeme=value;
-//     temp->token=value;
-//     temp->lineno = lineno; 
-//     return temp;
-// }
 
 Node* createNode( char* lexeme, char* token)
 {

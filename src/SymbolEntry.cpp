@@ -32,7 +32,7 @@ public:
         line_number=0;
         size=0;
         offset=0;
-        temp=true;
+        temp=false;
         entry_type="variable";
         hash_key="";
     }
@@ -45,7 +45,7 @@ public:
         this->line_number=0;
         this->size=0;
         this->offset=0;
-        this->temp=true;
+        this->temp=false;
         entry_type="variable";
         hash_key="";
     }
@@ -74,7 +74,7 @@ public:
 
         if(entry_type=="method")
         {
-            ofs<< this->type<<"\t"<<this->no_arguments << "\t"; 
+            ofs<< this->no_arguments << "\t"; 
             for(auto ele: type_arguments)   
                 ofs << ele << " ";
         }

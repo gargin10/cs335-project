@@ -2,6 +2,7 @@
     #pragma once
     #include <bits/stdc++.h>
     #include "AST.cpp"
+    #include "builder.cpp"
     
     extern int lineno;
     FILE* dotfile;
@@ -78,11 +79,14 @@
 %%
 
 CompilationUnit: {  
+                    vector<Node*> v;
+                    $$=createNode("CompilationUnit",v);
                     $$->symbol_table = new SymbolTable("CompilationUnit"); 
                     root=$$;
                 }
 |   OrdinaryCompilationUnit {  
-                                $$=$1; 
+                                vector<Node*> v{$1};
+                                $$=createNode("CompilationUnit",v);
                                 $$->symbol_table = new SymbolTable("CompilationUnit");
                                 $$->moveEntries();
                                 root=$$; 
@@ -317,12 +321,12 @@ TypeNames:
 
 ClassBody:
     CURLYBRACESTART CURLYBRACEEND {
-                           vector<Node*> v;
+                           vector<Node*> v{$1,$2};
                             $$=createNode( "ClassBody",v);
                             $$->symbol_table = new SymbolTable("ClassBody");
                         }
 |   CURLYBRACESTART ClassBodyDeclaration0 CURLYBRACEEND {
-                           vector<Node*> v{$2};
+                           vector<Node*> v{$1,$2,$3};
                             $$=createNode( "ClassBody",v);
                             $$->symbol_table = new SymbolTable("ClassBody");
                             $$->moveEntries();
@@ -350,19 +354,23 @@ ClassMemberDeclaration:
 |   MethodDeclaration { $$ = $1; }
 |   ClassDeclaration { $$ = $1; }
 |   StaticFinal0 fieldclassmethod {
-                            vector<Node*> v{$1,$2};
+                            vector<Node*> v{$1};
+                            v.insert(v.end(),$2->children.begin(),$2->children.end());
                             $$=createNode($2->val,v);
                         }
 |   ABSTRACT classmethod {
-                            vector<Node*> v{$1,$2};
+                            vector<Node*> v{$1};
+                            v.insert(v.end(),$2->children.begin(),$2->children.end());
                             $$=createNode($2->val,v);
                         }
 |   ConstructorModifier ABSTRACT classmethod {
-                            vector<Node*> v{$1,$2,$3};
+                            vector<Node*> v{$1,$2};
+                            v.insert(v.end(),$3->children.begin(),$3->children.end());
                             $$=createNode($3->val,v);
                         }
 |   ConstructorModifier StaticFinal0 fieldclassmethod  {
-                            vector<Node*> v{$1,$2,$3};
+                            vector<Node*> v{$1,$2};
+                            v.insert(v.end(),$3->children.begin(),$3->children.end());
                             $$=createNode($3->val,v);
                         }
 |   SEMICOLON { $$ = $1; }
@@ -655,25 +663,25 @@ UnannArrayType:
 MethodHeader:
     VOID MethodDeclarator {
                         vector<Node*> v{$1,$2};
-                        $$=createNode( "MethodHeader",v);
+                        $$=createNode( NULL,v);
                         $$->tempentry=$2->tempentry;
                         $$->tempentry->type="void";
                     }
 |   TypeParameters Result MethodDeclarator {
                         vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "MethodHeader",v);
+                        $$=createNode( NULL,v);
                         $$->tempentry=$3->tempentry;
                         $$->tempentry->type=$2->tempval;
                     }
 |   VOID MethodDeclarator Throws {
                         vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "MethodHeader",v);
+                        $$=createNode( NULL,v);
                         $$->tempentry=$2->tempentry;
                         $$->tempentry->type="void";
                     }
 |   TypeParameters Result MethodDeclarator Throws {
                         vector<Node*> v{$1,$2,$3,$4};
-                        $$=createNode( "MethodHeader",v);
+                        $$=createNode( NULL,v);
                         $$->tempentry=$3->tempentry;
                         $$->tempentry->type=$2->tempval;
                     }
@@ -766,7 +774,7 @@ ReceiverParameter:
 FormalParameterList:
     FormalParameter {
                         vector<Node*> v{$1};
-                        $$=createNode( "FormalParameterList",v);
+                        $$=createNode( NULL,v);
                         $$->tempargs.push_back($1->tempval);
                     }
 |   FormalParameterList COMMA FormalParameter {
@@ -909,19 +917,19 @@ SimpleTypeName:
 
 ConstructorBody:
     CURLYBRACESTART CURLYBRACEEND {
-                        vector<Node*> v;
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "ConstructorBody",v);
                     }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
-                        vector<Node*> v{$2};
+                        vector<Node*> v{$1,$2,$3};
                         $$=createNode( "ConstructorBody",v);
                     }
 |   CURLYBRACESTART ExplicitConstructorInvocation CURLYBRACEEND  {
-                        vector<Node*> v{$2};
+                        vector<Node*> v{$1,$2,$3};
                         $$=createNode( "ConstructorBody",v);
                     }
 |   CURLYBRACESTART ExplicitConstructorInvocation BlockStatements CURLYBRACEEND  {
-                        vector<Node*> v{$2,$3};
+                        vector<Node*> v{$1,$2,$3,$4};
                         $$=createNode( "ConstructorBody",v);
                     }
 
@@ -1180,13 +1188,13 @@ CompactConstructorDeclaration:
 
 Block: 
     CURLYBRACESTART CURLYBRACEEND {
-                        vector<Node*> v;
+                        vector<Node*> v{$1};
                         $$=createNode( "Block", v );
 
                         $$->symbol_table = new SymbolTable("Block");
                     }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
-                        vector<Node*> v{$2};
+                        vector<Node*> v{$1,$2,$3};
                         $$=createNode( "Block", v );
 
                         $$->symbol_table = new SymbolTable("Block");
@@ -2732,11 +2740,21 @@ int main(int argc, char *argv[]) {
     if( output_file == 0 ) output_file_name = "output.dot";
     yyin = fopen(input_file_name,"r");
     dotfile = fopen(output_file_name,"w");
+
     fprintf(dotfile,"digraph {\n");
     yyparse();
-    ofstream ofs("symbol_table.txt");
+
+    ofstream ofs("symbol_table1.txt");
     displaySymbolTable(ofs,root,NULL);
+
     buildTree(dotfile,root,-1,0);
+
+    ofstream ofs1("symbol_table.txt");
+
+    SymbolTableBuilder* builder = new SymbolTableBuilder();
+    builder->build(root);
+    display(builder->curr_symtable,ofs1);
+
     fprintf(dotfile," }\n");
     fclose(yyin);
     return 0;
