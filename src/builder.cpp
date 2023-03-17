@@ -16,8 +16,6 @@ public:
     SymbolTable* curr_symtable;
     SymbolTable* prev_symtable;
 
-    bool scope_created=0;
-
     SymbolTableBuilder()
     {
         createvalidstartscopes();
@@ -34,6 +32,9 @@ public:
     {
         validstartscopes.insert("CompilationUnit");
         validstartscopes.insert("{");
+        validstartscopes.insert("NormalClassDeclaration");
+        validstartscopes.insert("MethodDeclaration");
+        validstartscopes.insert("ForStatement");
     }
     bool validstartscope(Node* root)
     {
@@ -62,21 +63,13 @@ public:
         vector<string> typeargs;
         vector<string> id_list;
         string temp_identifier="";
-        if(!scope_created && validstartscope(root))
+        if(validstartscope(root))
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
             curr_symtable -> setParent(prev_symtable);
         }
-
-        if(root->val=="NormalClassDeclaration" || root->val=="MethodDeclaration" || root->val == "ForStatement")
-        {
-            prev_symtable = curr_symtable;
-            curr_symtable = new SymbolTable(root->val);
-            curr_symtable -> setParent(prev_symtable);
-            scope_created=0;
-        }
-        if(!scope_created && strcmp(root->val,"}")==0)
+        if(strcmp(root->val,"}")==0)
         {
             assert(curr_symtable!=NULL);
             curr_symtable = curr_symtable -> parent;
@@ -132,7 +125,6 @@ public:
         }
         if(root->val=="NormalClassDeclaration")
         {
-            scope_created=0;
             assert(curr_symtable!=NULL);
             curr_symtable -> scope = temp_identifier;
             curr_symtable = curr_symtable -> parent;
@@ -142,7 +134,6 @@ public:
         }
         if(root->val=="MethodDeclaration")
         {
-            scope_created=0;
             assert(curr_symtable!=NULL);
             curr_symtable -> scope = temp_identifier;
             curr_symtable = curr_symtable -> parent;
@@ -175,7 +166,6 @@ public:
         }
         if(root->val == "ForStatement")
         {
-            scope_created=0;
             curr_symtable = curr_symtable -> parent;
         }
     }

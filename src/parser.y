@@ -321,12 +321,12 @@ TypeNames:
 
 ClassBody:
     CURLYBRACESTART CURLYBRACEEND {
-                           vector<Node*> v{$1,$2};
+                           vector<Node*> v;
                             $$=createNode( "ClassBody",v);
                             $$->symbol_table = new SymbolTable("ClassBody");
                         }
 |   CURLYBRACESTART ClassBodyDeclaration0 CURLYBRACEEND {
-                           vector<Node*> v{$1,$2,$3};
+                           vector<Node*> v{$2};
                             $$=createNode( "ClassBody",v);
                             $$->symbol_table = new SymbolTable("ClassBody");
                             $$->moveEntries();
