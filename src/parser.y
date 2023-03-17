@@ -1188,7 +1188,7 @@ CompactConstructorDeclaration:
 
 Block: 
     CURLYBRACESTART CURLYBRACEEND {
-                        vector<Node*> v{$1};
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "Block", v );
 
                         $$->symbol_table = new SymbolTable("Block");
@@ -1447,8 +1447,14 @@ DO Statement WHILE BRACESTART Expression BRACEEND SEMICOLON {
                     }
 
 ForStatement:
-    BasicForStatement  { $$ = $1; }
-|   EnhancedForStatement  { $$ = $1; }
+    BasicForStatement  {
+                        vector<Node*> v{$1};
+                        $$=createNode( "ForStatement", v ); 
+                    }
+|   EnhancedForStatement  {
+                        vector<Node*> v{$1};
+                        $$=createNode( "ForStatement", v ); 
+                    }
 
 ForStatementNoShortIf:
     BasicForStatementNoShortIf  { $$ = $1; }
@@ -1457,69 +1463,69 @@ ForStatementNoShortIf:
 BasicForStatement:
     FOR BRACESTART SEMICOLON SEMICOLON BRACEEND Statement {
                         vector<Node*> v{$1,$6};
-                        $$=createNode( "BasicForStatement", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART ForInit SEMICOLON SEMICOLON BRACEEND Statement {
                         vector<Node*> v{$1,$3,$7};
-                        $$=createNode( "BasicForStatement", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART SEMICOLON Expression SEMICOLON BRACEEND Statement {
                         vector<Node*> v{$1,$4,$7};
-                        $$=createNode( "BasicForStatement", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART ForInit SEMICOLON Expression SEMICOLON BRACEEND Statement {
                         vector<Node*> v{$1,$3,$5,$8};
-                        $$=createNode( "BasicForStatement", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART SEMICOLON SEMICOLON ForUpdate BRACEEND Statement {
                         vector<Node*> v{$1,$5,$7};
-                        $$=createNode( "BasicForStatement", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART ForInit SEMICOLON SEMICOLON ForUpdate BRACEEND Statement {
                         vector<Node*> v{$1,$3,$6,$8};
-                        $$=createNode( "BasicForStatement", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART SEMICOLON Expression SEMICOLON ForUpdate BRACEEND Statement {
                         vector<Node*> v{$1,$4,$6,$8};
-                        $$=createNode( "BasicForStatement", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART ForInit SEMICOLON Expression SEMICOLON ForUpdate BRACEEND Statement {
                         vector<Node*> v{$1,$3,$5,$7,$9};
-                        $$=createNode( "BasicForStatement", v );
+                        $$=createNode(NULL, v );
                     }
 
 BasicForStatementNoShortIf:
     FOR BRACESTART SEMICOLON SEMICOLON BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$6};
-                        $$=createNode( "BasicForStatementNoShortIf", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART ForInit  SEMICOLON SEMICOLON BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$3,$7};
-                        $$=createNode( "BasicForStatementNoShortIf", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART SEMICOLON Expression SEMICOLON BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$4,$7};
-                        $$=createNode( "BasicForStatementNoShortIf", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART ForInit  SEMICOLON Expression SEMICOLON BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$3,$5,$8};
-                        $$=createNode( "BasicForStatementNoShortIf", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART SEMICOLON SEMICOLON ForUpdate BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$5,$7};
-                        $$=createNode( "BasicForStatementNoShortIf", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART ForInit  SEMICOLON SEMICOLON ForUpdate BRACEEND StatementNoShortIf  {
                         vector<Node*> v{$1,$2,$3,$4,$5,$6,$7,$8};
-                        $$=createNode( "BasicForStatementNoShortIf", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART SEMICOLON Expression SEMICOLON ForUpdate BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$4,$6,$8};
-                        $$=createNode( "BasicForStatementNoShortIf", v );
+                        $$=createNode(NULL, v );
                     }
 |   FOR BRACESTART ForInit  SEMICOLON Expression SEMICOLON ForUpdate BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$3,$5,$7,$9};
-                        $$=createNode( "BasicForStatementNoShortIf", v );
+                        $$=createNode(NULL, v );
                     }
 
 
@@ -1553,13 +1559,13 @@ StatementExpressionList:
 EnhancedForStatement:
 FOR BRACESTART LocalVariableDeclaration COLON Expression BRACEEND Statement {
                         vector<Node*> v{$1,$3,$4,$5,$7};
-                        $$=createNode( "EnhancedForStatement", v );
+                        $$=createNode( NULL, v );
                     }
 
 EnhancedForStatementNoShortIf:
 FOR BRACESTART LocalVariableDeclaration COLON Expression BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$3,$4,$5,$7};
-                        $$=createNode( "EnhancedForStatementNoShortIf", v );
+                        $$=createNode( NULL, v );
                     }
 
 BreakStatement: 

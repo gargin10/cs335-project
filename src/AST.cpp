@@ -150,8 +150,11 @@ Node* createNode(char* value)
 {
     Node* temp= new Node();
     temp->val=value;
-    temp->lexeme=value;
-    temp->token=value;
+    if(value)
+    {
+        temp->lexeme=value;
+        temp->token=value;
+    }
     return temp;
 }
 

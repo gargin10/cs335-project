@@ -60,6 +60,7 @@ public:
         vector<string> modifiers;
         vector<string> typeargs;
         vector<string> id_list;
+        string temp_identifier="";
         if(!scope_created && validstartscope(root))
         {
             prev_symtable = curr_symtable;
@@ -67,12 +68,12 @@ public:
             curr_symtable -> setParent(prev_symtable);
         }
 
-        if(root->val=="NormalClassDeclaration" || root->val=="MethodDeclaration")
+        if(root->val=="NormalClassDeclaration" || root->val=="MethodDeclaration" || root->val == "ForStatement")
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
             curr_symtable -> setParent(prev_symtable);
-            scope_created=1;
+            scope_created=0;
         }
         if(!scope_created && root->val == "CURLYBRACEEND")
         {
@@ -84,23 +85,34 @@ public:
         for(auto child_node: root-> children)
         {
             build(child_node);
+            
             // if(is_modifier(child_node->val))
             //     modifiers.push_back(child_node->val);
-            if(validtypes.find(child_node->lexeme)!=validtypes.end())
+            if(validtypes.find(child_node->lexeme)!=validtypes.end() || child_node->val=="UnannClassType")
                 type= child_node->lexeme;
             if(child_node->token=="IDENTIFIER")
+            {
+                temp_identifier=child_node->lexeme;
                 id_list.push_back(child_node->lexeme);
+            } 
             if(child_node->val=="MethodDeclarator")
             {
-                id_list.push_back(child_node->lexeme);
+                temp_identifier=child_node->lexeme;
                 typeargs=child_node->tempargs;
             }
             if(child_node->val=="FormalParameter")
                 typeargs.push_back(child_node->lexeme);
             if(child_node->val=="VariableDeclaratorList")
+            {
                 id_list=child_node->tempargs;
+            }
+            if(strcmp(child_node->val,"=")==0)
+                id_list.push_back(child_node->lexeme);   
         }
-
+        if(strcmp(root->val,"=")==0)
+            root->lexeme=temp_identifier;
+        if(root->val=="UnannClassType")
+            root->lexeme=temp_identifier;
         if(root->val=="VariableDeclaratorList")
         {
             root->tempargs=id_list;
@@ -108,22 +120,22 @@ public:
         if(root->val=="FormalParameter")
         {
             root->lexeme=type;
-            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", id_list[0]);
+            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", temp_identifier);
             entry->type=type;
             addEntry(entry);
         }
         if(root->val=="MethodDeclarator")
         {
-            root->lexeme=id_list[0];
+            root->lexeme=temp_identifier;
             root->tempargs=typeargs;
         }
         if(root->val=="NormalClassDeclaration")
         {
             scope_created=0;
             assert(curr_symtable!=NULL);
-            curr_symtable -> scope = id_list[0];
+            curr_symtable -> scope = temp_identifier;
             curr_symtable = curr_symtable -> parent;
-            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", id_list[0]);
+            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", temp_identifier);
             entry->type="class";
             addEntry(entry);
         }
@@ -131,9 +143,9 @@ public:
         {
             scope_created=0;
             assert(curr_symtable!=NULL);
-            curr_symtable -> scope = id_list[0];
+            curr_symtable -> scope = temp_identifier;
             curr_symtable = curr_symtable -> parent;
-            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", id_list[0]);
+            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", temp_identifier);
             entry->type=type;
             entry->type_arguments=typeargs;
             entry->no_arguments=typeargs.size();
@@ -148,6 +160,22 @@ public:
                 entry->type=type;
                 addEntry(entry);
             }
+        }
+        if(root->val=="LocalVariableDeclaration")
+        {
+            if(type=="")
+                type=temp_identifier;
+            for(auto ele: id_list)
+            {
+                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele);
+                entry->type=type;
+                addEntry(entry);
+            }
+        }
+        if(root->val == "ForStatement")
+        {
+            scope_created=0;
+            curr_symtable = curr_symtable -> parent;
         }
     }
 };
