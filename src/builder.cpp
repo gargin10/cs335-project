@@ -33,11 +33,12 @@ public:
     void createvalidstartscopes()
     {
         validstartscopes.insert("CompilationUnit");
-        validstartscopes.insert("CURLYBRACESTART");
+        validstartscopes.insert("{");
     }
     bool validstartscope(Node* root)
     {
-        if(validstartscopes.find(root->val)!=validstartscopes.end())
+        string s(root->val);
+        if(validstartscopes.find(s)!=validstartscopes.end())
             return true;
         return false;
     }
@@ -75,7 +76,7 @@ public:
             curr_symtable -> setParent(prev_symtable);
             scope_created=0;
         }
-        if(!scope_created && root->val == "CURLYBRACEEND")
+        if(!scope_created && strcmp(root->val,"}")==0)
         {
             assert(curr_symtable!=NULL);
             curr_symtable = curr_symtable -> parent;
