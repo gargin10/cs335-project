@@ -34,6 +34,7 @@ public:
         validstartscopes.insert("NormalClassDeclaration");
         validstartscopes.insert("MethodDeclaration");
         validstartscopes.insert("ForStatement");
+        validstartscopes.insert("ConstructorDeclaration");
     }
     bool validstartscope(Node* root)
     {
@@ -94,7 +95,7 @@ public:
                 temp_identifier=child_node->lexeme;
                 id_list.push_back({child_node->lexeme,0});
             } 
-            if(child_node->val=="MethodDeclarator")
+            if(child_node->val=="MethodDeclarator"|| child_node->val=="ConstructorDeclarator")
             {
                 temp_identifier=child_node->lexeme;
                 typeargs=child_node->typeargs;
@@ -148,7 +149,7 @@ public:
             }
             addEntry(entry);
         }
-        if(root->val=="MethodDeclarator")
+        if(root->val=="MethodDeclarator"|| root->val=="ConstructorDeclarator")
         {
             root->lexeme=temp_identifier;
             root->typeargs=typeargs;
@@ -162,7 +163,7 @@ public:
             entry->type="class";
             addEntry(entry);
         }
-        if(root->val=="MethodDeclaration")
+        if(root->val=="MethodDeclaration"|| root->val=="ConstructorDeclaration")
         {
             assert(curr_symtable!=NULL);
             curr_symtable -> scope = temp_identifier;
