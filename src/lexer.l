@@ -209,7 +209,7 @@ TextblockWhitespace [ \t\f]
 
 "("    { yylval.node = createNode(strdup(yytext)); return(BRACESTART); }
 ")"    { yylval.node = createNode(strdup(yytext)); return(BRACEEND); }
-"{"    { yylval.node = createNode(strdup(yytext)); return(CURLYBRACESTART); }
+"{"    { yylval.node = createNode(strdup(yytext),lineno); return(CURLYBRACESTART); }
 "}"    { yylval.node = createNode(strdup(yytext)); return(CURLYBRACEEND); }
 "["    { yylval.node = createNode(strdup(yytext)); return(SQUAREBRACESTART); }
 "]"    { yylval.node = createNode(strdup(yytext)); return(SQUAREBRACEEND); }

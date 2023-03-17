@@ -5,14 +5,16 @@
 using namespace std;
 
 struct Node{
-    char* val;
-    string lexeme;
-    string token;
-    int lineno;
+    char* val=NULL;
+    string lexeme="";
+    string token="";
+    int lineno=0;
+    int dims=0;
 
     string tempval;
     SymbolEntry* tempentry;
-    vector<string> tempargs;
+    vector<pair<string,int>> tempargs;
+    vector<string> typeargs;
 
     SymbolTable* symbol_table;
     vector<SymbolEntry*> entries;
@@ -170,6 +172,15 @@ Node* createNode( char* lexeme, char* token)
     temp1->val=ans;
     temp1->lexeme=lexeme;
     temp1->token=token;
+    return temp1;
+}
+Node* createNode( char* lexeme, int lineno)
+{
+    Node* temp1= new Node();
+    temp1->val=lexeme;
+    temp1->lexeme=lexeme;
+    temp1->token="";
+    temp1->lineno=lineno;
     return temp1;
 }
 

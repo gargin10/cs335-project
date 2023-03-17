@@ -31,7 +31,6 @@ public:
     void createvalidstartscopes()
     {
         validstartscopes.insert("CompilationUnit");
-        validstartscopes.insert("{");
         validstartscopes.insert("NormalClassDeclaration");
         validstartscopes.insert("MethodDeclaration");
         validstartscopes.insert("ForStatement");
@@ -61,19 +60,25 @@ public:
         string type="";
         vector<string> modifiers;
         vector<string> typeargs;
-        vector<string> id_list;
+        vector<pair<string,int>> id_list;
         string temp_identifier="";
+        int dims=0;
         if(validstartscope(root))
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
             curr_symtable -> setParent(prev_symtable);
         }
+        if(strcmp(root->val,"{")==0)
+        {
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable("Block Line number "+to_string(root->lineno));
+            curr_symtable -> setParent(prev_symtable);
+        }
         if(strcmp(root->val,"}")==0)
         {
             assert(curr_symtable!=NULL);
             curr_symtable = curr_symtable -> parent;
-            type="";
         }
             
         for(auto child_node: root-> children)
@@ -82,17 +87,17 @@ public:
             
             // if(is_modifier(child_node->val))
             //     modifiers.push_back(child_node->val);
-            if(validtypes.find(child_node->lexeme)!=validtypes.end() || child_node->val=="UnannClassType")
+            if(validtypes.find(child_node->lexeme)!=validtypes.end())
                 type= child_node->lexeme;
             if(child_node->token=="IDENTIFIER")
             {
                 temp_identifier=child_node->lexeme;
-                id_list.push_back(child_node->lexeme);
+                id_list.push_back({child_node->lexeme,0});
             } 
             if(child_node->val=="MethodDeclarator")
             {
                 temp_identifier=child_node->lexeme;
-                typeargs=child_node->tempargs;
+                typeargs=child_node->typeargs;
             }
             if(child_node->val=="FormalParameter")
                 typeargs.push_back(child_node->lexeme);
@@ -100,28 +105,53 @@ public:
             {
                 id_list=child_node->tempargs;
             }
+            if(child_node->val=="VariableDeclaratorId")
+            {
+                temp_identifier=child_node->lexeme;
+                dims=child_node->dims;
+                id_list.push_back({temp_identifier,dims});
+            }
             if(strcmp(child_node->val,"=")==0)
-                id_list.push_back(child_node->lexeme);   
+            {
+                id_list.push_back({child_node->lexeme,child_node->dims});  
+                dims=child_node->dims; 
+            }
+            if(strcmp(child_node->val,"[]")==0)
+                dims++; 
         }
         if(strcmp(root->val,"=")==0)
+        {
+            root->lexeme=temp_identifier;  
+            root->dims=dims; 
+        }
+        if(root->val=="VariableDeclaratorId")
+        {
             root->lexeme=temp_identifier;
-        if(root->val=="UnannClassType")
-            root->lexeme=temp_identifier;
+            root->dims=dims;
+        }
         if(root->val=="VariableDeclaratorList")
         {
             root->tempargs=id_list;
         }
         if(root->val=="FormalParameter")
         {
+            if(type=="")
+                type=id_list[0].first;
             root->lexeme=type;
+            root->dims=dims;
             SymbolEntry* entry = new SymbolEntry("IDENTIFIER", temp_identifier);
             entry->type=type;
+            if(dims>0)
+            {
+                entry->entry_type="array";
+                entry->no_dimensions=dims;
+            }
             addEntry(entry);
         }
         if(root->val=="MethodDeclarator")
         {
             root->lexeme=temp_identifier;
-            root->tempargs=typeargs;
+            root->typeargs=typeargs;
         }
         if(root->val=="NormalClassDeclaration")
         {
@@ -148,8 +178,13 @@ public:
         {
             for(auto ele: id_list)
             {
-                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele);
+                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele.first);
                 entry->type=type;
+                if(ele.second>0)
+                {
+                    entry->entry_type="array";
+                    entry->no_dimensions=ele.second;
+                }
                 addEntry(entry);
             }
         }
@@ -159,8 +194,13 @@ public:
                 type=temp_identifier;
             for(auto ele: id_list)
             {
-                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele);
+                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele.first);
                 entry->type=type;
+                if(ele.second>0)
+                {
+                    entry->entry_type="array";
+                    entry->no_dimensions=ele.second;
+                }
                 addEntry(entry);
             }
         }
