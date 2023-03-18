@@ -221,18 +221,18 @@ TextblockWhitespace [ \t\f]
 "::"    { yylval.node = createNode(strdup(yytext)); return(SCOPE); }
 
 
-{DecimalInteger}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
-{HexInteger}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
-{OctalInteger}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
-{BinaryInteger}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
-{DecimalFloating}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL);}
-{HexadecimalFloating}   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
+{DecimalInteger}   {yylval.node = createNode(strdup(yytext),"INT_LITERAL"); return(LITERAL); }
+{HexInteger}   {yylval.node = createNode(strdup(yytext),"INT_LITERAL"); return(LITERAL); }
+{OctalInteger}   {yylval.node = createNode(strdup(yytext),"INT_LITERAL"); return(LITERAL); }
+{BinaryInteger}   {yylval.node = createNode(strdup(yytext),"INT_LITERAL"); return(LITERAL); }
+{DecimalFloating}   {yylval.node = createNode(strdup(yytext),"FLOAT_LITERAL"); return(LITERAL);}
+{HexadecimalFloating}   {yylval.node = createNode(strdup(yytext),"FLOAT_LITERAL"); return(LITERAL); }
 
-"true"|"false"   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
-"null"   {yylval.node = createNode(strdup(yytext),"LITERAL"); return(LITERAL); }
+"true"|"false"   {yylval.node = createNode(strdup(yytext),"BOOLEAN_LITERAL"); return(LITERAL); }
+"null"   {yylval.node = createNode(strdup(yytext),"NULL_LITERAL"); return(LITERAL); }
 
 '{EscapeSequence}'|'[^"\\""\'"']?' {
-    yylval.node = createNode(strdup(yytext),"LITERAL"); 
+    yylval.node = createNode(strdup(yytext),"CHAR_LITERAL"); 
     return (LITERAL);
 }
 
@@ -296,7 +296,7 @@ TextblockWhitespace [ \t\f]
         }
     }
 
-    yylval.node = createNode( strdup(s.c_str()),"LITERAL"); 
+    yylval.node = createNode( strdup(s.c_str()),"STRING_LITERAL"); 
     return (LITERAL);
 }
 
@@ -317,7 +317,7 @@ TextblockWhitespace [ \t\f]
             return -1;
         }
     }
-    yylval.node = createNode( strdup(s.c_str()),"LITERAL"); 
+    yylval.node = createNode( strdup(s.c_str()),"STRING_LITERAL"); 
     return (LITERAL);
 }
 

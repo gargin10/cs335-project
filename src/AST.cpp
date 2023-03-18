@@ -10,6 +10,7 @@ struct Node{
     string token="";
     int lineno=0;
     int dims=0;
+    string type="";
 
     string tempval;
     SymbolEntry* tempentry;
@@ -171,7 +172,25 @@ Node* createNode( char* lexeme, char* token)
     strcat(ans,")");
     temp1->val=ans;
     temp1->lexeme=lexeme;
-    temp1->token=token;
+    if( strcmp( token, "INT_LITERAL") == 0 ){
+        temp1->type = "INT";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "FLOAT_LITERAL") == 0 ){
+        temp1->type = "FLOAT";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "CHAR_LITERAL") == 0 ){
+        temp1->type = "CHAR";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "BOOLEAN_LITERAL") == 0 ){
+        temp1->type = "BOOLEAN";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "NULL_LITERAL") == 0 ){
+        temp1->type = "NULL";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "STRING_LITERAL") == 0 ){
+        temp1->type = "STRING";
+        temp1->token = "LITERAL";
+    } else temp1->token=token;
     return temp1;
 }
 Node* createNode( char* lexeme, int lineno)
