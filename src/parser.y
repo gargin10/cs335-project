@@ -917,19 +917,19 @@ SimpleTypeName:
 
 ConstructorBody:
     CURLYBRACESTART CURLYBRACEEND {
-                        vector<Node*> v{$1,$2};
+                        vector<Node*> v;
                         $$=createNode( "ConstructorBody",v);
                     }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$2};
                         $$=createNode( "ConstructorBody",v);
                     }
 |   CURLYBRACESTART ExplicitConstructorInvocation CURLYBRACEEND  {
-                        vector<Node*> v{$1,$2,$3};
+                        vector<Node*> v{$2};
                         $$=createNode( "ConstructorBody",v);
                     }
 |   CURLYBRACESTART ExplicitConstructorInvocation BlockStatements CURLYBRACEEND  {
-                        vector<Node*> v{$1,$2,$3,$4};
+                        vector<Node*> v{$2,$3};
                         $$=createNode( "ConstructorBody",v);
                     }
 
