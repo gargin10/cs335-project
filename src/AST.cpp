@@ -173,22 +173,22 @@ Node* createNode( char* lexeme, char* token)
     temp1->val=ans;
     temp1->lexeme=lexeme;
     if( strcmp( token, "INT_LITERAL") == 0 ){
-        temp1->type = "INT";
+        temp1->type = "int";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "FLOAT_LITERAL") == 0 ){
-        temp1->type = "FLOAT";
+        temp1->type = "float";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "CHAR_LITERAL") == 0 ){
-        temp1->type = "CHAR";
+        temp1->type = "char";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "BOOLEAN_LITERAL") == 0 ){
-        temp1->type = "BOOLEAN";
+        temp1->type = "boolean";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "NULL_LITERAL") == 0 ){
-        temp1->type = "NULL";
+        temp1->type = "null";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "STRING_LITERAL") == 0 ){
-        temp1->type = "STRING";
+        temp1->type = "string";
         temp1->token = "LITERAL";
     } else temp1->token=token;
     return temp1;

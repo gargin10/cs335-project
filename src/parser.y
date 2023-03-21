@@ -1272,18 +1272,18 @@ StatementWithoutTrailingSubstatement:
 |   YieldStatement  { $$ = $1; }
 
 EmptyStatement: SEMICOLON  { vector<Node*> v;
-                        $$=createNode( "EmptyStatement", v ); }
+                        $$=createNode( "Statement", v ); }
 
 LabeledStatement:
     IDENTIFIER COLON Statement {
                         vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "LabeledStatement", v );
+                        $$=createNode( "Statement", v );
                     }
 
 LabeledStatementNoShortIf:
     IDENTIFIER COLON StatementNoShortIf {
                         vector<Node*> v{$1,$2,$3};
-                        $$=createNode( "LabeledStatementNoShortIf", v );
+                        $$=createNode( "Statement", v );
                     }
 
 ExpressionStatement:
@@ -1859,42 +1859,42 @@ ClassInstanceCreationExpression:
 UnqualifiedClassInstanceCreationExpression:
     NEW ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND {
                     vector<Node*> v{$1,$2};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND ClassBody {
                     vector<Node*> v{$1,$2,$5};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND {
                     vector<Node*> v{$1,$2,$4};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND ClassBody {
                     vector<Node*> v{$1,$2,$4,$6};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND {
                     vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND ClassBody {
                     vector<Node*> v{$1,$2,$3,$6};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND {
                     vector<Node*> v{$1,$2,$3,$5};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND ClassBody {
                     vector<Node*> v{$1,$2,$3,$5,$7};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 
 ClassOrInterfaceTypeToInstantiate:
     IDENTIFIER 
 |   IDENTIFIER TypeArgumentsOrDiamond {
                     vector<Node*> v{$1,$2};
-                    $$=createNode( "ClassOrInterfaceTypeToInstantiate", v );
+                    $$=createNode( NULL, v );
                 } 
     
 TypeArgumentsOrDiamond:
@@ -2162,8 +2162,14 @@ DimExpr:
                 } 
 
 Expression:
-    LambdaExpression
-|   AssignmentExpression
+    LambdaExpression {
+                    vector<Node*> v{$1};
+                    $$=createNode( "Expression", v );
+                } 
+|   AssignmentExpression {
+                    vector<Node*> v{$1};
+                    $$=createNode( "Expression", v );
+                } 
 
 LambdaExpression:
     IDENTIFIER PTR LambdaBody {
