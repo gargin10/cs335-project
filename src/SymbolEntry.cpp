@@ -54,7 +54,7 @@ public:
     string hash() 
     {
         // string s= this->lexeme+ this->token + this->type;
-        string s= this->lexeme+ this->token;
+        string s= this->lexeme;
 
         // if(entry_type=="method")
         // {
@@ -86,6 +86,24 @@ public:
             ofs<< this->no_dimensions<< "\t"; 
         }
         ofs<<"\n";
+    }
+    void display()
+    {
+        cout<< this->lexeme<<"\t"<<this->token <<"\t"<< this->type << "\t"
+                    << this->line_number << "\t" << this->size <<"\t" << this->offset<<"\t";   
+
+        if(entry_type=="method")
+        {
+            cout<< this->no_arguments << "\t"; 
+            for(auto ele: type_arguments)   
+                cout << ele << " ";
+        }
+        
+        if(entry_type=="array")
+        {
+            cout<< this->no_dimensions<< "\t"; 
+        }
+        cout<<"\n";
     }
 };
 

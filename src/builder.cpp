@@ -92,11 +92,7 @@ public:
             //     modifiers.push_back(child_node->val);
             if(validtypes.find(child_node->lexeme)!=validtypes.end())
                 type= child_node->lexeme;
-            if(child_node->token=="IDENTIFIER")
-            {
-                temp_identifier=child_node->lexeme;
-                id_list.push_back({child_node->lexeme,0});
-            } 
+            
             if(child_node->val=="MethodDeclarator"|| child_node->val=="ConstructorDeclarator")
             {
                 temp_identifier=child_node->lexeme;
@@ -133,7 +129,14 @@ public:
             }
             if(child_node->val=="Expression")
                 literal_type=child_node->type;
+            if(child_node->token=="IDENTIFIER")
+            {
+                temp_identifier=child_node->lexeme;
+                id_list.push_back({child_node->lexeme,0});
+                // cout<<"here for "<<root->val<<" "<<temp_identifier<<"\n";
+            } 
         }
+        // cout<<temp_identifier<<" ";
         if(isOperator(root->val))
         {
             root->lexeme=temp_identifier;
@@ -230,19 +233,29 @@ public:
         }
         if((root->val == "Expression" || root->val  == "Statement")&& temp_identifier!="")
         {
-            SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable);
+            SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable,root->lineno);
             if(entry && literal_type!="")
             {
-                checktypes(entry->type,literal_type);
+                checktypes(entry->type,literal_type, root->lineno);
                 root->type=entry->type;
             }
         }
-        if(root->val == "Assignment")
+        if(root->val == "Assignment"|| root->val == "ArrayAccess")
         {
-            SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable);
+            SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable,root->lineno);
             if(entry && literal_type!="")
             {
-                checktypes(entry->type,literal_type);
+                checktypes(entry->type,literal_type,root->lineno);
+                root->type=entry->type;
+            }
+        }
+        if(root->val == "PostIncrementExpression"|| root->val == "PreIncrementExpression" || root->val == "PostDecrementExpression"|| root->val == "PreDecrementExpression")
+        {
+            // cout<<temp_identifier<<" ";
+            SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable,root->lineno);
+            if(entry && literal_type!="")
+            {
+                checktypes(entry->type,literal_type,root->lineno);
                 root->type=entry->type;
             }
         }

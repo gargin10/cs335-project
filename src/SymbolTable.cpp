@@ -72,6 +72,17 @@ public:
         // if(parent)
         //     parent->display(outputfile);
     }
+    void display()
+    {
+        cout << "Scope : "<< scope <<"\n";
+        for(auto [_, entry]: entries)
+        {
+            for( auto ele : entry ){
+                ele->display();
+            }
+        }
+        cout<<"\n";
+    }
 
     void setChild(SymbolTable* child)
     {

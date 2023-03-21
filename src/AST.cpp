@@ -78,6 +78,7 @@ Node* createNode(char* value, vector<Node*> children)
         }
     }
     temp->children=v;
+    temp->lineno=v[0]->lineno;
     // temp->pushEntriestoUSTE(v);
     return temp;
 }

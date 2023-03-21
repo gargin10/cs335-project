@@ -58,7 +58,7 @@
 %type<node> FormalParameter VariableArityParameter VariableModifier ExceptionTypeList ExceptionType EnumConstant RecordDeclaration RecordHeader RecordBody RecordComponentList EnumBody
 
 %type<node> ClassModifier0 ClassBodyDeclaration0 FieldModifier0 MethodModifier0 
-%type<node>  RecordBodyDeclaration0 NormalClassDeclaration0 TypeArgumentsOrDiamond
+%type<node>  RecordBodyDeclaration0 NormalClassDeclaration0 TypeArgumentsOrDiamond Assignmentval
 
 %type<node> MethodInvocation MethodReference ArrayCreationExpression
 %type<node> DimExprs DimExpr Expression LambdaExpression LambdaParameters LambdaParameterList CommaLambdaParameter0 CommaIdentifier0 LambdaParameter
@@ -1907,15 +1907,15 @@ TypeArgumentsOrDiamond:
 ArrayAccess:
     IDENTIFIER SQUAREBRACESTART Expression SQUAREBRACEEND {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "[]", v );
+                    $$=createNode( "ArrayAccess", v );
                 } 
 |   ExpressionName SQUAREBRACESTART Expression SQUAREBRACEEND {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "[]", v );
+                    $$=createNode( "ArrayAccess", v );
                 } 
 |   PrimaryNoNewArray SQUAREBRACESTART Expression SQUAREBRACEEND {
                     vector<Node*> v{$1,$3};
-                    $$=createNode( "[]", v );
+                    $$=createNode( "ArrayAccess", v );
                 } 
 
 MethodInvocation:
@@ -2248,7 +2248,13 @@ AssignmentExpression:
 |  Assignment
 
 Assignment:
-   IDENTIFIER AssignmentOperator Expression {
+    Assignmentval {
+        vector<Node*> v{$1};
+        $$=createNode( "Assignment", v );
+    }
+
+Assignmentval:
+    IDENTIFIER AssignmentOperator Expression {
                     vector<Node*> v{$1,$3};
                     $$=createNode( $2->val, v );
                 }
