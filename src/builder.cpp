@@ -236,7 +236,8 @@ public:
             SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable,root->lineno);
             if(entry && literal_type!="")
             {
-                checktypes(entry->type,literal_type, root->lineno);
+                bool check = checktypevariable(entry,literal_type, root->lineno);
+                if(check)
                 root->type=entry->type;
             }
         }
@@ -245,17 +246,18 @@ public:
             SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable,root->lineno);
             if(entry && literal_type!="")
             {
-                checktypes(entry->type,literal_type,root->lineno);
+                bool check = checktypevariable(entry,literal_type, root->lineno);
+                if(check)
                 root->type=entry->type;
             }
         }
         if(root->val == "PostIncrementExpression"|| root->val == "PreIncrementExpression" || root->val == "PostDecrementExpression"|| root->val == "PreDecrementExpression")
         {
-            // cout<<temp_identifier<<" ";
             SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable,root->lineno);
             if(entry && literal_type!="")
             {
-                checktypes(entry->type,literal_type,root->lineno);
+                bool check = checktypevariable(entry,literal_type, root->lineno);
+                if(check)
                 root->type=entry->type;
             }
         }
