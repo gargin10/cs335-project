@@ -2,10 +2,10 @@
 
 #include "SymbolEntry.cpp"
 #include "SymbolTable.cpp"
+#include "helper.cpp"
 #include <map>
 #include <iostream>
 #include <cstdio>
-#include <set>
 using namespace std;
 
 class SymbolTableBuilder {
@@ -64,6 +64,7 @@ public:
         vector<string> typeargs;
         vector<pair<string,int>> id_list;
         string temp_identifier="";
+        string literal_type="";
         int dims=0;
         if(validstartscope(root))
         {
@@ -120,6 +121,23 @@ public:
             }
             if(strcmp(child_node->val,"[]")==0)
                 dims++; 
+
+            if(isOperator(child_node->val))
+                literal_type=child_node->type;
+            if(child_node->token=="LITERAL")
+                literal_type=child_node->type;
+            if(isOperator(child_node->val))
+            {
+                temp_identifier=child_node->lexeme;
+                literal_type=child_node->type;
+            }
+            if(child_node->val=="Expression")
+                literal_type=child_node->type;
+        }
+        if(isOperator(root->val))
+        {
+            root->lexeme=temp_identifier;
+            root->type=literal_type;
         }
         if(strcmp(root->val,"=")==0)
         {
@@ -209,6 +227,24 @@ public:
         if(root->val == "ForStatement")
         {
             curr_symtable = curr_symtable -> parent;
+        }
+        if((root->val == "Expression" || root->val  == "Statement")&& temp_identifier!="")
+        {
+            SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable);
+            if(entry && literal_type!="")
+            {
+                checktypes(entry->type,literal_type);
+                root->type=entry->type;
+            }
+        }
+        if(root->val == "Assignment")
+        {
+            SymbolEntry* entry= checkvariable(temp_identifier,curr_symtable);
+            if(entry && literal_type!="")
+            {
+                checktypes(entry->type,literal_type);
+                root->type=entry->type;
+            }
         }
     }
 };
