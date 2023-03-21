@@ -20,74 +20,6 @@ struct Node{
     SymbolTable* symbol_table;
     vector<SymbolEntry*> entries;
     vector<Node*> children;
-
-    void addTypeEntry(vector<SymbolEntry*> entries, string type)
-    {
-        for(auto ele: entries)
-        {
-            ele->type=type;
-            ele->temp=false;
-            this->entries.push_back(ele);
-        }
-    }
-    void addReturntypeEntry(vector<SymbolEntry*> entries, string returntype)
-    {
-        for(auto ele: entries)
-        {
-            ele->type=returntype;
-            ele->temp=false;
-            this->entries.push_back(ele);
-        }
-    }
-    void addReturntypeEntry(SymbolEntry* entry, string returntype)
-    {
-        assert(entry!=NULL);
-        // cout<<"Tempentry:"<<"\n";
-        // cout<< entry->lexeme<<"\t"<<entry->token <<"\t"<< entry->type << "\t"
-        //             << entry->line_number << "\t" << entry->size <<"\t" << entry->offset<<"\n";  
-
-        entry->type=returntype;
-        entry->temp=false;
-        // cout<< entry->lexeme<<"\t"<<entry->token <<"\t"<< entry->type << "\t"
-        //             << entry->line_number << "\t" << entry->size <<"\t" << entry->offset<<"\n";  
-
-        this->entries.push_back(entry);
-    }
-
-    void pushEntriestoUSTE(vector<Node*> v)
-    {
-        for(auto node: v)
-        {
-            for(auto ele: node->entries)
-            {
-                this->entries.push_back(ele);
-            }
-        }
-    }
-
-    void addEntriestoST(vector<SymbolEntry*> childentries)
-    {
-        this->symbol_table->insert(childentries);
-    }
-
-    void moveEntries()
-    {
-        assert(this->symbol_table!=NULL);
-        this->symbol_table->insert(this->entries);
-        vector<SymbolEntry*> temp;
-        this->entries=temp;
-    }
-
-    void setChildren()
-    {
-        for(auto node: this->children)
-        {
-            if(node->symbol_table)
-            {
-                this->symbol_table->setChild(node->symbol_table);
-            }
-        }
-    }
 };
 
 
@@ -146,7 +78,7 @@ Node* createNode(char* value, vector<Node*> children)
         }
     }
     temp->children=v;
-    temp->pushEntriestoUSTE(v);
+    // temp->pushEntriestoUSTE(v);
     return temp;
 }
 Node* createNode(char* value)

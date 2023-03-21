@@ -1,12 +1,30 @@
 public class ArraySum {
   
-//   private static int arr[][][] = {{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}};
-
-//   public static void main(String[] args) {
-//     int sum = 0;
-//     String s="Hello";
-//     char ch='a';
-//   }
+  private static int arr[][][] = {{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}};
+  public static int arr1[]={0}, b[][];
+  int c[][][][];
+  int d, a[]={1,2};
+  public static void main(String args[]) {
+    // int a,b,c;
+    // String s1,s2;
+    int x[];
+    int sum = 5+3-2;
+    int y=x++;
+    String s="Hello";
+    char ch='a';
+    {}
+    {
+      for(int i=0;i<n;i++)
+      {
+          sum++;
+      }
+    }
+    sum=a+2;
+    z++;
+    if(r>=3)
+      break;
+    k = l +2;
+  }
 }
 // class Student {
 //     public int roll_no;
@@ -18,7 +36,8 @@ public class ArraySum {
 //     }
 //     public static void main()
 //     {
-
+//       x=2;
+//       int x;
 //     }
 // }
   
@@ -86,71 +105,71 @@ public class ArraySum {
 //         ;
 //     }
 // }
- class TestMethods {
+//  class TestMethods {
     
-    // Example of a static method that returns a value
-    public static int staticMethodWithReturn(String args) {
-        // Do something here to calculate and return an integer value
-        return 0;
-    }
-    public void myMethod() {
-        // code goes here
-    }
-    public void myMethod(int x) {
-        // code goes here
-    }
-    public void myMethod(int x, String s, boolean b) {
-        // code goes here
-    }
-    public int myMethod(int x) {
-        return x * 2;
-    }
-    public double myMethod(double x, double y) {
-        return x + y;
-    }
-    public static void myMethod() {
-        // code goes here
-    }
-    public static void myMethod(int x, String s, boolean b) {
-        // code goes here
-    }
-    public static double myMethod(double x, double y) {
-        return x + y;
-    }
-    private void myMethod(int x, String s, boolean b) {
-        // code goes here
-    }
-    private int myMethod(int x) {
-        return x * 2;
-    }
-    public static void staticMethod() {
-        // Do something here
-    }
-    
-    // Example of an instance method with no parameters
-    public void instanceMethod() {
-        // Do something here
-    }
-    
-    // Example of a static method with parameters
-    public static void staticMethodWithParams(int x, String str) {
-        // Do something here with x and str
-    }
-    
-    // Example of an instance method with parameters
-    public void instanceMethodWithParams(int x, String str) {
-        // Do something here with x and str
-    }
-    
-    // Example of a static method that returns a value
-    public static int staticMethodWithReturn() {
-        // Do something here to calculate and return an integer value
-        return 0;
-    }
-    
-    // Example of an instance method that returns a value
-    public int instanceMethodWithReturn() {
-        // Do something here to calculate and return an integer value
-        return 0;
-    }
-}
+//     // Example of a static method that returns a value
+//     public static int staticMethodWithReturn(String args) {
+//         // Do something here to calculate and return an integer value
+//         return 0;
+//     }
+//     public void myMethod() {
+//         // code goes here
+//     }
+//     public void myMethod(int x) {
+//         // code goes here
+//     }
+//     public void myMethod(int x, String s, boolean b) {
+//         // code goes here
+//     }
+      // public int myMethod(int x) {
+      //     return x * 2;
+      // }
+      // public double myMethod(double x, double y) {
+      //     return x + y;
+      // }
+      // public static void myMethod() {
+      //     // code goes here
+      // }
+      // public static void myMethod(int x, String s, boolean b) {
+      //     // code goes here
+      // }
+      // public static double myMethod(double x, double y) {
+      //     return x + y;
+      // }
+      // private void myMethod(int x, String s, boolean b) {
+      //     // code goes here
+      // }
+      // private int myMethod(int x) {
+      //     return x * 2;
+      // }
+      // public static void staticMethod() {
+      //     // Do something here
+      // }
+      
+      // // Example of an instance method with no parameters
+      // public void instanceMethod() {
+      //     // Do something here
+      // }
+      
+      // // Example of a static method with parameters
+      // public static void staticMethodWithParams(int x, String str) {
+      //     // Do something here with x and str
+      // }
+      
+      // // Example of an instance method with parameters
+      // public void instanceMethodWithParams(int x, String str) {
+      //     // Do something here with x and str
+      // }
+      
+      // // Example of a static method that returns a value
+      // public static int staticMethodWithReturn() {
+      //     // Do something here to calculate and return an integer value
+      //     return 0;
+      // }
+      
+      // // Example of an instance method that returns a value
+      // public int instanceMethodWithReturn() {
+      //     // Do something here to calculate and return an integer value
+      //     return 0;
+      // }
+  // }

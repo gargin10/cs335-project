@@ -154,17 +154,8 @@ TextblockWhitespace [ \t\f]
         }
      }
 
-"//" {
-    int c;
-    for( ; ; ){
-        while( ( c = yyinput() ) != '\n' && c != EOF ) ;
-        if( c == '\n' ) {
-            lineno++;
-            break;
-        }
-        if( c == EOF )
-         printf("EOF between Comments");
-    }
+[\/]{2}[^\n\r]* {
+    // printf("Comment: %s\n",yytext);
 }
 
 "="    { yylval.node = createNode(strdup(yytext)); return(ASSIGN); }

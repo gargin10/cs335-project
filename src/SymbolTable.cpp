@@ -26,17 +26,23 @@ public:
     }
     void insert(SymbolEntry* entry)
     {
+        string x=entry->hash();
+        if(entries.find(x)==entries.end())
+        {
+            vector<SymbolEntry*> temp;
+            entries[x]=temp;
+        }
         entries[entry->hash()].push_back(entry);
     }
 
-    void insert(vector<SymbolEntry*> entries)
-    {
-        for(auto ele:entries)
-        {
-            if(!ele->temp)
-            this->entries[ele->hash()].push_back(ele);
-        }
-    }
+    // void insert(vector<SymbolEntry*> entries)
+    // {
+    //     for(auto ele:entries)
+    //     {
+    //         if(!ele->temp)
+    //         this->entries[ele->hash()].push_back(ele);
+    //     }
+    // }
 
     vector<SymbolEntry*> lookup(string lexeme)
     {
