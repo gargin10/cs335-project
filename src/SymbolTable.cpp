@@ -10,7 +10,7 @@ class SymbolTable {
 
 public:
 
-    map<string, SymbolEntry*> entries;
+    map<string, vector<SymbolEntry*> > entries;
     SymbolTable* parent;
     vector<SymbolTable*> children;
     string scope = "";
@@ -26,7 +26,7 @@ public:
     }
     void insert(SymbolEntry* entry)
     {
-        entries[entry->hash()]=entry;
+        entries[entry->hash()].push_back(entry);
     }
 
     void insert(vector<SymbolEntry*> entries)
@@ -34,11 +34,11 @@ public:
         for(auto ele:entries)
         {
             if(!ele->temp)
-            this->entries[ele->hash()]=ele;
+            this->entries[ele->hash()].push_back(ele);
         }
     }
 
-    SymbolEntry* lookup(string lexeme)
+    vector<SymbolEntry*> lookup(string lexeme)
     {
         SymbolTable* temp= this;
         while(temp)
@@ -50,7 +50,7 @@ public:
             }
             temp=temp->parent;
         }
-        return NULL;
+        return {};
     }
 
     void display(std::ofstream& ofs)
@@ -58,7 +58,9 @@ public:
         ofs << "Scope : "<< scope <<"\n";
         for(auto [_, entry]: entries)
         {
-            entry->display(ofs);
+            for( auto ele : entry ){
+                ele->display(ofs);
+            }
         }
         ofs<<"\n";
         // if(parent)

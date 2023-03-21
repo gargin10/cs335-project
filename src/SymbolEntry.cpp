@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <vector>
 using namespace std;
 
 
@@ -52,18 +53,19 @@ public:
 
     string hash() 
     {
-        string s= this->lexeme+ this->token + this->type;
+        // string s= this->lexeme+ this->token + this->type;
+        string s= this->lexeme+ this->token;
 
-        if(entry_type=="method")
-        {
-            s+=this->no_arguments;
-            for(auto ele: this->type_arguments)   
-                s+=ele;
-        }
-        if(entry_type=="array")
-        {
-            s+=this->no_dimensions; 
-        }
+        // if(entry_type=="method")
+        // {
+        //     s+=this->no_arguments;
+        //     for(auto ele: this->type_arguments)   
+        //         s+=ele;
+        // }
+        // if(entry_type=="array")
+        // {
+        //     s+=this->no_dimensions; 
+        // }
         return s;
     }
 

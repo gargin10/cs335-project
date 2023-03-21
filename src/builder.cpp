@@ -5,6 +5,7 @@
 #include <map>
 #include <iostream>
 #include <cstdio>
+#include <set>
 using namespace std;
 
 class SymbolTableBuilder {
