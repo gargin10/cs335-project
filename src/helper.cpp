@@ -3,32 +3,101 @@
 #include "SymbolTable.h"
 using namespace std;
 
+// returns "" if no definite type can be produced
+string biggertype( string arg1, string arg2){
+    if( arg1 == "STRING")
+    {
+        if(arg2 == "STRING") return "STRING";
+    }
+    if( arg1 == "BOOLEAN")
+    {
+        if(arg2 == "BOOLEAN") return "BOOLEAN";
+    }
+    if( arg2 == "BYTE" )
+    {
+        if( arg1 == "BYTE" ) return "BYTE";
+        // else return false;
+    }
+    if( arg2 == "SHORT" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" ) return "SHORT";
+        // else return false;
+    }
+    if( arg2 == "CHAR" )
+    {
+        if( arg1 == "CHAR" ) return "CHAR";
+        // return false;
+    }
+    if( arg2 == "INT" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "CHAR" ) return "INT";
+        // else return false;
+    }
+    if( arg2 == "LONG" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "CHAR"  ) return "LONG";
+        // else return false;
+    }
+    if( arg2 == "FLOAT" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || arg1 == "CHAR"  ) return "FLOAT";
+        // else return false;
+    }
+    if( arg2 == "DOUBLE" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || arg1 == "DOUBLE" || arg1 == "CHAR" ) return "DOUBLE";
+        // Error else 
+    }
+    return "";
+}
+
+
+// arg1 is where it is used and arg2 is the entry type inside the symbol table i.e. type during declaration time.
 bool castit( string arg1, string arg2){
-    if( arg2 == "BYTE" ){
+    if( arg1 == "STRING")
+    {
+        if(arg2 == "STRING") return true;
+        else return false;
+    }
+    if( arg1 == "BOOLEAN")
+    {
+        if(arg2 == "BOOLEAN") return true;
+        else return false;
+    }
+    if( arg2 == "BYTE" )
+    {
         if( arg1 == "BYTE" ) return true;
         else return false;
     }
-    if( arg2 == "SHORT" ){
+    if( arg2 == "SHORT" )
+    {
         if( arg1 == "BYTE" || arg1 == "SHORT" ) return true;
         else return false;
     }
-    if( arg2 == "INT" ){
-        
+    if( arg2 == "CHAR" )
+    {
+        if( arg1 == "CHAR" ) return true;
+        return false;
     }
-    if( arg1 == "LONG" ){
-        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" ){
-            return true;
-        } else return false;
+    if( arg2 == "INT" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "CHAR" ) return true;
+        else return false;
     }
-    if( arg2 == "FLOAT" ){
-        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" ){
-            return true;
-        } else return false;
+    if( arg2 == "LONG" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "CHAR"  ) return true;
+        else return false;
     }
-    if( arg2 == "DOUBLE" ){
-        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || arg1 == "DOUBLE"){
-            return true;
-        } else return false;
+    if( arg2 == "FLOAT" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || arg1 == "CHAR"  ) return true;
+        else return false;
+    }
+    if( arg2 == "DOUBLE" )
+    {
+        if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || arg1 == "DOUBLE" || arg1 == "CHAR" ) return true;
+        else return false;
     }
 }
 

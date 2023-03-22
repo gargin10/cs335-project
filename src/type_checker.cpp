@@ -38,6 +38,7 @@ public:
         validtypes.insert("FLOAT");
         validtypes.insert("DOUBLE");
         validtypes.insert("VAR");
+        validtypes.insert("STRING");
     }
 
     void build (Node* root)
@@ -71,6 +72,7 @@ public:
             assert(curr_symtable!=NULL);
             curr_symtable -> scope = identifier_class;
             curr_symtable = curr_symtable -> parent;
+
             SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
             entry->type="class";
             addEntry(entry);
@@ -83,6 +85,7 @@ public:
 
             string identifier_method="";
             string method_type="";
+            int method_type_dims=0;
             vector<string> arguments_type;
             for(auto child_node: root-> children)
             {
@@ -96,6 +99,11 @@ public:
                 }
                 if(validtypes.find(child_node->lexeme)!=validtypes.end())
                     method_type= child_node->lexeme;
+                if(child_node->val=="UnannReferenceType")
+                {
+                    method_type=child_node->type;
+                    method_type_dims=child_node->dims;
+                }
             }
             
             assert(curr_symtable!=NULL);
@@ -190,7 +198,7 @@ public:
             string identifier="";
             string field_type="";
             int field_type_dims= 0;
-            vector<pair<string,int>> identifier_list;
+            vector<tuple<string,int,string>> identifier_type_list;
             for(auto child_node: root-> children)
             {
                 build(child_node);  
@@ -202,52 +210,152 @@ public:
                     field_type_dims=child_node->dims;
                 }
                 if(child_node->val=="VariableDeclaratorList")
-                    identifier_list=child_node->identifier_list;
+                    identifier_type_list=child_node->identifier_type_list;
             }
-            for(auto ele: identifier_list)
+            for(auto [ele_identifier, ele_dims,ele_type ]: identifier_type_list)
             {
-                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele.first);
+                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
                 entry->type=field_type;
-                if(ele.second>0)
+                if(ele_dims>0)
                 {
                     entry->entry_type="array";
-                    entry->no_dimensions=ele.second;
+                    entry->no_dimensions=ele_dims;
                 }
+                if(ele_type!="")
+                    checktypevariable(entry,field_type,root->lineno);
                 addEntry(entry);
             }
         }
         else if(root->val=="VariableDeclaratorList")
         {
-            vector<pair<string,int>> identifier_list;
+            vector<tuple<string,int,string>> identifier_type_list;
+            string type="";
             for(auto child_node: root-> children)
             {
                 build(child_node);       
                 if(child_node->val=="VariableDeclaratorId")
                 {
-                    identifier_list.push_back({child_node->identifier,child_node->dims});
+                    identifier_type_list.push_back({child_node->identifier,child_node->dims,""});
                 }  
                 if(strcmp(child_node->val,"=")==0)
                 {
-                    identifier_list.push_back({child_node->identifier,child_node->dims});
+                    identifier_type_list.push_back({child_node->identifier,child_node->dims,child_node->type});
+                    type=child_node->type;
                 }
             }
-            root->identifier_list=identifier_list;
+            root->identifier_type_list=identifier_type_list;
+            root->type=type;
         }
         else if(strcmp(root->val,"=")==0)
         {
-            string identifier="";
+            string identifier1="";
+            string righthand_type="";
             int variable_dims=0;
+            int f=0;
             for(auto child_node: root-> children)
             {
                 build(child_node);    
                 if(child_node->token=="VariableDeclaratorId")
                 {
-                    identifier=child_node->identifier;
+                    f=1;
+                    identifier1=child_node->identifier;
                     variable_dims=child_node->dims;
                 }            
+                if(child_node->token=="IDENTIFIER")
+                {
+                    identifier1=child_node->lexeme;
+                }
+                if(child_node->val=="Expression")
+                    righthand_type=child_node->type;
             }
-            root->identifier=identifier;  
-            root->dims=variable_dims; 
+            if(f)
+            {
+                root->identifier=identifier1;  
+                root->dims=variable_dims; 
+                root->type=righthand_type;
+            }
+            else
+            {
+                SymbolEntry* entry= checkvariable(identifier1,curr_symtable,root->lineno);
+                if(entry)
+                {
+                    bool check = checktypevariable(entry,righthand_type, root->lineno);
+                    if(check)
+                        root->type=righthand_type;
+                }
+            }
+        }
+        else if(root->val == "ForStatement")
+        {
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
+
+            for(auto child_node: root-> children)
+            {
+                build(child_node);                
+            }
+            curr_symtable = curr_symtable -> parent;
+        }
+        else if(root->val == "Expression" || root->val  == "Statement")
+        {
+            string exp_type="";
+            for(auto child_node: root-> children)
+            {
+                build(child_node);      
+                if(isOperator(child_node->val))
+                {
+                    exp_type=child_node->type;
+                }    
+                if(child_node->token=="IDENTIFIER")
+                {
+                    SymbolEntry* entry= checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    exp_type=entry->type;
+                }   
+                if(child_node->token=="LITERAL")
+                {
+                    exp_type=child_node->type;
+                }  
+            }
+            root->type=exp_type;
+        }
+        else if(isOperator(root->val))
+        {
+            string type1="";
+            string type2="";
+            for(auto child_node: root-> children)
+            {
+                build(child_node);   
+                if(child_node->token=="IDENTIFIER")
+                {
+                    if(type1=="")
+                    {
+                        SymbolEntry* entry= checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry)
+                            type1=entry->type;
+                    }
+                    else
+                    {
+                        SymbolEntry* entry= checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry)
+                            type2=entry->type;
+                    }     
+                }
+                // cout<<child_node->token<<" ";
+                if(isOperator(child_node->val)|| child_node->val=="Expression" || child_node->token=="LITERAL")
+                {
+                    
+                    if(type1=="")
+                        type1=child_node->type;
+                    else
+                        type2=child_node->type;
+                }   
+            }
+            if(!castit(type1,type2))
+            {
+                throwerror("Incompatible types i.e. conversion from "+type1 + " to "+type2+" Line number: "+to_string(root->lineno));
+            }
+            root->type=type1;
         }
         else
         {

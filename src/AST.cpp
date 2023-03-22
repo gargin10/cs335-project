@@ -12,7 +12,7 @@ struct Node{
 
     int dims=0;
     string type="";
-    vector<pair<string,int>> identifier_list;
+    vector<tuple<string,int,string>> identifier_type_list;
     vector<string> arguments_type;
     string identifier="";
 
@@ -103,22 +103,22 @@ Node* createNode( char* lexeme, char* token)
     temp1->val=ans;
     temp1->lexeme=lexeme;
     if( strcmp( token, "INT_LITERAL") == 0 ){
-        temp1->type = "int";
+        temp1->type = "INT";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "FLOAT_LITERAL") == 0 ){
-        temp1->type = "float";
+        temp1->type = "FLOAT";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "CHAR_LITERAL") == 0 ){
-        temp1->type = "char";
+        temp1->type = "CHAR";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "BOOLEAN_LITERAL") == 0 ){
-        temp1->type = "boolean";
+        temp1->type = "BOOLEAN";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "NULL_LITERAL") == 0 ){
-        temp1->type = "null";
+        temp1->type = "NULL";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "STRING_LITERAL") == 0 ){
-        temp1->type = "string";
+        temp1->type = "STRING";
         temp1->token = "LITERAL";
     } else temp1->token=token;
     return temp1;
@@ -144,7 +144,25 @@ Node* createNode( char* lexeme, char* token, int lineno)
     strcat(ans,")");
     temp1->val=ans;
     temp1->lexeme=lexeme;
-    temp1->token=token;
+    if( strcmp( token, "INT_LITERAL") == 0 ){
+        temp1->type = "INT";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "FLOAT_LITERAL") == 0 ){
+        temp1->type = "FLOAT";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "CHAR_LITERAL") == 0 ){
+        temp1->type = "CHAR";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "BOOLEAN_LITERAL") == 0 ){
+        temp1->type = "BOOLEAN";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "NULL_LITERAL") == 0 ){
+        temp1->type = "NULL";
+        temp1->token = "LITERAL";
+    } else if( strcmp( token, "STRING_LITERAL") == 0 ){
+        temp1->type = "STRING";
+        temp1->token = "LITERAL";
+    } else temp1->token=token;
     temp1->lineno=lineno;
     return temp1;
 }
