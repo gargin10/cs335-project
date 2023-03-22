@@ -7,24 +7,30 @@ public class ArraySum {
   public static void main(String args[]) {
     // int a,b,c;
     // String s1,s2;
-    int x[];
-    int sum = 5+3-2;
+    int x;
+    int sum = 5+2;
+    int a=2, b[]={true,4};
     int y=f++;
     String s="Hello";
     char ch='a';
+    x=y;
+    char t[][];
+    int v[][][]=new int[10][];
     {}
     {
       for(int i=0;i<n;i++)
       {
           sum++;
-          y=t[2];
+          y=t[3.0][3];
+          t[2][3]=y;
       }
     }
     sum=a+2;
     z++;
     if(r>=3)
       break;
-    k = l +2;
+    boolean f=true;
+    k = f+3;
   }
 }
 // class Student {

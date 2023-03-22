@@ -253,6 +253,7 @@ public:
             int variable_dims=0;
             int array_dims=0;
             int f=0;
+            int righthand_dims=0;
             for(auto child_node: root-> children)
             {
                 build(child_node);    
@@ -267,7 +268,10 @@ public:
                     identifier1=child_node->lexeme;
                 }
                 if(child_node->val=="Expression")
+                {
                     righthand_type=child_node->type;
+                    righthand_dims=child_node->dims;
+                }
                 if(child_node->token=="ArrayAccess")
                 {
                     identifier1=child_node->identifier;
@@ -279,8 +283,15 @@ public:
                 root->identifier=identifier1;  
                 root->dims=variable_dims; 
                 root->type=righthand_type;
+                if(righthand_dims>0)
+                {
+                    if(variable_dims!=righthand_dims)
+                    {
+                        throwerror("Required array access dimensions as "+to_string(variable_dims)+" but found "+to_string(righthand_dims)+" Line number: "+to_string(root->lineno));
+                    }
+                }
             }
-            else if(array_dims>0)
+            else if(righthand_dims>0)
             {
                 SymbolEntry* entry= checkarray(identifier1,array_dims,curr_symtable,root->lineno);
                 if(entry)
@@ -316,6 +327,7 @@ public:
         else if(root->val == "Expression" || root->val  == "Statement")
         {
             string exp_type="";
+            int dims=0;
             for(auto child_node: root-> children)
             {
                 build(child_node);      
@@ -340,8 +352,14 @@ public:
                         exp_type=entry->type;
                     }
                 }   
+                if(child_node->token=="ArrayCreationExpression")
+                {
+                    exp_type=child_node->type;
+                    dims=child_node->dims;
+                }   
             }
             root->type=exp_type;
+            root->dims=dims;
         }
         else if(isOperator(root->val))
         {
@@ -395,7 +413,7 @@ public:
                     array_dims++;
                     bool ans = typecast(child_node,"INT");
                     if(!ans)
-                        throwerror("Incorrect type in array access expression");
+                        throwerror("Incorrect type in array access expression Line number: "+to_string(root->lineno));
                 }
                 if(child_node->val=="ArrayAccess")
                 {
@@ -405,6 +423,49 @@ public:
             }
             root->identifier=identifier;
             root->dims=array_dims;
+        }
+        else if(root->val=="ArrayCreationExpression")
+        {
+            string array_type="";
+            int type_dims=0;
+            int variable_dims = 0;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                if(validtypes.find(child_node->lexeme)!=validtypes.end())
+                    array_type= child_node->lexeme;
+                if(child_node->val=="UnannReferenceType")
+                {
+                    array_type=child_node->type;
+                    type_dims=child_node->dims;
+                }
+                if(child_node->val=="DimExprs")
+                {
+                    variable_dims += child_node->dims;    
+                }
+                if(child_node->val=="[]")
+                {
+                    variable_dims++;    
+                }
+            }
+            root->type=array_type;
+            root->dims=variable_dims;
+        }
+        else if(root->val=="DimExprs")
+        {
+            int variable_dims = 0;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                if(child_node->val=="Expression")
+                {
+                    bool ans = typecast(child_node,"INT");
+                    variable_dims++;
+                    if(!ans)
+                        throwerror("Incorrect type in dimensions specification expression");
+                }
+            }
+            root->dims = variable_dims;
         }
         else
         {
