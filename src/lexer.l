@@ -99,6 +99,7 @@ TextblockWhitespace [ \t\f]
 "catch"           {yylval.node = createNode("CATCH",lineno); return(CATCH); }
 "extends"           {yylval.node = createNode("EXTENDS",lineno); return(EXTENDS); }
 "int"           {yylval.node = createNode("INT",lineno); return(INT); }
+"String"           {yylval.node = createNode("STRING",lineno); return(STRING); }
 "short"           {yylval.node = createNode("SHORT",lineno); return(SHORT); }
 "try"           {yylval.node = createNode("TRY",lineno); return(TRY); }
 "char"           {yylval.node = createNode("CHAR",lineno); return(CHAR); }
