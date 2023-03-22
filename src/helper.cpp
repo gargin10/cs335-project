@@ -3,6 +3,7 @@
 #include "SymbolTable.h"
 using namespace std;
 
+
 // returns "" if no definite type can be produced
 string biggertype( string arg1, string arg2){
     if( arg1 == "STRING")
@@ -161,6 +162,38 @@ SymbolEntry* checkvariable(string lexeme, SymbolTable* symbol_table, int lineno)
     return list_entries[0];
 }
 
+SymbolEntry* checkarray(string array_identifier, int dims,SymbolTable* symbol_table, int lineno)
+{
+    assert(symbol_table!=NULL);
+    // vector<SymbolEntry*> list_entries;
+    vector<SymbolEntry*> list_entries=symbol_table->lookup(array_identifier);
+    if(list_entries.size()==0)
+    {
+        // symbol_table->display();
+        throwerror("Array identifier not declared: "+array_identifier+" Line number: "+to_string(lineno));
+        return NULL;
+    }
+    if(list_entries[0]->no_dimensions!=dims)
+    {
+        throwerror("Required array access dimensions as "+to_string(list_entries[0]->no_dimensions)+" but found "+to_string(dims)+" Line number: "+to_string(lineno));
+    }
+    return list_entries[0];
+}
+bool checktypearrayacess(SymbolEntry* entry, string type, int lineno)
+{
+    if( entry->entry_type != "array" ) 
+    {
+        throwerror("Identifier '"+entry->lexeme+"' used as a array access however declared as type "+entry->entry_type+" Line number: "+to_string(lineno));
+        return false;
+    }
+    if( !castit( type, entry->type) ) 
+    {
+        throwerror("Incorrect type conversion of Identifier '"+entry->lexeme+"' declared as "+entry->type+" to type as "+ type+ " Line number: "+to_string(lineno));
+        return false;
+    }
+    return true;
+}
+
 bool checktypevariable(SymbolEntry* entry, string type, int lineno)
 {
     if( entry->entry_type != "variable" ) 
@@ -174,4 +207,16 @@ bool checktypevariable(SymbolEntry* entry, string type, int lineno)
         return false;
     }
     return true;
+}
+
+bool typecast(Node* root, string type)
+{
+    if(root->type==type)
+    return true;
+    if(castit(root->type,type))
+    {
+        root->type=type;
+        return true;
+    }
+    return false;
 }

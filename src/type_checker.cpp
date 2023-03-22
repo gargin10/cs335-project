@@ -251,6 +251,7 @@ public:
             string identifier1="";
             string righthand_type="";
             int variable_dims=0;
+            int array_dims=0;
             int f=0;
             for(auto child_node: root-> children)
             {
@@ -267,12 +268,27 @@ public:
                 }
                 if(child_node->val=="Expression")
                     righthand_type=child_node->type;
+                if(child_node->token=="ArrayAccess")
+                {
+                    identifier1=child_node->identifier;
+                    array_dims=child_node->dims;
+                }     
             }
             if(f)
             {
                 root->identifier=identifier1;  
                 root->dims=variable_dims; 
                 root->type=righthand_type;
+            }
+            else if(array_dims>0)
+            {
+                SymbolEntry* entry= checkarray(identifier1,array_dims,curr_symtable,root->lineno);
+                if(entry)
+                {
+                    bool check = checktypearrayacess(entry,righthand_type, root->lineno);
+                    if(check)
+                        root->type=righthand_type;
+                }
             }
             else
             {
@@ -315,7 +331,15 @@ public:
                 if(child_node->token=="LITERAL")
                 {
                     exp_type=child_node->type;
-                }  
+                } 
+                if(child_node->token=="ArrayAccess")
+                {
+                    SymbolEntry* entry= checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
+                    if(entry)
+                    {
+                        exp_type=entry->type;
+                    }
+                }   
             }
             root->type=exp_type;
         }
@@ -356,6 +380,31 @@ public:
                 throwerror("Incompatible types i.e. conversion from "+type1 + " to "+type2+" Line number: "+to_string(root->lineno));
             }
             root->type=type1;
+        }
+        else if(root->val=="ArrayAccess")
+        {
+            string identifier="";
+            int array_dims= 0;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);  
+                if(child_node->token=="IDENTIFIER")
+                    identifier=child_node->lexeme;
+                if(child_node->val=="Expression")
+                {
+                    array_dims++;
+                    bool ans = typecast(child_node,"INT");
+                    if(!ans)
+                        throwerror("Incorrect type in array access expression");
+                }
+                if(child_node->val=="ArrayAccess")
+                {
+                    identifier=child_node->identifier;
+                    array_dims+=child_node->dims;
+                }
+            }
+            root->identifier=identifier;
+            root->dims=array_dims;
         }
         else
         {
