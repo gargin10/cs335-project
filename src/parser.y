@@ -2,7 +2,7 @@
     #pragma once
     #include <bits/stdc++.h>
     #include "AST.cpp"
-    #include "builder.cpp"
+    #include "type_checker.cpp"
     
     extern int lineno;
     FILE* dotfile;
@@ -81,14 +81,11 @@
 CompilationUnit: {  
                     vector<Node*> v;
                     $$=createNode("CompilationUnit",v);
-                    // $$->symbol_table = new SymbolTable("CompilationUnit"); 
                     root=$$;
                 }
 |   OrdinaryCompilationUnit {  
                                 vector<Node*> v{$1};
                                 $$=createNode("CompilationUnit",v);
-                                // $$->symbol_table = new SymbolTable("CompilationUnit");
-                                // $$->moveEntries();
                                 root=$$; 
                             }
 
@@ -206,58 +203,34 @@ NormalClassDeclaration0:
     CLASS TypeIdentifier ClassBody {
                                         vector<Node*> v{$1,$2,$3};
                                         $$=createNode(NULL,v);
-                                        // $$->symbol_table=$3->symbol_table;
-                                        // $$->symbol_table->scope=$2->tempval;
-                                        // $$->addTypeEntry($2->entries,"class");
                                     }
 |   CLASS TypeIdentifier ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
                                                 $$=createNode( NULL,v);
-                                                // $$->symbol_table=$4->symbol_table;
-                                                // $$->symbol_table->scope=$2->tempval;
-                                                // $$->addTypeEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier ClassExtends ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
                                                 $$=createNode(NULL,v);
-                                                // $$->symbol_table=$4->symbol_table;
-                                                // $$->symbol_table->scope=$2->tempval;
-                                                // $$->addTypeEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier ClassExtends ClassPermits ClassBody {
                                                vector<Node*> v{$1,$2,$3,$4,$5};
                                                 $$=createNode( NULL,v);
-                                                // $$->symbol_table=$5->symbol_table;
-                                                // $$->symbol_table->scope=$2->tempval;
-                                                // $$->addTypeEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4};
                                                 $$=createNode( NULL,v);
-                                                // $$->symbol_table=$4->symbol_table;
-                                                // $$->symbol_table->scope=$2->tempval;
-                                                // $$->addTypeEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4, $5};
                                                 $$=createNode( NULL,v);
-                                                // $$->symbol_table=$5->symbol_table;
-                                                // $$->symbol_table->scope=$2->tempval;
-                                                // $$->addTypeEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4, $5};
                                                 $$=createNode( NULL,v);
-                                                // $$->symbol_table=$5->symbol_table;
-                                                // $$->symbol_table->scope=$2->tempval;
-                                                // $$->addTypeEntry($2->entries,"class");
                                             }
 |   CLASS TypeIdentifier TypeParameters ClassExtends ClassPermits ClassBody {
                                                 vector<Node*> v{$1,$2,$3,$4,$5, $6};
                                                 $$=createNode( NULL,v);
-                                                // $$->symbol_table=$6->symbol_table;
-                                                // $$->symbol_table->scope=$2->tempval;
-                                                // $$->addTypeEntry($2->entries,"class");
                                             }
 
 ClassModifier0:
@@ -323,14 +296,10 @@ ClassBody:
     CURLYBRACESTART CURLYBRACEEND {
                            vector<Node*> v;
                             $$=createNode( "ClassBody",v);
-                            // $$->symbol_table = new SymbolTable("ClassBody");
                         }
 |   CURLYBRACESTART ClassBodyDeclaration0 CURLYBRACEEND {
                            vector<Node*> v{$2};
                             $$=createNode( "ClassBody",v);
-                            // $$->symbol_table = new SymbolTable("ClassBody");
-                            // $$->moveEntries();
-                            // $$->symbol_table->setChild($2->symbol_table);
                         }
 
 ClassBodyDeclaration0: 
@@ -379,30 +348,14 @@ classmethod:
     MethodHeader MethodBody {
                                 vector<Node*> v{$1,$2};
                                 $$=createNode( "MethodDeclaration",v);
-
-                                // $$->symbol_table = $2->symbol_table;
-                                // $$->symbol_table->scope=$1->tempentry->lexeme;
-                                // $$->moveEntries();
-                                // $$->entries.push_back($1->tempentry);
                             }
 |   UnannType MethodDeclarator MethodBody {
                                     vector<Node*> v{$1,$2,$3};
                                     $$=createNode( "MethodDeclaration",v);
-
-                                    // $$->symbol_table = $3->symbol_table;
-                                    // $$->symbol_table->scope=$2->tempentry->lexeme;
-                                    // $$->moveEntries();
-                                    // $$->addReturntypeEntry($2->tempentry,$1->tempval);
-
                                 }
 |   UnannType MethodDeclarator Throws MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4};
                                         $$=createNode( "MethodDeclaration",v);
-
-                                        // $$->symbol_table = $4->symbol_table;
-                                        // $$->symbol_table->scope=$2->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->addReturntypeEntry($2->tempentry,$1->tempval);
                                     }
 |   NormalClassDeclaration0 {
                                 vector<Node*> v{$1};
@@ -413,8 +366,6 @@ fieldclassmethod:
     UnannType VariableDeclaratorList SEMICOLON{
                                         vector<Node*> v{$1,$2};
                                         $$=createNode( "FieldDeclaration",v);
-
-                                        // $$->addTypeEntry($2->entries, $1->tempval);
                                     }
 |   classmethod { $$ = $1; }
 
@@ -422,26 +373,18 @@ FieldDeclaration:
     UnannType VariableDeclaratorList SEMICOLON {
                                         vector<Node*> v{$1,$2};
                                         $$=createNode( "FieldDeclaration",v);
-
-                                        // $$->addTypeEntry($2->entries, $1->tempval);
                                     }
 |   FieldModifier0 UnannType VariableDeclaratorList SEMICOLON {
                                         vector<Node*> v{$1,$2,$3};
                                         $$=createNode( "FieldDeclaration",v);
-
-                                        // $$->addTypeEntry($3->entries, $2->tempval);
                                     }
 |   ConstructorModifier UnannType VariableDeclaratorList SEMICOLON {
                                         vector<Node*> v{$1,$2,$3};
                                         $$=createNode( "FieldDeclaration",v);
-
-                                        // $$->addTypeEntry($3->entries, $2->tempval);
                                     }
 |   ConstructorModifier FieldModifier UnannType VariableDeclaratorList SEMICOLON {
                                         vector<Node*> v{$1,$2,$3,$4};
                                         $$=createNode( "FieldDeclaration",v);
-
-                                        // $$->addTypeEntry($4->entries, $3->tempval);
                                     }
 
 FieldModifier0: 
@@ -459,110 +402,50 @@ MethodDeclaration:
     MethodHeader MethodBody {
                                 vector<Node*> v{$1,$2};
                                 $$=createNode( "MethodDeclaration",v);
-                                
-                                // $$->symbol_table = $2->symbol_table;
-                                // $$->symbol_table->scope=$1->tempentry->lexeme;
-                                // $$->moveEntries();
-                                // $$->entries.push_back($1->tempentry);
-                            }
+                             }
 |   UnannType MethodDeclarator Throws MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4};
                                         $$=createNode( "MethodDeclaration",v);
-
-                                        // $$->symbol_table = $4->symbol_table;
-                                        // $$->symbol_table->scope=$2->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->addReturntypeEntry($2->tempentry,$1->tempval);
                                     }
 |   UnannType MethodDeclarator MethodBody  {
                                     vector<Node*> v{$1,$2,$3};
                                     $$=createNode( "MethodDeclaration",v);
-                                    
-                                    // $$->symbol_table = $3->symbol_table;
-                                    // $$->symbol_table->scope=$2->tempentry->lexeme;
-                                    // $$->moveEntries();
-                                    // $$->addReturntypeEntry($2->tempentry,$1->tempval);
                                 }
 |   MethodModifier0 MethodHeader MethodBody {
                                         vector<Node*> v{$1,$2,$3};
                                         $$=createNode( "MethodDeclaration",v);
-                                        
-                                        // $$->symbol_table = $3->symbol_table;
-                                        // $$->symbol_table->scope=$2->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->entries.push_back($2->tempentry);
                                     }
 |   ConstructorModifier MethodHeader MethodBody {
                                         vector<Node*> v{$1,$2,$3};
                                         $$=createNode( "MethodDeclaration",v);
-                                        
-                                        // $$->symbol_table = $3->symbol_table;
-                                        // $$->symbol_table->scope=$2->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->entries.push_back($2->tempentry);
                                     }
 |   ConstructorModifier MethodModifier MethodHeader MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4};
                                         $$=createNode( "MethodDeclaration",v);
-
-                                        // $$->symbol_table = $4->symbol_table;
-                                        // $$->symbol_table->scope=$3->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->entries.push_back($3->tempentry);
                                     }
 |   MethodModifier0 UnannType MethodDeclarator Throws MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4,$5};
                                         $$=createNode( "MethodDeclaration",v);
-                                        
-                                        // $$->symbol_table = $5->symbol_table;
-                                        // $$->symbol_table->scope=$3->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->addReturntypeEntry($3->tempentry,$2->tempval);
                                     }
 |   ConstructorModifier UnannType MethodDeclarator Throws MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4,$5};
                                         $$=createNode( "MethodDeclaration",v);
-                                        
-                                        // $$->symbol_table = $5->symbol_table;
-                                        // $$->symbol_table->scope=$3->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->addReturntypeEntry($3->tempentry,$2->tempval);
                                     }
 |   ConstructorModifier MethodModifier UnannType MethodDeclarator Throws MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4,$5,$6};
                                         $$=createNode( "MethodDeclaration",v);
-                                        
-                                        // $$->symbol_table = $6->symbol_table;
-                                        // $$->symbol_table->scope=$4->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->addReturntypeEntry($4->tempentry,$3->tempval);
                                     }
 |   MethodModifier0 UnannType MethodDeclarator MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4};
                                         $$=createNode( "MethodDeclaration",v);
-                                        
-                                        // $$->symbol_table = $4->symbol_table;
-                                        // $$->symbol_table->scope=$3->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->addReturntypeEntry($3->tempentry,$2->tempval);
                                     }
 |   ConstructorModifier UnannType MethodDeclarator MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4};
                                         $$=createNode( "MethodDeclaration",v);
-                                        
-                                        // $$->symbol_table = $4->symbol_table;
-                                        // $$->symbol_table->scope=$3->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->addReturntypeEntry($3->tempentry,$2->tempval);
                                     }
 |   ConstructorModifier MethodModifier UnannType MethodDeclarator MethodBody {
                                         vector<Node*> v{$1,$2,$3,$4,$5};
                                         $$=createNode( "MethodDeclaration",v);
-                                        
-                                        // $$->symbol_table = $5->symbol_table;
-                                        // $$->symbol_table->scope=$4->tempentry->lexeme;
-                                        // $$->moveEntries();
-                                        // $$->addReturntypeEntry($4->tempentry,$3->tempval);
                                     }
 
 
@@ -602,10 +485,8 @@ VariableDeclarator:
 
 VariableDeclaratorId:
     IDENTIFIER { 
-                    $$=$1; 
-                    // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                    // entry->temp=true;
-                    // $$->entries.push_back(entry);
+                    vector<Node*> v{$1};
+                    $$=createNode( "VariableDeclaratorId",v);
                 }   
 |   IDENTIFIER Dims {
                         vector<Node*> v{$1,$2};
@@ -618,7 +499,10 @@ VariableInitializer:
 
 UnannType:
     UnannPrimitiveType { $$ = $1; }
-|   UnannReferenceType { $$ = $1; }
+|   UnannReferenceType {
+                        vector<Node*> v{$1};
+                        $$=createNode( "UnannReferenceType",v);
+                    }
 
 UnannPrimitiveType:
     NumericType { $$ = $1; }
@@ -664,26 +548,18 @@ MethodHeader:
     VOID MethodDeclarator {
                         vector<Node*> v{$1,$2};
                         $$=createNode( NULL,v);
-                        // $$->tempentry=$2->tempentry;
-                        // $$->tempentry->type="void";
                     }
 |   TypeParameters Result MethodDeclarator {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( NULL,v);
-                        // $$->tempentry=$3->tempentry;
-                        // $$->tempentry->type=$2->tempval;
                     }
 |   VOID MethodDeclarator Throws {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( NULL,v);
-                        // $$->tempentry=$2->tempentry;
-                        // $$->tempentry->type="void";
                     }
 |   TypeParameters Result MethodDeclarator Throws {
                         vector<Node*> v{$1,$2,$3,$4};
                         $$=createNode( NULL,v);
-                        // $$->tempentry=$3->tempentry;
-                        // $$->tempentry->type=$2->tempval;
                     }
 
 
@@ -695,70 +571,52 @@ MethodDeclarator:
     IDENTIFIER BRACESTART BRACEEND {
                         vector<Node*> v{$1};
                         $$=createNode( "MethodDeclarator",v);
-
-                        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                        // entry->entry_type="method";
-                        // $$->tempentry=entry;
                     }
 |   IDENTIFIER BRACESTART FormalParameterList BRACEEND {
                         vector<Node*> v{$1,$3};
                         $$=createNode( "MethodDeclarator",v);
-
-                        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                        // entry->no_arguments=$3->tempargs.size();
-                        // entry->type_arguments=$3->tempargs;
-                        // entry->entry_type="method";
-                        // $$->tempentry=entry;
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA BRACEEND {
                         vector<Node*> v{$1,$3,$4};
                         $$=createNode( "MethodDeclarator",v);
-
-                        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                        // entry->entry_type="method";
-                        // $$->tempentry=entry;
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA FormalParameterList BRACEEND {
                         vector<Node*> v{$1,$3,$4,$5};
                         $$=createNode( "MethodDeclarator",v);
-
-                        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                        // entry->entry_type="method";
-                        // $$->tempentry=entry;
                     }
 |   IDENTIFIER BRACESTART BRACEEND Dims {
                         vector<Node*> v{$1,$4};
                         $$=createNode( "MethodDeclarator",v);
 
-                        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                        // entry->entry_type="method";
-                        // $$->tempentry=entry;
+                        
+                        
+                        
                     }
 |   IDENTIFIER BRACESTART FormalParameterList BRACEEND Dims {
                         vector<Node*> v{$1,$3,$5};
                         $$=createNode( "MethodDeclarator",v);
 
-                        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                        // entry->no_arguments=$3->tempargs.size();
-                        // entry->type_arguments=$3->tempargs;
-                        // entry->entry_type="method";
-                        // $$->tempentry=entry;
+                        
+                        
+                        
+                        
+                        
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA BRACEEND Dims {
                         vector<Node*> v{$1,$3,$4,$6};
                         $$=createNode( "MethodDeclarator",v);
 
-                        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                        // entry->entry_type="method";
-                        // $$->tempentry=entry;
+                        
+                        
+                        
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA FormalParameterList BRACEEND Dims {
                         vector<Node*> v{$1,$3,$4,$5,$7};
                         $$=createNode( "MethodDeclarator",v);
 
-                        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-                        // entry->entry_type="method";
-                        // $$->tempentry=entry;
+                        
+                        
+                        
                     }
 
 ReceiverParameter:
@@ -775,14 +633,14 @@ FormalParameterList:
     FormalParameter {
                         vector<Node*> v{$1};
                         $$=createNode( NULL,v);
-                        // $$->tempargs.push_back($1->tempval);
+                        
                     }
 |   FormalParameterList COMMA FormalParameter {
                         vector<Node*> v($1->children);
                         v.push_back($3);
                         $$=createNode( $1->val,v);
-                        // $$->tempargs.insert($$->tempargs.end(),$1->tempargs.begin(),$1->tempargs.end());
-                        // $$->tempargs.push_back($3->tempval);
+                        
+                        
                     }
 
 FormalParameter:
@@ -790,15 +648,15 @@ FormalParameter:
                         vector<Node*> v{$1,$2};
                         $$=createNode( "FormalParameter",v);
 
-                        // $$->addTypeEntry($2->entries,$1->tempval);
-                        // $$->tempval=$1->tempval;
+                        
+                        
                     }
 |   VariableModifier0 UnannType VariableDeclaratorId {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "FormalParameter",v);
 
-                        // $$->addTypeEntry($3->entries,$2->tempval);
-                        // $$->tempval=$1->tempval;
+                        
+                        
                     }
 |   VariableArityParameter { $$ = $1; }
 
@@ -1191,14 +1049,14 @@ Block:
                         vector<Node*> v{$1,$2};
                         $$=createNode( "Block", v );
 
-                        $$->symbol_table = new SymbolTable("Block");
+                        // $$->symbol_table = new SymbolTable("Block");
                     }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "Block", v );
 
-                        // $$->symbol_table = new SymbolTable("Block");
-                        // $$->symbol_table->setChild($2->symbol_table);
+                        
+                        
                     }
 
 BlockStatements: 
@@ -2678,10 +2536,10 @@ UnqualifiedMethodIdentifier:
 TypeIdentifier:
     IDENTIFIER {
         $$=$1; 
-        // SymbolEntry* entry = new SymbolEntry($1->token, $1->lexeme);
-        // entry->temp=true;
-        // $$->entries.push_back(entry);
-        // $$->tempval=$1->lexeme;
+        
+        
+        
+        
     }
 |    ContextualExceptPRS
 
@@ -2762,8 +2620,8 @@ int main(int argc, char *argv[]) {
     fprintf(dotfile,"digraph {\n");
     yyparse();
 
-    // ofstream ofs("symbol_table1.txt");
-    // displaySymbolTable(ofs,root,NULL);
+    
+    
 
     buildTree(dotfile,root,-1,0);
 

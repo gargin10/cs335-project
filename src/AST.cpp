@@ -9,16 +9,14 @@ struct Node{
     string lexeme="";
     string token="";
     int lineno=0;
+
     int dims=0;
     string type="";
+    vector<pair<string,int>> identifier_list;
+    vector<string> arguments_type;
+    string identifier="";
 
-    string tempval;
-    SymbolEntry* tempentry;
-    vector<pair<string,int>> tempargs;
-    vector<string> typeargs;
-
-    SymbolTable* symbol_table;
-    vector<SymbolEntry*> entries;
+    string tempval="";
     vector<Node*> children;
 };
 
@@ -79,7 +77,6 @@ Node* createNode(char* value, vector<Node*> children)
     }
     temp->children=v;
     temp->lineno=v[0]->lineno;
-    // temp->pushEntriestoUSTE(v);
     return temp;
 }
 Node* createNode(char* value)
@@ -169,37 +166,4 @@ int buildTree(FILE* dotfile, Node* node, int parentno, int co)
         co=buildTree(dotfile,children[i],nodeno,co);
     }
     return co;
-}
-
-void displaySymbolTable(std::ofstream& ofs, Node* node,Node* parent)
-{
-    if(node==NULL)
-    return;
-
-    
-    if(node->symbol_table && (!parent || node->symbol_table!=parent->symbol_table))
-    {    
-        ofs <<"SymbolTable:"<<"\n";
-        node->symbol_table->display(ofs);
-        ofs<<"\n";
-    }
-    // if(node->tempentry)
-    // {
-    //     ofs<<"Tempentry:"<<"\n";
-    //     node->tempentry->display(ofs);
-    // }
-    
-    // ofs<<"Nodeentries:"<<"\n";
-    // for(auto ele: node->entries)
-    // {
-    //     ele->display(ofs);
-    // }
-    // ofs<<"\n";
-    int n=node->children.size();
-    vector<Node*> children=node->children;
-    for(int i=0;i<n;i++)
-    {
-        displaySymbolTable(ofs,children[i],node);
-    }
-    return;
 }
