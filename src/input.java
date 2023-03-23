@@ -4,6 +4,10 @@ public class ArraySum {
   public static int arr1[]={0}, b[][];
   int c[][][][];
   int d, a[]={1,2};
+  int foo(int x, int y)
+  {
+
+  }
   public static void main(String args[]) {
     // int a,b,c;
     // String s1,s2;
@@ -31,6 +35,8 @@ public class ArraySum {
       break;
     boolean f=true;
     k = f+3;
+    double z;
+    foo(x,z);
   }
 }
 // class Student {

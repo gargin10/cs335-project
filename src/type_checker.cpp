@@ -338,7 +338,8 @@ public:
                 if(child_node->token=="IDENTIFIER")
                 {
                     SymbolEntry* entry= checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                    exp_type=entry->type;
+                    if(entry)
+                        exp_type=entry->type;
                 }   
                 if(child_node->token=="LITERAL")
                 {
@@ -466,6 +467,41 @@ public:
                 }
             }
             root->dims = variable_dims;
+        }
+        else if(root->val=="MethodInvocation")
+        {
+            string identifier="";
+            vector<string> arguments_type;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);       
+                if(child_node->token=="IDENTIFIER")
+                {
+                    identifier=child_node->lexeme;
+                }  
+                if(child_node->val=="ArgumentList")
+                {
+                    arguments_type=child_node->arguments_type;
+                }
+            }
+            root->identifier=identifier;
+            root->arguments_type=arguments_type;
+            SymbolEntry* entry = checkmethod(identifier,arguments_type,curr_symtable,root->lineno);
+            if(entry)
+                root->type=entry->type;
+        }
+        else if(root->val=="ArgumentList")
+        {
+            vector<string> arguments_type;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);  
+                if( child_node->val=="Expression")
+                {
+                    arguments_type.push_back(child_node->type);
+                }
+            }
+            root->arguments_type=arguments_type;
         }
         else
         {
