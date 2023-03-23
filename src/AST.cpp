@@ -1,6 +1,9 @@
+#pragma once
+
 #include <bits/stdc++.h>
 #include "SymbolTable.cpp"
 #include "SymbolEntry.cpp"
+#include "3AC_entry.cpp"
 
 using namespace std;
 
@@ -16,6 +19,7 @@ struct Node{
     vector<string> arguments_type;
     string identifier="";
     SymbolTable* symtable;
+    string code_entry="";
 
     bool expression_new_used = false;
     string tempval="";

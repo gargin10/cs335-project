@@ -3,6 +3,8 @@
 #include "SymbolEntry.cpp"
 #include "SymbolTable.cpp"
 #include "helper.cpp"
+#include "3AC.cpp"
+
 #include <map>
 #include <iostream>
 #include <cstdio>
@@ -16,6 +18,7 @@ public:
     SymbolTable* prev_symtable;
     Helper* helper;
     int method_invocation_flag=0;
+    ThreeAddressCodeBuilder* builder;
 
     SymbolTableBuilder()
     {
@@ -24,15 +27,25 @@ public:
         prev_symtable=NULL;
         helper=new Helper();
         helper->display_flag=0;
+        builder=new ThreeAddressCodeBuilder();
+        builder->display_flag=0;
     }
 
     void setMethodInvocationFlag(int method_invocation_flag)
     {
         this->method_invocation_flag=method_invocation_flag;
         if(!method_invocation_flag)
+        {
             helper->display_flag=0;
+            builder->display_flag=0;
+            builder->code_entries.clear();
+        }
         else
+        {
             helper->display_flag=1;
+            builder->display_flag=1;
+            builder->code_entries.clear();
+        }
     }
     void addEntry(SymbolEntry* entry)
     {
@@ -397,10 +410,6 @@ public:
                     }
                 }
             }
-            if( new_used )
-            {
-                root->expression_new_used = true;
-            }
             root->identifier_type_list=identifier_type_list;
             root->type=type;
         }
@@ -512,10 +521,10 @@ public:
                 }    
                 if(child_node->token=="IDENTIFIER")
                 {
-                    vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                    if(entry[0])
-                        if( entry[0]->type == "class" ) exp_type=entry[0]->lexeme;
-                        else exp_type=entry[0]->type;
+                    SymbolEntry* entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    if(entry)
+                        exp_type=entry->type;
+                    root->code_entry=child_node->lexeme;
                 }   
                 if(child_node->token=="LITERAL")
                 {
@@ -675,6 +684,9 @@ public:
         {
             string type1="";
             string type2="";
+            string op="";
+            string arg1="";
+            string arg2="";
             for(auto child_node: root-> children)
             {
                 build(child_node);   
@@ -688,9 +700,10 @@ public:
                     }
                     else
                     {
-                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                        if(entry[0])
-                            type2=entry[0]->type;
+                        SymbolEntry* entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry)
+                            type2=entry->type;
+                        arg2=child_node->lexeme;
                     }     
                 }
                 if(child_node->val=="ArrayAccess")
@@ -704,13 +717,39 @@ public:
                             type2=entry->type;
                     }
                 }
-                if(helper->isOperator(child_node->val)|| child_node->val=="Expression"|| child_node->token=="LITERAL")
+                if(helper->isOperator(child_node->val))
                 {
                     if(type1=="")
                         type1=child_node->type;
                     else
                         type2=child_node->type;
                 }   
+                if(child_node->val=="Expression")
+                {
+                    if(type1=="")
+                    {
+                        type1=child_node->type;
+                        arg1=child_node->code_entry;
+                    }
+                    else
+                    {
+                        type2=child_node->type;
+                        arg2=child_node->code_entry;
+                    }
+                }  
+                if(child_node->token=="LITERAL")
+                {
+                    if(type1=="")
+                    {
+                        type1=child_node->type;
+                        arg1=child_node->code_entry;
+                    }
+                    else
+                    {
+                        type2=child_node->type;
+                        arg2=child_node->code_entry;
+                    }
+                }  
             }
             if( root->children.size() == 1 )
             {
@@ -720,6 +759,7 @@ public:
             {
                 helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible types i.e. conversion from "+type1 + " to "+type2);
             }
+            builder->generateExpression(root->val,arg1,arg2);
             root->type=type1;
         }
         else if(root->val=="ArrayAccess")
@@ -827,6 +867,10 @@ public:
                 }
             }
             root->arguments_type=arguments_type;
+        }
+        else if(root->token=="LITERAL")
+        {
+            root->code_entry=builder->generateExpression("","",root->lexeme);
         }
         else
         {
