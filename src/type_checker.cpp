@@ -287,7 +287,7 @@ public:
                 {
                     if(variable_dims!=righthand_dims)
                     {
-                        throwerror("Required array access dimensions as "+to_string(variable_dims)+" but found "+to_string(righthand_dims)+" Line number: "+to_string(root->lineno));
+                        throwerror("Line number: "+to_string(root->lineno)+" Required array access dimensions as "+to_string(variable_dims)+" but found "+to_string(righthand_dims));
                     }
                 }
             }
@@ -396,7 +396,7 @@ public:
             }
             if(!castit(type1,type2))
             {
-                throwerror("Incompatible types i.e. conversion from "+type1 + " to "+type2+" Line number: "+to_string(root->lineno));
+                throwerror("Line number: "+to_string(root->lineno)+" Incompatible types i.e. conversion from "+type1 + " to "+type2);
             }
             root->type=type1;
         }
@@ -414,7 +414,7 @@ public:
                     array_dims++;
                     bool ans = typecast(child_node,"INT");
                     if(!ans)
-                        throwerror("Incorrect type in array access expression Line number: "+to_string(root->lineno));
+                        throwerror("Line number: "+to_string(root->lineno)+" Incorrect type in array access expression");
                 }
                 if(child_node->val=="ArrayAccess")
                 {
@@ -463,7 +463,7 @@ public:
                     bool ans = typecast(child_node,"INT");
                     variable_dims++;
                     if(!ans)
-                        throwerror("Incorrect type in dimensions specification expression");
+                        throwerror("Line number: "+to_string(root->lineno)+" Incorrect type in dimensions specification expression");
                 }
             }
             root->dims = variable_dims;
