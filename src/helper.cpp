@@ -114,10 +114,25 @@ public:
     //     return false;
     // }
 
+    bool Assign_Operator(string str)
+    {
+         vector<string> v{"+=","-=","*=","&=","/=","|=","^=","%=","<<=",">>=",">>>="};
+
+        set<string> s;
+        for(auto ele:v)
+        {
+            s.insert(ele);
+        }
+
+        if(s.find(str)!=s.end())
+            return true;
+        return false;
+    }
+
     bool isOperator(string str)
     {
         vector<string> v{"=",">","<","!","~","?",":","->","==",">=","<=","!=","&&","||","+","-","*",
-        "/","&","|","^","%","<<",">>",">>>","+=","-=","*=","&=","/=","|=","^=","%=","<<=",">>=",">>>="};
+        "/","&","|","^","%","<<",">>",">>>"};
 
         set<string> s;
         for(auto ele:v)

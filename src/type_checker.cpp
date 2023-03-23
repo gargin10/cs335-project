@@ -255,6 +255,22 @@ public:
                 addEntry(entry);
             }
         }
+        else if( root->val == "UnannReferenceType" )
+        {
+            string type="";
+            for(auto child_node: root-> children)
+            {
+                build(child_node); 
+                // Nested class support is not mandatory
+                if( child_node->token == "IDENTIFIER" )
+                {
+                    type = child_node->lexeme;
+                }
+            }
+            root->type = type;
+            // array of reference type not required to support.
+            root->dims = 0;
+        }
         else if(root->val=="VariableDeclaratorList")
         {
             vector<tuple<string,int,string>> identifier_type_list;
@@ -395,6 +411,44 @@ public:
             }
             root->type=exp_type;
             root->dims=dims;
+        }
+        else if( helper->Assign_Operator(root->val) )
+        {
+            string type1="";
+            string type2="";
+            // For E1 and E2, E2 can be any value which can be Type casted( implicit or explicit) into E1.
+            for( auto child_node : root->children )
+            {
+                build(child_node);
+                if( child_node->token == "IDENTIFIER" )
+                {
+                   type1=child_node->type;
+                }
+                if( child_node->token == "ExpressionName" )
+                {
+                   type1=child_node->type;
+                }
+                if( child_node->token == "FieldAccess" )
+                {
+                   type1=child_node->type;
+                }
+                if( child_node->token == "ArrayAccess" )
+                {
+                   type1=child_node->type;
+                }
+                if( child_node->val == "Expression" )
+                {
+                    type2=child_node->type;
+                }
+            }
+            // if( root->val == "=" and !castit( type2, type1) ){
+            //     throwerror("Error: Incorrect type Conversion from "+type2+" to "+type1+" for assignment not possible.");
+            // } else 
+            if( type1 == "BOOLEAN" || type2 == "BOOLEAN" )
+            {
+                string opr = root->val;
+                helper->throwerror("Line Number: "+to_string(root->lineno)+" Incorrect type conversion from "+type2+" to "+type1);
+            }
         }
         else if(helper->isOperator(root->val))
         {
