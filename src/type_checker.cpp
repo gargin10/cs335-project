@@ -389,7 +389,9 @@ public:
                 {
                     exp_type=child_node->type;
                     dims=child_node->dims;
-                }   
+                } 
+                if(child_node->val=="MethodInvocation")
+                    exp_type=child_node->type;
             }
             root->type=exp_type;
             root->dims=dims;
