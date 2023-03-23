@@ -248,8 +248,9 @@ public:
                 {
                     entry->entry_type="array";
                     entry->no_dimensions=ele_dims;
+                    helper->checktypearrayacess(entry,field_type,root->lineno);
                 }
-                if(ele_type!="")
+                else
                     helper->checktypevariable(entry,field_type,root->lineno);
                 addEntry(entry);
             }
@@ -319,7 +320,7 @@ public:
                     }
                 }
             }
-            else if(righthand_dims>0)
+            else if(array_dims>0)
             {
                 SymbolEntry* entry= helper->checkarray(identifier1,array_dims,curr_symtable,root->lineno);
                 if(entry)
@@ -415,10 +416,19 @@ public:
                             type2=entry->type;
                     }     
                 }
-                // cout<<child_node->token<<" ";
-                if(helper->isOperator(child_node->val)|| child_node->val=="Expression" || child_node->token=="LITERAL")
+                if(child_node->val=="ArrayAccess")
                 {
-                    
+                    SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
+                    if(entry)
+                    {
+                        if(type1=="")
+                            type1=entry->type;
+                        else
+                            type2=entry->type;
+                    }
+                }
+                if(helper->isOperator(child_node->val)|| child_node->val=="Expression"|| child_node->token=="LITERAL")
+                {
                     if(type1=="")
                         type1=child_node->type;
                     else
