@@ -2606,6 +2606,8 @@ int main(int argc, char *argv[]) {
     SymbolTableBuilder* builder = new SymbolTableBuilder();
     builder->build(root);
     display(builder->curr_symtable,ofs1);
+    builder->setMethodInvocationFlag(1);
+    builder->build(root);
 
     fprintf(dotfile," }\n");
     fclose(yyin);

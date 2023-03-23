@@ -15,6 +15,7 @@ struct Node{
     vector<tuple<string,int,string>> identifier_type_list;
     vector<string> arguments_type;
     string identifier="";
+    SymbolTable* symtable;
 
     string tempval="";
     vector<Node*> children;
