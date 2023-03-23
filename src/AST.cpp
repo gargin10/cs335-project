@@ -76,6 +76,7 @@ Node* createNode(char* value, vector<Node*> children)
         }
     }
     temp->children=v;
+    if(v.size()>0)
     temp->lineno=v[0]->lineno;
     return temp;
 }

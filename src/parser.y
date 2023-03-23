@@ -296,6 +296,7 @@ ClassBody:
     CURLYBRACESTART CURLYBRACEEND {
                            vector<Node*> v;
                             $$=createNode( "ClassBody",v);
+                            $$->lineno=$1->lineno;
                         }
 |   CURLYBRACESTART ClassBodyDeclaration0 CURLYBRACEEND {
                            vector<Node*> v{$2};
@@ -505,8 +506,8 @@ UnannType:
                     }
 
 UnannPrimitiveType:
-    NumericType { $$ = $1; }
-|   BOOLEAN { $$ = $1; $$->tempval="boolean"; }
+    NumericType
+|   BOOLEAN
 
 UnannReferenceType:
     UnannClassOrInterfaceType { $$ = $1; }
@@ -516,11 +517,10 @@ UnannClassOrInterfaceType:
     UnannClassType { $$ = $1; }
 
 UnannClassType:
-    TypeIdentifier { $$ = $1; $$->tempval= $1->tempval;}
+    TypeIdentifier
 |   TypeIdentifier TypeArguments {
                         vector<Node*> v{$1,$2};
                         $$=createNode( "UnannClassType",v);
-                        $$->tempval= $1->tempval;
                     }
 |   UnannClassOrInterfaceType PERIOD TypeIdentifier {
                         vector<Node*> v{$1,$2,$3};
@@ -565,7 +565,7 @@ MethodHeader:
 
 Result:
     UnannType { $$ = $1; }
-|   VOID { $$ = $1; $$->tempval="void";}
+|   VOID { $$ = $1;}
 
 MethodDeclarator:
     IDENTIFIER BRACESTART BRACEEND {
@@ -586,37 +586,19 @@ MethodDeclarator:
                     }
 |   IDENTIFIER BRACESTART BRACEEND Dims {
                         vector<Node*> v{$1,$4};
-                        $$=createNode( "MethodDeclarator",v);
-
-                        
-                        
-                        
+                        $$=createNode( "MethodDeclarator",v);    
                     }
 |   IDENTIFIER BRACESTART FormalParameterList BRACEEND Dims {
                         vector<Node*> v{$1,$3,$5};
                         $$=createNode( "MethodDeclarator",v);
-
-                        
-                        
-                        
-                        
-                        
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA BRACEEND Dims {
                         vector<Node*> v{$1,$3,$4,$6};
-                        $$=createNode( "MethodDeclarator",v);
-
-                        
-                        
-                        
+                        $$=createNode( "MethodDeclarator",v); 
                     }
 |   IDENTIFIER BRACESTART ReceiverParameter COMMA FormalParameterList BRACEEND Dims {
                         vector<Node*> v{$1,$3,$4,$5,$7};
                         $$=createNode( "MethodDeclarator",v);
-
-                        
-                        
-                        
                     }
 
 ReceiverParameter:
@@ -638,25 +620,17 @@ FormalParameterList:
 |   FormalParameterList COMMA FormalParameter {
                         vector<Node*> v($1->children);
                         v.push_back($3);
-                        $$=createNode( $1->val,v);
-                        
-                        
+                        $$=createNode( $1->val,v); 
                     }
 
 FormalParameter:
     UnannType VariableDeclaratorId {
                         vector<Node*> v{$1,$2};
                         $$=createNode( "FormalParameter",v);
-
-                        
-                        
                     }
 |   VariableModifier0 UnannType VariableDeclaratorId {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "FormalParameter",v);
-
-                        
-                        
                     }
 |   VariableArityParameter { $$ = $1; }
 
@@ -777,6 +751,7 @@ ConstructorBody:
     CURLYBRACESTART CURLYBRACEEND {
                         vector<Node*> v;
                         $$=createNode( "ConstructorBody",v);
+                        $$->lineno=$1->lineno;
                     }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
                         vector<Node*> v{$2};
@@ -891,6 +866,7 @@ EnumBody:
 |   CURLYBRACESTART CURLYBRACEEND {
                         vector<Node*> v;
                         $$=createNode( "EnumBody",v);
+                        $$->lineno=$1->lineno;
                     }
 |   CURLYBRACESTART COMMA EnumBodyDeclarations CURLYBRACEEND {
                         vector<Node*> v{$2,$3};
@@ -947,6 +923,7 @@ PArgumentList:
     BRACESTART BRACEEND {
                         vector<Node*> v;
                         $$=createNode( "PArgumentList",v);
+                        $$->lineno=$1->lineno;
                     }
 |   BRACESTART ArgumentList BRACEEND {
                         vector<Node*> v{$2};
@@ -981,6 +958,7 @@ RecordHeader:
     BRACESTART BRACEEND {
                         vector<Node*> v;
                         $$=createNode( "RecordHeader",v);
+                        $$->lineno=$1->lineno;
                     }
 |   BRACESTART RecordComponentList BRACEEND {
                         vector<Node*> v{$2};
@@ -1015,11 +993,11 @@ VariableArityRecordComponent:
 
 RecordBody:
     CURLYBRACESTART CURLYBRACEEND  {
-                        vector<Node*> v;
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "RecordBody", v );
                     }
 |   CURLYBRACESTART RecordBodyDeclaration0 CURLYBRACEEND {
-                        vector<Node*> v{$2};
+                        vector<Node*> v{$1,$2,$3};
                         $$=createNode( "RecordBody", v );
                     }
 
@@ -1048,15 +1026,10 @@ Block:
     CURLYBRACESTART CURLYBRACEEND {
                         vector<Node*> v{$1,$2};
                         $$=createNode( "Block", v );
-
-                        // $$->symbol_table = new SymbolTable("Block");
                     }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "Block", v );
-
-                        
-                        
                     }
 
 BlockStatements: 
@@ -1129,7 +1102,7 @@ StatementWithoutTrailingSubstatement:
 |   TryStatement  { $$ = $1; }
 |   YieldStatement  { $$ = $1; }
 
-EmptyStatement: SEMICOLON  { vector<Node*> v;
+EmptyStatement: SEMICOLON  { vector<Node*> v{$1};
                         $$=createNode( "Statement", v ); }
 
 LabeledStatement:
@@ -1194,19 +1167,19 @@ SwitchStatement:
 
 SwitchBlock:
     CURLYBRACESTART SwitchRule0 CURLYBRACEEND {
-                        vector<Node*> v{$2};
+                        vector<Node*> v{$1,$2,$3};
                         $$=createNode( "SwitchBlock", v );
                     }
 |   CURLYBRACESTART CURLYBRACEEND {
-                        vector<Node*> v;
+                        vector<Node*> v{$1,$2};
                         $$=createNode( "SwitchBlock", v );
                     }
 |   CURLYBRACESTART SwitchBlockStatementGroup0 CURLYBRACEEND {
-                        vector<Node*> v{$2};
+                        vector<Node*> v{$1,$2,$3};
                         $$=createNode( "SwitchBlock", v );
                     }
 |   CURLYBRACESTART SwitchBlockStatementGroup0 SwitchColonLabel0 CURLYBRACEEND {
-                        vector<Node*> v{$2,$3};
+                        vector<Node*> v{$1,$2,$3,$4};
                         $$=createNode( "SwitchBlock", v );
                     }
 
@@ -2041,7 +2014,7 @@ LambdaExpression:
     
 LambdaParameters:
     BRACESTART BRACEEND {
-                    vector<Node*> v;
+                    vector<Node*> v{$1,$2};
                     $$=createNode( "LambdaParameters", v );
                 } 
 |   BRACESTART IDENTIFIER BRACEEND {
@@ -2355,6 +2328,7 @@ ArrayInitializer:
     CURLYBRACESTART CURLYBRACEEND {
                     vector<Node*> v;
                     $$=createNode( "ArrayInitializer", v );
+                    $$->lineno=$1->lineno;
                 } 
 |   CURLYBRACESTART VariableInitializerList CURLYBRACEEND  {
                     vector<Node*> v{$2};
@@ -2382,23 +2356,23 @@ VariableInitializerList:
 
 PrimitiveType:
     NumericType
-|   BOOLEAN {$$->tempval="boolean";}
+|   BOOLEAN
 
 NumericType:
     IntegralType
 |   FloatingPointType
 
 IntegralType:
-    BYTE {$$->tempval="byte";}
-|   SHORT {$$->tempval="short";}
-|   INT {$$->tempval="int";}
-|   LONG {$$->tempval="long";}
-|   CHAR {$$->tempval="char";}
-|   STRING {$$->tempval="string";}
+    BYTE
+|   SHORT
+|   INT 
+|   LONG
+|   CHAR 
+|   STRING 
 
 FloatingPointType:
-    FLOAT {$$->tempval="float";}
-|   DOUBLE {$$->tempval="double";}
+    FLOAT 
+|   DOUBLE
 
 ReferenceType:
     ClassOrInterfaceType
@@ -2441,6 +2415,7 @@ Dims:
                                             vector<Node*> v;
                                             v.push_back(createNode("[]"));
                                             $$=createNode( NULL, v );
+                                            $$->lineno=$1->lineno;
                                         }
 |   SQUAREBRACESTART SQUAREBRACEEND Dims {
                                             vector<Node*> v($3->children);
