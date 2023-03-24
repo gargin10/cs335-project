@@ -6,14 +6,11 @@ class ThreeAddressCodeEntry
 {
 public:
 
-    int indexno=0;
-    string val="";
-    string op="";
     string arg1="";
     string arg2="";
-    int goto_addr=0;
+    string arg3="";
+    string arg4="";
     string entry_type="";
-    string assign_arg="";
 
     ThreeAddressCodeEntry()
     {
@@ -34,18 +31,22 @@ public:
     // }
     void output_code_entry(ofstream& ofs)
     {
-        if(this->entry_type=="if")
-        {
-            ofs<<"if "<< this->arg1 << " "<< this->op << " "<< this->arg2 << " goto "<< this->goto_addr;
-        }
-        else if(this->entry_type=="goto")
-        {
-            ofs << "goto "<< this->goto_addr;
-        }
-        else if(this->entry_type=="relation")
-        {
-            ofs << this->assign_arg << " = "<< this->arg1<< " "<<this->op << " " << this->arg2;
-        }
-        ofs << endl;
+        if(this->entry_type=="label")
+            ofs<<this->arg1<<":"<<endl;
+        else
+            ofs<<"\t"<<this->arg1 << " = "<<this->arg2<<" "<< this->arg3 << " "<< this->arg4<<endl;
+    //     if(this->entry_type=="if")
+    //     {
+    //         ofs<<"if "<< this->arg1 << " "<< this->op << " "<< this->arg2 << " goto "<< this->goto_addr;
+    //     }
+    //     else if(this->entry_type=="goto")
+    //     {
+    //         ofs << "goto "<< this->goto_addr;
+    //     }
+    //     else if(this->entry_type=="relation")
+    //     {
+    //         ofs << this->assign_arg << " = "<< this->arg1<< " "<<this->op << " " << this->arg2;
+    //     }
+    //     ofs << endl;
     }
 };

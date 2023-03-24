@@ -143,23 +143,8 @@ public:
 
             SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
             entry->type="class";
-            // if( not method_invocation_flag )
-            // {
-            //     if( not presentEntry(entry) ){
-                    addEntry(entry);
-                // } else {
-            // if( method_invocation_flag ) 
-            // {
-            //     vector<SymbolEntry*> entries = curr_symtable->lookup(identifier_class);
-            //     set<string> s;
-            //     for( auto entry : entries )
-            //     {
-            //         if( s.find(entry->) == s.end() ) s.insert();
-            //     }
-            // }
-            // helper->throwerror("Class "+identifier_class+" Already Declared.");
-            //     }
-            // }
+            addEntry(entry);
+            root->identifier=identifier_class;
         }
         else if(root->val=="MethodDeclaration"|| root->val=="ConstructorDeclaration")
         {
@@ -200,6 +185,8 @@ public:
             entry->no_arguments=arguments_type.size();
             entry->entry_type="method";
             addEntry(entry);
+
+            root->identifier=identifier_method;
         }
         else if(strcmp(root->val,"{")==0)
         {

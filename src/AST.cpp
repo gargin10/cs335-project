@@ -19,10 +19,8 @@ struct Node{
     vector<string> arguments_type;
     string identifier="";
     SymbolTable* symtable;
-    // string label_entry="";
-    // vector<int> truelist;
-    // vector<int> falselist;
-    // vector<int> nextlist;
+    vector<ThreeAddressCodeEntry*> code_entries;
+    string label_entry="";
 
     bool expression_new_used = false;
     string tempval="";

@@ -3,6 +3,7 @@
     #include <bits/stdc++.h>
     #include "AST.cpp"
     #include "type_checker.cpp"
+    #include "3AC_generator.cpp"
     
     extern int lineno;
     FILE* dotfile;
@@ -2607,6 +2608,9 @@ int main(int argc, char *argv[]) {
     builder->build(root);
     display(builder->curr_symtable,ofs1);
 
+    ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
+    generator->build(root);
+    
     // builder->builder->display();
     fprintf(dotfile," }\n");
     fclose(yyin);
