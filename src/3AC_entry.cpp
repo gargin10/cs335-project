@@ -33,6 +33,8 @@ public:
     {
         if(this->type=="label")
             ofs<<this->arg1<<":"<<endl;
+        else if(this->type=="param")
+            ofs<<"\t"<<this->arg1<<" "<<this->arg2<<endl;
         else if(this->arg1=="goto")
             ofs<<"\t"<<"goto "<<this->arg2<<endl;
         else if(this->type=="if")

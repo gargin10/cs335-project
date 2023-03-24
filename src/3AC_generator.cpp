@@ -394,6 +394,48 @@ public:
             root->code_entries.push_back(entry3);
             root->code_entries.push_back(label_entry_3);
         }
+        else if(root->val=="ArgumentList")
+        {
+            Node* expression;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries);
+                if(child_node->val=="Expression")
+                    child_node=expression;               
+            }
+
+            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="pushparam";
+            entry->arg2=expression->label_entry;
+
+            root->code_entries.push_back(entry);
+        }
+        else if(root->val=="MethodInvocation")
+        {
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries);
+            }
+            root->label_entry=root->identifier;
+
+            string temp=generatetemp();
+            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->arg1=temp;
+            entry->arg2="CALL";
+            entry->arg3=root->label_entry;
+
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="popparams";
+
+            root->code_entries.push_back(entry);
+            root->label_entry=temp;
+        }
         else if(root->token=="LITERAL")
         {
             root->label_entry=root->lexeme;
