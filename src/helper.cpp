@@ -6,7 +6,6 @@ using namespace std;
 class Helper
 {
 public:
-    int display_flag=1;
     // returns "" if no definite type can be produced
     string biggertype( string arg1, string arg2){
         if( arg1 == "STRING" || arg2 == "STRING")
@@ -162,7 +161,6 @@ public:
 
     void throwerror(string str)
     {
-        if(display_flag)
         cout<<str<<"\n";
     }
 
