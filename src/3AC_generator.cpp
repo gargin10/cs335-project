@@ -150,6 +150,21 @@ public:
             {
                 build(child_node);
             }
+            if(root->children.size()==1)
+            {
+                Node* node=root->children[0];
+                ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+
+                string label=generatetemp();
+                entry->arg1=label;
+                entry->arg2=root->val;
+                entry->arg3=node->label_entry;
+
+                builder->merge_entries(root,node->code_entries);
+                root->code_entries.push_back(entry);
+                root->label_entry=label;
+                return;
+            }
             Node* node1=root->children[0];
             Node* node2=root->children[1];
 
@@ -477,6 +492,54 @@ public:
             entry->arg2=expression->label_entry;
 
             root->code_entries.push_back(entry);
+        }
+        else if(root->val=="PostIncrementExpression"|| root->val=="PostDecrementExpression")
+        {
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+            }
+            Node* node = root->children[0];
+
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            string label1=generatetemp();
+            entry->arg1=label1;
+            entry->arg2=node->label_entry;
+
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->arg1=node->label_entry;
+            entry->arg2=label1;
+            entry->arg3="+";
+            entry->arg4="1";
+
+            root->code_entries.push_back(entry);
+            root->label_entry=node->label_entry;
+        }
+         else if(root->val=="PreIncrementExpression"|| root->val=="PreDecrementExpression")
+        {
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+            }
+            Node* node = root->children[1];
+
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            string label1=generatetemp();
+            entry->arg1=label1;
+            entry->arg2=node->label_entry;
+
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->arg1=node->label_entry;
+            entry->arg2=label1;
+            entry->arg3="+";
+            entry->arg4="1";
+
+            root->code_entries.push_back(entry);
+            root->label_entry=label1;
         }
         else if(root->token=="LITERAL")
         {
