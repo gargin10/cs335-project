@@ -47,6 +47,23 @@ public:
         string temp="$"+to_string(co_temps);
         return temp;
     }
+
+    void set_break_gotos(Node* node, string label)
+    {
+        for(auto ele: node->code_entries)
+        {
+            if(ele->type=="breakgoto" && ele->arg2=="")
+                ele->arg2=label;
+        }
+    }
+    void set_continue_gotos(Node* node, string label)
+    {
+        for(auto ele: node->code_entries)
+        {
+            if(ele->type=="continuegoto" && ele->arg2=="")
+                ele->arg2=label;
+        }
+    }
     void build (Node* root)
     {
         curr_symtable=root->symtable;
@@ -243,6 +260,8 @@ public:
                 if(forinit)
                 builder->merge_entries(root,forinit->code_entries);
                 root->code_entries.push_back(label_entry_1);
+                set_break_gotos(statement,label2);
+                set_continue_gotos(statement,label1);
                 builder->merge_entries(root,statement->code_entries);
                 if(forupdate)
                 builder->merge_entries(root,forupdate->code_entries);
@@ -291,11 +310,31 @@ public:
             root->code_entries.push_back(entry1);
             root->code_entries.push_back(entry2);
             root->code_entries.push_back(label_entry_2);
+            set_break_gotos(statement,label3);
+            set_continue_gotos(statement,label1);
             builder->merge_entries(root,statement->code_entries);
             if(forupdate)
                 builder->merge_entries(root,forupdate->code_entries);
             root->code_entries.push_back(entry3);
             root->code_entries.push_back(label_entry_3);
+        }
+        else if(root->val=="BreakStatement")
+        {
+            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->type="breakgoto";
+            entry->arg1="goto";
+            entry->arg2="";
+
+            root->code_entries.push_back(entry);
+        }
+        else if(root->val=="ContinueStatement")
+        {
+            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->type="continuegoto";
+            entry->arg1="goto";
+            entry->arg2="";
+
+            root->code_entries.push_back(entry);
         }
         else if(root->token=="LITERAL")
         {
