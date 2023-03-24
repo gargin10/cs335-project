@@ -1133,19 +1133,19 @@ StatementExpression:
 
 IfThenStatement:
     IF BRACESTART Expression BRACEEND Statement {
-                        vector<Node*> v{$1,$3,$5};
+                        vector<Node*> v{$1,$2,$3,$4,$5};
                         $$=createNode( "IfThenStatement", v );
                     }
 
 IfThenElseStatement:
     IF BRACESTART Expression BRACEEND StatementNoShortIf ELSE Statement {
-                        vector<Node*> v{$1,$3,$5,$6,$7};
+                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
                         $$=createNode( "IfThenElseStatement", v );
                     }
 
 IfThenElseStatementNoShortIf:
     IF BRACESTART Expression BRACEEND StatementNoShortIf ELSE StatementNoShortIf {
-                        vector<Node*> v{$1,$3,$5,$6,$7};
+                        vector<Node*> v{$1,$2,$3,$4,$5,$6,$7};
                         $$=createNode( "IfThenElseStatementNoShortIf", v );
                     }
 
@@ -2606,9 +2606,8 @@ int main(int argc, char *argv[]) {
     SymbolTableBuilder* builder = new SymbolTableBuilder();
     builder->build(root);
     display(builder->curr_symtable,ofs1);
-    builder->setMethodInvocationFlag(1);
-    builder->build(root);
 
+    // builder->builder->display();
     fprintf(dotfile," }\n");
     fclose(yyin);
     return 0;
