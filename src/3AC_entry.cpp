@@ -10,7 +10,7 @@ public:
     string arg2="";
     string arg3="";
     string arg4="";
-    string entry_type="";
+    string type="";
 
     ThreeAddressCodeEntry()
     {
@@ -31,9 +31,13 @@ public:
     // }
     void output_code_entry(ofstream& ofs)
     {
-        if(this->entry_type=="label")
+        if(this->type=="label")
             ofs<<this->arg1<<":"<<endl;
-        else
+        else if(this->type=="if")
+            ofs<<"\t"<<this->arg1 << " "<<this->arg2<<" "<< this->arg3 << " "<< this->arg4<<endl;
+        else if(this->type=="else")
+            ofs<<"\t"<<this->arg1 << " "<<this->arg2<<" "<< this->arg3 <<endl;
+        else 
             ofs<<"\t"<<this->arg1 << " = "<<this->arg2<<" "<< this->arg3 << " "<< this->arg4<<endl;
     //     if(this->entry_type=="if")
     //     {
