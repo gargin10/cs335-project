@@ -2596,11 +2596,8 @@ int main(int argc, char *argv[]) {
 
     fprintf(dotfile,"digraph {\n");
     yyparse();
-
-    
-    
-
     buildTree(dotfile,root,-1,0);
+    fprintf(dotfile," }\n");
 
     ofstream ofs1("symbol_table.txt");
 
@@ -2611,8 +2608,6 @@ int main(int argc, char *argv[]) {
     ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
     generator->build(root);
     
-    // builder->builder->display();
-    fprintf(dotfile," }\n");
     fclose(yyin);
     return 0;
 }
