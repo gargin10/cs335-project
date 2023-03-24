@@ -1,3 +1,4 @@
-1) 1-D array working
-2) Object Type 
-3) 
+1-D array working
+Object Type 
+Working for Unary Operators, Assignment Operators
+Left for Casting Expression, Shift Operators, ...
