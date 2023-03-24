@@ -1,6 +1,6 @@
 public class FourDimensionalArray {
 
-    public static void main(String[] args) {
+    public static void main() {
         int fourDArray [][][][]  = new int[3][4][5][6];
 
         // initialize the array with some values

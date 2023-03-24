@@ -1,0 +1,100 @@
+Scope : CompilationUnit
+Example	IDENTIFIER	class	0	0	0	
+
+Scope : Example
+calculateSum	IDENTIFIER	INT	0	0	0	0	
+count	IDENTIFIER	INT	0	0	0	
+findMax	IDENTIFIER	INT	0	0	0	0	
+flag	IDENTIFIER	BOOLEAN	0	0	0	
+incrementCounter	IDENTIFIER	VOID	0	0	0	0	
+initializeArray	IDENTIFIER	VOID	0	0	0	0	
+isNumberEven	IDENTIFIER	BOOLEAN	0	0	0	1	INT 
+main	IDENTIFIER	VOID	0	0	0	0	
+multiplyNumbers	IDENTIFIER	INT	0	0	0	2	INT INT 
+numbers	IDENTIFIER	INT	0	0	0	1	
+printArray	IDENTIFIER	VOID	0	0	0	0	
+run	IDENTIFIER	VOID	0	0	0	0	
+
+Scope : main
+
+Scope : Block Line number 7
+ex	IDENTIFIER	Example	0	0	0	
+
+Scope : run
+
+Scope : Block Line number 12
+i	IDENTIFIER	INT	0	0	0	
+isEven	IDENTIFIER	BOOLEAN	0	0	0	
+max	IDENTIFIER	INT	0	0	0	
+result	IDENTIFIER	INT	0	0	0	
+shouldContinue	IDENTIFIER	BOOLEAN	0	0	0	
+sum	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 24
+
+Scope : Block Line number 26
+
+Scope : Block Line number 30
+
+Scope : Block Line number 31
+
+Scope : Block Line number 38
+input	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 41
+
+Scope : initializeArray
+
+Scope : Block Line number 60
+
+Scope : ForStatement
+i	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 61
+
+Scope : printArray
+
+Scope : Block Line number 66
+
+Scope : ForStatement
+i	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 67
+
+Scope : calculateSum
+
+Scope : Block Line number 72
+sum	IDENTIFIER	INT	0	0	0	
+
+Scope : ForStatement
+i	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 74
+
+Scope : findMax
+
+Scope : Block Line number 80
+max	IDENTIFIER	INT	0	0	0	
+
+Scope : ForStatement
+i	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 82
+
+Scope : Block Line number 83
+
+Scope : isNumberEven
+number	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 90
+
+Scope : multiplyNumbers
+a	IDENTIFIER	INT	0	0	0	
+b	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 94
+
+Scope : incrementCounter
+
+Scope : Block Line number 98
+

@@ -4,7 +4,7 @@ public class Example {
   private int numbers[] = new int[10];
   private boolean flag = true;
   
-  public static void main(String[] args) {
+  public static void main() {
     Example ex = new Example();
     ex.run();
   }

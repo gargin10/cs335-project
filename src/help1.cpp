@@ -14,45 +14,18 @@ public:
     set<string> validtypes;
     SymbolTable* curr_symtable;
     SymbolTable* prev_symtable;
-    Helper* helper;
-    int method_invocation_flag=0;
 
     SymbolTableBuilder()
     {
         createValidTypes();
         curr_symtable=NULL;
         prev_symtable=NULL;
-        helper=new Helper();
-        helper->display_flag=0;
-    }
-
-    void setMethodInvocationFlag(int method_invocation_flag)
-    {
-        this->method_invocation_flag=method_invocation_flag;
-        if(!method_invocation_flag)
-            helper->display_flag=0;
-        else
-            helper->display_flag=1;
     }
     void addEntry(SymbolEntry* entry)
     {
-        if(method_invocation_flag)
-            return;
         assert(curr_symtable!=NULL);
         curr_symtable->insert(entry);
     }
-    // bool presentEntry(SymbolEntry* entry)
-    // {
-    //     if(method_invocation_flag)
-    //         return true;
-    //     // assert(curr_symtable!=NULL);
-    //     vector<SymbolEntry*> entries = curr_symtable->lookup(entry->lexeme);
-    //     for( auto symboltable_entry : entries )
-    //     {
-    //         if( symboltable_entry->token == entry->token and symboltable_entry->type == entry->type ) return true;
-    //     }
-    //     return false;
-    // }
     void createValidTypes()
     {
         validtypes.insert("BYTE");
@@ -64,70 +37,28 @@ public:
         validtypes.insert("VOID");
         validtypes.insert("FLOAT");
         validtypes.insert("DOUBLE");
-        validtypes.insert("VAR");
+        // validtypes.insert("VAR");
         validtypes.insert("STRING");
     }
+
     void build (Node* root)
     {
-        if(method_invocation_flag)
-            curr_symtable=root->symtable;
         if(root->val=="CompilationUnit")
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable(root->val);
-                curr_symtable -> setParent(prev_symtable);
-            }
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
 
             for(auto child_node: root-> children)
             {
                 build(child_node);                
             }
         }
-        // else if(root->val=="ClassBody")
-        // {
-        //     if(!method_invocation_flag)
-        //     {
-        //         prev_symtable = curr_symtable;
-        //         curr_symtable = new SymbolTable(root->val);
-        //         curr_symtable -> setParent(prev_symtable);
-        //     }
-        //     string identifier_class="";
-        //     for(auto child_node: root-> children)
-        //     {
-        //         build(child_node); 
-        //         if( child_node->val == "NormalClassDeclaration")
-        //         {
-        //             // if( identifier_class == "" ) continue;
-        //             vector<SymbolEntry*> entries = curr_symtable->lookup(identifier_class);
-        //             for( auto entry : entries )
-        //             {
-        //                 helper->throwerror("Class Redeclared " + identifier_class);
-        //             }
-        //             if( entries[0] == NULL )
-        //             {
-        //                 SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
-        //                 entry->type="class";
-        //                 cout << "Addng Entry" << endl;
-        //                 addEntry(entry);
-        //             }
-        //         }
-        //     }
-
-        //     assert(curr_symtable!=NULL);
-        //     curr_symtable -> scope = identifier_class;
-        //     curr_symtable = curr_symtable -> parent;
-
-        // }
         else if(root->val=="NormalClassDeclaration")
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable(root->val);
-                curr_symtable -> setParent(prev_symtable);
-            }
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
 
             string identifier_class="";
             for(auto child_node: root-> children)
@@ -142,50 +73,15 @@ public:
             curr_symtable -> scope = identifier_class;
             curr_symtable = curr_symtable -> parent;
 
-            // if( !method_invocation_flag )
-            // {
-            //     vector<SymbolEntry*> entries = curr_symtable->lookup(identifier_class);
-            //     for( auto entry : entries )
-            //     {
-            //         helper->throwerror("Class Redeclared " + identifier_class);
-            //     }
-                // if( entries[0] == NULL )
-                // {
-                //     SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
-                //     entry->type="class";
-                //     cout << "Addng Entry" << endl;
-                //     addEntry(entry);
-                // }
-            // }
-
             SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
             entry->type="class";
-            // if( not method_invocation_flag )
-            // {
-            //     if( not presentEntry(entry) ){
-                    addEntry(entry);
-                // } else {
-            // if( method_invocation_flag ) 
-            // {
-            //     vector<SymbolEntry*> entries = curr_symtable->lookup(identifier_class);
-            //     set<string> s;
-            //     for( auto entry : entries )
-            //     {
-            //         if( s.find(entry->) == s.end() ) s.insert();
-            //     }
-            // }
-            // helper->throwerror("Class "+identifier_class+" Already Declared.");
-            //     }
-            // }
+            addEntry(entry);
         }
         else if(root->val=="MethodDeclaration"|| root->val=="ConstructorDeclaration")
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable(root->val);
-                curr_symtable -> setParent(prev_symtable);
-            }
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
 
             string identifier_method="";
             string method_type="";
@@ -223,12 +119,9 @@ public:
         }
         else if(strcmp(root->val,"{")==0)
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable("Block Line number "+to_string(root->lineno));
-                curr_symtable -> setParent(prev_symtable);
-            }            
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable("Block Line number "+to_string(root->lineno));
+            curr_symtable -> setParent(prev_symtable);
         }
         else if(strcmp(root->val,"}")==0)
         {
@@ -305,8 +198,6 @@ public:
             string identifier="";
             string field_type="";
             int field_type_dims= 0;
-            bool new_used = false;
-            string left_type="", right_type="";
             vector<tuple<string,int,string>> identifier_type_list;
             for(auto child_node: root-> children)
             {
@@ -315,17 +206,11 @@ public:
                     field_type= child_node->lexeme;
                 if(child_node->val=="UnannReferenceType")
                 {
-                    left_type=child_node->type;
                     field_type=child_node->type;
                     field_type_dims=child_node->dims;
                 }
-                if(child_node->val=="VariableDeclaratorList"){
+                if(child_node->val=="VariableDeclaratorList")
                     identifier_type_list=child_node->identifier_type_list;
-                    if( child_node->expression_new_used )
-                    {
-                        new_used = true;
-                    }
-                }
             }
             for(auto [ele_identifier, ele_dims,ele_type ]: identifier_type_list)
             {
@@ -335,50 +220,16 @@ public:
                 {
                     entry->entry_type="array";
                     entry->no_dimensions=ele_dims;
-                    helper->checktypearrayacess(entry,field_type,root->lineno);
                 }
-                else 
-                {
-                    if( new_used )
-                    {
-                        if( left_type != ele_type )
-                        {
-                            helper->throwerror("Line number: " +to_string(root->lineno)+ " ReferenceType "+left_type+" doesn't match with "+ele_type);
-                        }
-                    } 
-                    else 
-                    {
-                        helper->checktypevariable(entry,field_type,root->lineno);
-                    }
-                }
+                if(ele_type!="")
+                    checktypevariable(entry,field_type,root->lineno);
                 addEntry(entry);
             }
-        }
-        else if( root->val == "UnannReferenceType" )
-        {
-            string type="";
-            for(auto child_node: root-> children)
-            {
-                build(child_node); 
-                // Nested class support is not mandatory
-                if( child_node->token == "IDENTIFIER" )
-                {
-                    type = child_node->lexeme;
-                }
-            }
-            if( !helper->checkclass( type, curr_symtable) )
-            {
-                helper->throwerror("Line number: "+to_string(root->lineno)+" No Reference Type "+type+" found.");
-            }
-            root->type = type;
-            // array of reference type not required to support.
-            root->dims = 0;
         }
         else if(root->val=="VariableDeclaratorList")
         {
             vector<tuple<string,int,string>> identifier_type_list;
             string type="";
-            bool new_used = false;
             for(auto child_node: root-> children)
             {
                 build(child_node);       
@@ -390,15 +241,7 @@ public:
                 {
                     identifier_type_list.push_back({child_node->identifier,child_node->dims,child_node->type});
                     type=child_node->type;
-                    if( child_node->expression_new_used )
-                    {
-                        new_used = true;
-                    }
                 }
-            }
-            if( new_used )
-            {
-                root->expression_new_used = true;
             }
             root->identifier_type_list=identifier_type_list;
             root->type=type;
@@ -411,7 +254,6 @@ public:
             int array_dims=0;
             int f=0;
             int righthand_dims=0;
-            bool new_used = false;
             for(auto child_node: root-> children)
             {
                 build(child_node);    
@@ -429,20 +271,12 @@ public:
                 {
                     righthand_type=child_node->type;
                     righthand_dims=child_node->dims;
-                    if( child_node->expression_new_used )
-                    {
-                        new_used = true;
-                    }
                 }
                 if(child_node->token=="ArrayAccess")
                 {
                     identifier1=child_node->identifier;
                     array_dims=child_node->dims;
                 }     
-            }
-            if( new_used )
-            {
-                root->expression_new_used = true;
             }
             if(f)
             {
@@ -453,26 +287,26 @@ public:
                 {
                     if(variable_dims!=righthand_dims)
                     {
-                        helper->throwerror("Line number: "+to_string(root->lineno)+" Required array access dimensions as "+to_string(variable_dims)+" but found "+to_string(righthand_dims));
+                        throwerror("Line number: "+to_string(root->lineno)+" Required array access dimensions as "+to_string(variable_dims)+" but found "+to_string(righthand_dims));
                     }
                 }
             }
-            else if(array_dims>0)
+            else if(righthand_dims>0)
             {
-                SymbolEntry* entry= helper->checkarray(identifier1,array_dims,curr_symtable,root->lineno);
+                SymbolEntry* entry= checkarray(identifier1,array_dims,curr_symtable,root->lineno);
                 if(entry)
                 {
-                    bool check = helper->checktypearrayacess(entry,righthand_type, root->lineno);
+                    bool check = checktypearrayacess(entry,righthand_type, root->lineno);
                     if(check)
                         root->type=righthand_type;
                 }
             }
             else
             {
-                vector<SymbolEntry*> entry= helper->checkvariable(identifier1,curr_symtable,root->lineno);
-                if(entry[0])
+                SymbolEntry* entry= checkvariable(identifier1,curr_symtable,root->lineno);
+                if(entry)
                 {
-                    bool check = helper->checktypevariable(entry[0],righthand_type, root->lineno);
+                    bool check = checktypevariable(entry,righthand_type, root->lineno);
                     if(check)
                         root->type=righthand_type;
                 }
@@ -480,12 +314,9 @@ public:
         }
         else if(root->val == "ForStatement")
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable(root->val);
-                curr_symtable -> setParent(prev_symtable);
-            }
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
 
             for(auto child_node: root-> children)
             {
@@ -497,25 +328,18 @@ public:
         {
             string exp_type="";
             int dims=0;
-            bool new_used = false;
             for(auto child_node: root-> children)
             {
-                build(child_node);  
-                if( child_node->lexeme=="NEW")
-                {
-                    new_used = true;
-                }    
-                if(helper->isOperator(child_node->val))
+                build(child_node);      
+                if(isOperator(child_node->val))
                 {
                     exp_type=child_node->type;
                 }    
                 if(child_node->token=="IDENTIFIER")
                 {
-
-                    vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                    if(entry[0])
-                        if( entry[0]->type == "class" ) exp_type=entry[0]->lexeme;
-                        else exp_type=entry[0]->type;
+                    SymbolEntry* entry= checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    if(entry)
+                        exp_type=entry->type;
                 }   
                 if(child_node->token=="LITERAL")
                 {
@@ -523,7 +347,7 @@ public:
                 } 
                 if(child_node->token=="ArrayAccess")
                 {
-                    SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
+                    SymbolEntry* entry= checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
                     if(entry)
                     {
                         exp_type=entry->type;
@@ -533,18 +357,12 @@ public:
                 {
                     exp_type=child_node->type;
                     dims=child_node->dims;
-                } 
-                if(child_node->val=="MethodInvocation")
-                    exp_type=child_node->type;
-            }
-            if( new_used )
-            {
-                root->expression_new_used = true;
+                }   
             }
             root->type=exp_type;
             root->dims=dims;
         }
-        else if( helper->Assign_Operator(root->val) )
+        else if( Assign_Operator(root->val) )
         {
             string type1="";
             string type2="";
@@ -556,80 +374,16 @@ public:
                 {
                    type1=child_node->type;
                 }
-                if( child_node->token == "ExpressionName" )
-                {
-                   type1=child_node->type;
-                }
-                if( child_node->token == "FieldAccess" )
-                {
-                   type1=child_node->type;
-                }
-                if( child_node->token == "ArrayAccess" )
-                {
-                   type1=child_node->type;
-                }
                 if( child_node->val == "Expression" )
                 {
                     type2=child_node->type;
                 }
             }
-            // if( root->val == "=" and !castit( type2, type1) ){
-            //     throwerror("Error: Incorrect type Conversion from "+type2+" to "+type1+" for assignment not possible.");
-            // } else 
-            if( type1 == "BOOLEAN" || type2 == "BOOLEAN" )
-            {
-                string opr = root->val;
-                helper->throwerror("Line Number: "+to_string(root->lineno)+" Incorrect type conversion from "+type2+" to "+type1);
+            if( !castit( type2, type1) ){
+                throwerror("Error:: Conversion from "+type2+" to "+type1+" for assignment not possible.");
             }
         }
-        // else if(helper->isUnaryOperator(root->val))
-        // {
-        //     string type1="";
-        //     string type2="";
-        //     for(auto child_node: root-> children)
-        //     {
-        //         build(child_node);   
-        //         if(child_node->token=="IDENTIFIER")
-        //         {
-        //             if(type1=="")
-        //             {
-        //                 vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-        //                 if(entry[0])
-        //                     type1=entry[0]->type;
-        //             }
-        //             else
-        //             {
-        //                 vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-        //                 if(entry[0])
-        //                     type2=entry[0]->type;
-        //             }     
-        //         }
-        //         if(child_node->val=="ArrayAccess")
-        //         {
-        //             SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
-        //             if(entry)
-        //             {
-        //                 if(type1=="")
-        //                     type1=entry->type;
-        //                 else
-        //                     type2=entry->type;
-        //             }
-        //         }
-        //         if(helper->isOperator(child_node->val)|| child_node->val=="Expression"|| child_node->token=="LITERAL")
-        //         {
-        //             if(type1=="")
-        //                 type1=child_node->type;
-        //             else
-        //                 type2=child_node->type;
-        //         }   
-        //     }
-        //     if(!helper->castit(type1,type2))
-        //     {
-        //         helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible types i.e. conversion from "+type1 + " to "+type2);
-        //     }
-        //     root->type=type1;
-        // }
-        else if(helper->isOperator(root->val))
+        else if(isOperator(root->val))
         {
             string type1="";
             string type2="";
@@ -640,43 +394,30 @@ public:
                 {
                     if(type1=="")
                     {
-                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                        if(entry[0])
-                            type1=entry[0]->type;
+                        SymbolEntry* entry= checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry)
+                            type1=entry->type;
                     }
                     else
                     {
-                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                        if(entry[0])
-                            type2=entry[0]->type;
+                        SymbolEntry* entry= checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry)
+                            type2=entry->type;
                     }     
                 }
-                if(child_node->val=="ArrayAccess")
+                // cout<<child_node->token<<" ";
+                if(isOperator(child_node->val)|| child_node->val=="Expression" || child_node->token=="LITERAL")
                 {
-                    SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
-                    if(entry)
-                    {
-                        if(type1=="")
-                            type1=entry->type;
-                        else
-                            type2=entry->type;
-                    }
-                }
-                if(helper->isOperator(child_node->val)|| child_node->val=="Expression"|| child_node->token=="LITERAL")
-                {
+                    
                     if(type1=="")
                         type1=child_node->type;
                     else
                         type2=child_node->type;
                 }   
             }
-            if( root->children.size() == 1 )
+            if(!castit(type1,type2))
             {
-                type2 = type1;
-            }
-            if(!helper->castit(type1,type2))
-            {
-                helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible types i.e. conversion from "+type1 + " to "+type2);
+                throwerror("Line number: "+to_string(root->lineno)+" Incompatible types i.e. conversion from "+type1 + " to "+type2);
             }
             root->type=type1;
         }
@@ -692,9 +433,9 @@ public:
                 if(child_node->val=="Expression")
                 {
                     array_dims++;
-                    bool ans = helper->typecast(child_node,"INT");
+                    bool ans = typecast(child_node,"INT");
                     if(!ans)
-                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect type in array access expression");
+                        throwerror("Line number: "+to_string(root->lineno)+" Incorrect type in array access expression");
                 }
                 if(child_node->val=="ArrayAccess")
                 {
@@ -740,10 +481,10 @@ public:
                 build(child_node);
                 if(child_node->val=="Expression")
                 {
-                    bool ans = helper->typecast(child_node,"INT");
+                    bool ans = typecast(child_node,"INT");
                     variable_dims++;
                     if(!ans)
-                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect type in dimensions specification expression");
+                        throwerror("Line number: "+to_string(root->lineno)+" Incorrect type in dimensions specification expression");
                 }
             }
             root->dims = variable_dims;
@@ -766,12 +507,9 @@ public:
             }
             root->identifier=identifier;
             root->arguments_type=arguments_type;
-            if(method_invocation_flag)
-            {
-                SymbolEntry* entry = helper->checkmethod(identifier,arguments_type,curr_symtable,root->lineno);
-                if(entry)
-                    root->type=entry->type;
-            }
+            SymbolEntry* entry = checkmethod(identifier,arguments_type,curr_symtable,root->lineno);
+            if(entry)
+                root->type=entry->type;
         }
         else if(root->val=="ArgumentList")
         {
@@ -793,6 +531,5 @@ public:
                 build(child_node);                
             }
         }
-        root->symtable=curr_symtable;
     }
 };

@@ -17,6 +17,7 @@ struct Node{
     string identifier="";
     SymbolTable* symtable;
 
+    bool expression_new_used = false;
     string tempval="";
     vector<Node*> children;
 };

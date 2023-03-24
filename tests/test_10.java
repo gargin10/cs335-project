@@ -1,5 +1,5 @@
 public class OperatorExample {
-    public static void main(String[] args) {
+    public static void main() {
         // arithmetic operators
         int a = 10;
         int b = 5;
@@ -8,6 +8,11 @@ public class OperatorExample {
         int e = a * b;
         int f = a / b;
         int g = a % b;
+        int ab = ++a;
+        int ac = !++a;
+        int ad = -~x;
+        int ae = +a+4-8;
+        int af = (int)+a;
         
         // increment and decrement operators
         int h = ++a;

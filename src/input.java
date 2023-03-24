@@ -1,42 +1,71 @@
 public class ArraySum {
   
-  private static int arr[][][] = {{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}};
-  public static int arr1[]={0}, b[][];
-  int c[][][][];
-  int d, a[]={1,2};
-  int foo(int x, int y)
-  {
+  // private static int arr[][][] = {{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}};
+  // public static int arr1[]={0}, b[][];
+  // int c[][][][];
+  // int d, a[]={1,2};
+  // int foo(int x, int y)
+  // {
+
+  // }
+
+  class tree{
+    int x = 1;
+  }
+  class pink{
 
   }
+  public class tree {}
+  // class pink {}
   public static void main(String args[]) {
+    tree obj1;
+    pink obj2;
+    tree obj3 = new tree("Piyush");
+    pink obj5 = new tree();
+    // tree obj1 = new tree();
+    // tree obj1 = new pink();
+    // obj1.x = 0;
+    int t = 9;
+    boolean t = true;
+    // pink k = new tree();
+
+    // int f[] = new int[10];
+    // f[0] = 1;
+
+    // int k = 10;
+    // int k = 3;
     // int a,b,c;
     // String s1,s2;
-    int x;
-    int sum = 5+2;
-    int a=2, b[]={true,4};
-    int y=f++;
-    String s="Hello";
-    char ch='a';
-    x=y;
-    char t[][];
-    int v[][][]=new int[10][];
-    {}
-    {
-      for(int i=0;i<n;i++)
-      {
-          sum++;
-          y=t[3.0][3];
-          t[2][3]=y;
-      }
-    }
-    sum=a+2;
-    z++;
-    if(r>=3)
-      break;
-    boolean f=true;
-    k = f+3;
-    double z;
-    foo(x,z);
+    // int x;
+    // int sum = 5+2;
+    // int a=2, b[]={true,4};
+    // int y=f++;
+    // String s="Hello";
+    // char ch='a';
+    // x=y;
+    // char t[][];
+    // int v[][][]=new int[10][];
+    // {}
+    // {
+    //   for(int i=0;i<n;i++)
+    //   {
+    //       sum++;
+    //       y=t[3.0][3];
+    //       t[2][3]=y;
+    //   }
+    // }
+    // sum=a+2;
+    // z++;
+    // if(r>=3)
+    //   break;
+    // boolean f=true;
+    // k = f+3;
+    // double z;
+    // foo(x,z);
+
+    // int fi[] = new int[10];
+    // fi[1] = 4;
+    // f1[1] += 'c';
   }
 }
 // class Student {

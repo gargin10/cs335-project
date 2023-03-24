@@ -1,6 +1,6 @@
 public class LambdaTest {
 
-    public static void main(String[] args) {
+    public static void main() {
         
         List<String> words = Arrays.asList("apple", "banana", "cherry", "date", "elderberry");
         

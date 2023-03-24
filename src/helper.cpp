@@ -58,6 +58,7 @@ public:
 
     // arg1 is where it is used and arg2 is the entry type inside the symbol table i.e. type during declaration time.
     bool castit( string arg1, string arg2){
+        if( arg1 == arg2 ) return true;
         if( arg1 == "STRING"|| arg2 == "STRING")
         {
             return true;
@@ -129,9 +130,23 @@ public:
         return false;
     }
 
+    bool isUnaryOperator(string str)
+    {
+        vector<string> v{"!", "++", "~", "--"};
+        set<string> s;
+        for(auto ele:v)
+        {
+            s.insert(ele);
+        }
+
+        if(s.find(str)!=s.end())
+            return true;
+        return false;
+    }
+
     bool isOperator(string str)
     {
-        vector<string> v{"=",">","<","!","~","?",":","->","==",">=","<=","!=","&&","||","+","-","*",
+        vector<string> v{"=",">","<","?",":","->","==",">=","<=","!=","&&","||","+","-","*",
         "/","&","|","^","%","<<",">>",">>>"};
 
         set<string> s;
@@ -151,7 +166,7 @@ public:
         cout<<str<<"\n";
     }
 
-    SymbolEntry* checkvariable(string lexeme, SymbolTable* symbol_table, int lineno)
+    vector<SymbolEntry*> checkvariable(string lexeme, SymbolTable* symbol_table, int lineno)
     {
         assert(symbol_table!=NULL);
         // vector<SymbolEntry*> list_entries;
@@ -160,9 +175,9 @@ public:
         {
             // symbol_table->display();
             throwerror("Line number: "+to_string(lineno)+" Identifier not declared: "+lexeme);
-            return NULL;
+            return {NULL};
         }
-        return list_entries[0];
+        return list_entries;
     }
 
     SymbolEntry* checkarray(string array_identifier, int dims,SymbolTable* symbol_table, int lineno)
@@ -255,6 +270,17 @@ public:
         {
             root->type=type;
             return true;
+        }
+        return false;
+    }
+
+    bool checkclass(string type, SymbolTable* symtable){
+        vector<SymbolEntry*> entries = symtable->lookup(type);
+        for( auto entry : entries )
+        {
+            if( entry->type == "class" ){
+                    return true;
+            }
         }
         return false;
     }

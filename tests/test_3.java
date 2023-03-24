@@ -1,6 +1,6 @@
 public class RecordAndEnumExample {
     
-    public static void main(String[] args) {
+    public static void main() {
         
         // Create a new record and assign values to its fields
         Person person = new Person("John", "Doe", Gender.MALE, 30);
@@ -19,12 +19,13 @@ public class RecordAndEnumExample {
     }
     
     // Define an enum for gender
-    public enum Gender {
-        MALE,
-        FEMALE
-    }
+    // public enum Gender {
+    //     MALE,
+    //     FEMALE
+    // }
     
     // Define a record for a person
-    public record Person(String firstName, String lastName, Gender gender, int age) {}
+    // public record Person(String firstName, String lastName, Gender gender, int age) {}
+    public record Person(String firstName, String lastName, int age) {}
 }
 

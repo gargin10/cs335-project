@@ -181,6 +181,11 @@ public:
             assert(curr_symtable!=NULL);
             curr_symtable -> scope = temp_identifier;
             curr_symtable = curr_symtable -> parent;
+            vector<SymbolEntry*> entries = curr_symtable->lookup(temp_identifier);
+            for( auto entry : entries )
+            {
+                cout << "Class Redeclared " << temp_identifier << endl;
+            }
             SymbolEntry* entry = new SymbolEntry("IDENTIFIER", temp_identifier);
             entry->type="class";
             addEntry(entry);
