@@ -156,27 +156,33 @@ public:
             {
                 build(child_node);
             }
+                        
             Node* condition = root->children[2];
             Node* thencond = root->children[4];
 
             builder->merge_entries(root,condition->code_entries);   
 
-            string label=generatelabel();
-            ThreeAddressCodeEntry* entry1 = new ThreeAddressCodeEntry();
-            entry1->arg1=label;
-            entry1->type="label";
-            thencond->label_entry=label;
+            string end_label=generatelabel();
+            ThreeAddressCodeEntry* label_entry_3= new ThreeAddressCodeEntry();
+            label_entry_3->arg1=end_label;
+            label_entry_3->type="label";
+            
+            ThreeAddressCodeEntry* entry1= new ThreeAddressCodeEntry();
+            entry1->type="if";
+            entry1->arg1="IfFalse";
+            entry1->arg2=condition->label_entry;
+            entry1->arg3="goto";
+            entry1->arg4=end_label;
 
-            ThreeAddressCodeEntry* entry2 = new ThreeAddressCodeEntry();
-            entry2->type="if";
-            entry2->arg1="IfTrue";
-            entry2->arg2=condition->label_entry;
-            entry2->arg3="goto";
-            entry2->arg4=thencond->label_entry;
-            root->code_entries.push_back(entry2);
+            ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
+            entry2->type="goto";
+            entry2->arg1="goto";
+            entry2->arg2=end_label;
 
             root->code_entries.push_back(entry1);
-            builder->merge_entries(root,thencond->code_entries);   
+            builder->merge_entries(root,thencond->code_entries);  
+            root->code_entries.push_back(entry2);
+            root->code_entries.push_back(label_entry_3);  
         }
         else if(root->val=="IfThenElseStatement"||root->val=="IfThenElseStatementNoShortIf")
         {
@@ -191,37 +197,34 @@ public:
 
             builder->merge_entries(root,condition->code_entries);   
 
-            string label=generatelabel();
+            string else_label=generatelabel();
+            ThreeAddressCodeEntry* label_entry_2= new ThreeAddressCodeEntry();
+            label_entry_2->arg1=else_label;
+            label_entry_2->type="label";
+
+            string end_label=generatelabel();
+            ThreeAddressCodeEntry* label_entry_3= new ThreeAddressCodeEntry();
+            label_entry_3->arg1=end_label;
+            label_entry_3->type="label";
+            
             ThreeAddressCodeEntry* entry1= new ThreeAddressCodeEntry();
-            entry1->arg1=label;
-            entry1->type="label";
-            thencond->label_entry=label;
-            
+            entry1->type="if";
+            entry1->arg1="IfFalse";
+            entry1->arg2=condition->label_entry;
+            entry1->arg3="goto";
+            entry1->arg4=else_label;
+
             ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
-            entry2->type="if";
-            entry2->arg1="IfTrue";
-            entry2->arg2=condition->label_entry;
-            entry2->arg3="goto";
-            entry2->arg4=thencond->label_entry;
-            root->code_entries.push_back(entry2);
+            entry2->type="goto";
+            entry2->arg1="goto";
+            entry2->arg2=end_label;
 
-            label=generatelabel();
-            ThreeAddressCodeEntry* entry3= new ThreeAddressCodeEntry();
-            entry3->arg1=label;
-            entry3->type="label";
-            elsestmt->label_entry=label; 
-
-            ThreeAddressCodeEntry* entry4= new ThreeAddressCodeEntry();
-            entry4->type="else";
-            entry4->arg1="Else";
-            entry4->arg2="goto";
-            entry4->arg3=elsestmt->label_entry;
-            root->code_entries.push_back(entry4);
-            
             root->code_entries.push_back(entry1);
             builder->merge_entries(root,thencond->code_entries);  
-            root->code_entries.push_back(entry3);
-            builder->merge_entries(root,elsestmt->code_entries);   
+            root->code_entries.push_back(entry2);
+            root->code_entries.push_back(label_entry_2);
+            builder->merge_entries(root,elsestmt->code_entries); 
+            root->code_entries.push_back(label_entry_3);
         }
         else if(root->val=="ForStatement")
         {
@@ -335,6 +338,61 @@ public:
             entry->arg2="";
 
             root->code_entries.push_back(entry);
+        }
+        else if(root->val=="WhileStatement")
+        {
+            Node* expression;
+            Node* statement;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                if(child_node->val=="Expression")
+                    expression=child_node;
+                statement=child_node;
+            }
+            string label1=generatelabel();
+            ThreeAddressCodeEntry* label_entry_1= new ThreeAddressCodeEntry();
+            label_entry_1->arg1=label1;
+            label_entry_1->type="label";
+
+            string label2=generatelabel();
+            ThreeAddressCodeEntry* label_entry_2= new ThreeAddressCodeEntry();
+            label_entry_2->arg1=label2;
+            label_entry_2->type="label";
+
+            string label3=generatelabel();
+            ThreeAddressCodeEntry* label_entry_3= new ThreeAddressCodeEntry();
+            label_entry_3->arg1=label3;
+            label_entry_3->type="label";
+
+            ThreeAddressCodeEntry* entry1= new ThreeAddressCodeEntry();
+            entry1->type="if";
+            entry1->arg1="IfTrue";
+            entry1->arg2=expression->label_entry;
+            entry1->arg3="goto";
+            entry1->arg4=label2;
+
+            ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
+            entry2->type="if";
+            entry2->arg1="Else";
+            entry2->arg2="goto";
+            entry2->arg3=label3;
+
+            ThreeAddressCodeEntry* entry3= new ThreeAddressCodeEntry();
+            entry3->type="goto";
+            entry3->arg1="goto";
+            entry3->arg2=label1;
+
+            root->code_entries.push_back(label_entry_1);
+            builder->merge_entries(root,expression->code_entries);
+            root->code_entries.push_back(entry1);
+            root->code_entries.push_back(entry2);
+            root->code_entries.push_back(label_entry_2);
+            set_break_gotos(statement,label3);
+            set_continue_gotos(statement,label1);
+            builder->merge_entries(root,statement->code_entries);
+            root->code_entries.push_back(entry3);
+            root->code_entries.push_back(label_entry_3);
         }
         else if(root->token=="LITERAL")
         {

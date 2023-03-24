@@ -1269,7 +1269,7 @@ WHILE BRACESTART Expression BRACEEND Statement {
 WhileStatementNoShortIf:
 WHILE BRACESTART Expression BRACEEND StatementNoShortIf {
                         vector<Node*> v{$1,$3,$5};
-                        $$=createNode( "WhileStatementNoShortIf", v );
+                        $$=createNode( "WhileStatement", v );
                     }
 
 DoStatement:
