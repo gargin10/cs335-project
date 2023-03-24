@@ -1,16 +1,16 @@
 public class QuickSort {
-    public static void main(String[] args) {
+    public static void main(String args[]) {
         int arr[] = { 64, 34, 25, 12, 22, 11, 90 };
 
-        quickSort(arr, 0, arr.length - 1);
+        quickSort(arr, 0, 7);
 
         System.out.println("Sorted array:");
-        for (int i = 0; i < arr.length; i++) {
+        for (int i = 0; i < 7; i++) {
             System.out.print(arr[i] + " ");
         }
     }
 
-    static void quickSort(int[] arr, int low, int high) {
+    static void quickSort(int arr[], int low, int high) {
         if (low < high) {
             int pi = partition(arr, low, high);
 
@@ -19,7 +19,7 @@ public class QuickSort {
         }
     }
 
-    static int partition(int[] arr, int low, int high) {
+    static int partition(int arr[], int low, int high) {
         int pivot = arr[high];
         int i = (low - 1);
 

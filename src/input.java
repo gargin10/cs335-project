@@ -14,9 +14,19 @@ public class ArraySum {
   }
   class pink{
 
+  // private static int arr[][][] = {{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}};
+  // public static int arr1[]={0}, b[][];
+  // int c[][][][];
+  // int d, a[]={1,2};
+  double foo(int x, int y)
+  {
+    int a= x+y;
+    int b= a*4;
+    int c=3+d*(567+387/2);
   }
   public class tree {}
   // class pink {}
+  int d;
   public static void main(String args[]) {
     tree obj1;
     pink obj2;
@@ -66,6 +76,46 @@ public class ArraySum {
     // int fi[] = new int[10];
     // fi[1] = 4;
     // f1[1] += 'c';
+      int y,z;
+      int x=(2+3-5)*4;
+      x=x+y-z;
+      // x=2>3;
+    // int x,y;
+    if( 2 >3)
+      x=2+3+4;
+    else
+      y=2;
+    int a,b,c;
+    String s1,s2;
+    int x;
+    int sum = 5+2;
+    int a=2, b[]={true,4};
+    int y=f++;
+    String s="Hello";
+    char ch='a';
+    x=y;
+    char t[][];
+    int v[][][]=new int[10][];
+    {}
+    {
+      for(int i=0;i<n;i++)
+      {
+          sum++;
+          y=t[3.0][3];
+          t[2][3]=y;
+      }
+    }
+    sum=a+2;
+    z++;
+    if(r>=3)
+      break;
+    boolean f=true;
+    k = f+3;
+    int z;
+    int x;
+    z=foo(x,x);
+    int fi[] = new int[10];
+    fi[0] = 1;
   }
 }
 // class Student {

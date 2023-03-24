@@ -97,7 +97,6 @@ Node* createNode(char* value)
     {
         temp->lexeme=value;
         temp->token=value;
-        temp->label_entry=value;
     }
     return temp;
 }
@@ -113,7 +112,6 @@ Node* createNode( char* lexeme, char* token)
     strcat(ans,")");
     temp1->val=ans;
     temp1->lexeme=lexeme;
-    temp1->label_entry=lexeme;
     if( strcmp( token, "INT_LITERAL") == 0 ){
         temp1->type = "INT";
         temp1->token = "LITERAL";
@@ -140,7 +138,6 @@ Node* createNode( char* lexeme, int lineno)
     Node* temp1= new Node();
     temp1->val=lexeme;
     temp1->lexeme=lexeme;
-    temp1->label_entry=lexeme;
     temp1->token="";
     temp1->lineno=lineno;
     return temp1;
@@ -157,7 +154,6 @@ Node* createNode( char* lexeme, char* token, int lineno)
     strcat(ans,")");
     temp1->val=ans;
     temp1->lexeme=lexeme;
-    temp1->label_entry=lexeme;
     if( strcmp( token, "INT_LITERAL") == 0 ){
         temp1->type = "INT";
         temp1->token = "LITERAL";
