@@ -33,6 +33,8 @@ public:
     {
         if(this->type=="label")
             ofs<<this->arg1<<":"<<endl;
+        else if(this->arg1=="goto")
+            ofs<<"goto "<<this->arg2<<endl;
         else if(this->type=="if")
             ofs<<"\t"<<this->arg1 << " "<<this->arg2<<" "<< this->arg3 << " "<< this->arg4<<endl;
         else if(this->type=="else")

@@ -206,6 +206,97 @@ public:
             root->code_entries.push_back(entry3);
             builder->merge_entries(root,elsestmt->code_entries);   
         }
+        else if(root->val=="ForStatement")
+        {
+            Node* forinit;
+            Node* expression;
+            Node* forupdate;
+            Node* statement;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                if(child_node->val=="ForInit")
+                    forinit=child_node;
+                else if(child_node->val=="Expression" || child_node->val=="LocalVariableDeclaration")
+                    expression=child_node;
+                else if(child_node->val=="ForUpdate")
+                    forupdate=child_node;
+                statement=child_node;
+            }
+            if(!expression)
+            {
+                string label1=generatelabel();
+                ThreeAddressCodeEntry* label_entry_1= new ThreeAddressCodeEntry();
+                label_entry_1->arg1=label1;
+                label_entry_1->type="label";
+
+                string label2=generatelabel();
+                ThreeAddressCodeEntry* label_entry_2= new ThreeAddressCodeEntry();
+                label_entry_2->arg1=label2;
+                label_entry_2->type="label";
+
+                ThreeAddressCodeEntry* entry3= new ThreeAddressCodeEntry();
+                entry3->type="goto";
+                entry3->arg1="goto";
+                entry3->arg2=label1;
+
+                if(forinit)
+                builder->merge_entries(root,forinit->code_entries);
+                root->code_entries.push_back(label_entry_1);
+                builder->merge_entries(root,statement->code_entries);
+                if(forupdate)
+                builder->merge_entries(root,forupdate->code_entries);
+                root->code_entries.push_back(entry3);
+                root->code_entries.push_back(label_entry_2);
+                return;
+            }
+            string label1=generatelabel();
+            ThreeAddressCodeEntry* label_entry_1= new ThreeAddressCodeEntry();
+            label_entry_1->arg1=label1;
+            label_entry_1->type="label";
+
+            string label2=generatelabel();
+            ThreeAddressCodeEntry* label_entry_2= new ThreeAddressCodeEntry();
+            label_entry_2->arg1=label2;
+            label_entry_2->type="label";
+
+            string label3=generatelabel();
+            ThreeAddressCodeEntry* label_entry_3= new ThreeAddressCodeEntry();
+            label_entry_3->arg1=label3;
+            label_entry_3->type="label";
+
+            ThreeAddressCodeEntry* entry1= new ThreeAddressCodeEntry();
+            entry1->type="if";
+            entry1->arg1="IfTrue";
+            entry1->arg2=expression->label_entry;
+            entry1->arg3="goto";
+            entry1->arg4=label2;
+
+            ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
+            entry2->type="if";
+            entry2->arg1="Else";
+            entry2->arg2="goto";
+            entry2->arg3=label3;
+
+            ThreeAddressCodeEntry* entry3= new ThreeAddressCodeEntry();
+            entry3->type="goto";
+            entry3->arg1="goto";
+            entry3->arg2=label1;
+
+            if(forinit)
+                builder->merge_entries(root,forinit->code_entries);
+
+            root->code_entries.push_back(label_entry_1);
+            builder->merge_entries(root,expression->code_entries);
+            root->code_entries.push_back(entry1);
+            root->code_entries.push_back(entry2);
+            root->code_entries.push_back(label_entry_2);
+            builder->merge_entries(root,statement->code_entries);
+            if(forupdate)
+                builder->merge_entries(root,forupdate->code_entries);
+            root->code_entries.push_back(entry3);
+            root->code_entries.push_back(label_entry_3);
+        }
         else if(root->token=="LITERAL")
         {
             root->label_entry=root->lexeme;
