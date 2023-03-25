@@ -1,0 +1,10 @@
+foo:
+	$t1 = PopParameter  
+	x = $t1  
+	$t2 = PopParameter  
+	y = $t2  
+	$t3 = x + y
+	a = $t3  
+	$t4 = a * 4
+	b = $t4  
+

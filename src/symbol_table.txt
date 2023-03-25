@@ -1,0 +1,22 @@
+Scope : CompilationUnit
+ArraySum	IDENTIFIER	class	0	0	0	
+
+Scope : ArraySum
+foo	IDENTIFIER		0	0	0	2	INT INT 
+main	IDENTIFIER	VOID	0	0	0	3	INT INT INT 
+
+Scope : foo
+a	IDENTIFIER	INT	0	0	0	
+b	IDENTIFIER	INT	0	0	0	
+x	IDENTIFIER	INT	0	0	0	
+y	IDENTIFIER	INT	0	0	0	
+
+Scope : main
+x	IDENTIFIER	INT	0	0	0	
+y	IDENTIFIER	INT	0	0	0	
+z	IDENTIFIER	INT	0	0	0	
+
+Scope : Block Line number 9
+arr	IDENTIFIER	INT	0	0	0	3	
+x	IDENTIFIER	INT	0	0	0	
+
