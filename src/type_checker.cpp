@@ -240,7 +240,7 @@ public:
             string field_type="";
             int field_type_dims= 0;
             bool new_used = false;
-            // string left_type="", right_type="";
+            string left_type="", right_type="";
             vector<tuple<string,int,string>> identifier_type_list;
             for(auto child_node: root-> children)
             {
@@ -249,7 +249,7 @@ public:
                     field_type= child_node->lexeme;
                 if(child_node->val=="UnannReferenceType")
                 {
-                    // left_type=child_node->type;
+                    left_type=child_node->type;
                     field_type=child_node->type;
                     field_type_dims=child_node->dims;
                 }
@@ -263,30 +263,29 @@ public:
             }
             for(auto [ele_identifier, ele_dims,ele_type ]: identifier_type_list)
             {
-                if( field_type != ele_type )
+                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
+                entry->type=field_type;
+                if(ele_dims>0)
                 {
-                    helper->throwerror("Line number: " +to_string(root->lineno)+ " Type "+field_type+" doesn't match with "+ele_type);
-                } 
+                    entry->entry_type="array";
+                    entry->no_dimensions=ele_dims;
+                    helper->checktypearrayacess(entry,field_type,root->lineno);
+                }
                 else 
                 {
-                    SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
-                    entry->type=field_type;
-                    // cout << field_type << endl;
-                    if(ele_dims>0)
+                    if( new_used )
                     {
-                        entry->entry_type="array";
-                        entry->no_dimensions=ele_dims;
-                        helper->checktypearrayacess(entry,field_type,root->lineno);
-                    }
+                        if( left_type != ele_type )
+                        {
+                            helper->throwerror("Line number: " +to_string(root->lineno)+ " ReferenceType "+left_type+" doesn't match with "+ele_type);
+                        }
+                    } 
                     else 
                     {
-                       if( not new_used )
-                        {
-                           helper->checktypevariable(entry,field_type,root->lineno);
-                        }
+                        helper->checktypevariable(entry,field_type,root->lineno);
                     }
-                    addEntry(entry);
                 }
+                addEntry(entry);
             }
         }
         else if( root->val == "UnannReferenceType" )
@@ -320,6 +319,7 @@ public:
                 if(child_node->val=="VariableDeclaratorId")
                 {
                     identifier_type_list.push_back({child_node->identifier,child_node->dims,""});
+                    // cout<<child_node->identifier<<" "<<child_node->dims<<endl;
                 }  
                 if(strcmp(child_node->val,"=")==0)
                 {
@@ -331,6 +331,10 @@ public:
                     }
                 }
             }
+            if( new_used )
+            {
+                root->expression_new_used = true;
+            } 
             root->identifier_type_list=identifier_type_list;
             root->type=type;
         }
@@ -351,6 +355,7 @@ public:
                     f=1;
                     identifier1=child_node->identifier;
                     variable_dims=child_node->dims;
+                    // cout<<child_node->identifier<<" "<<child_node->dims<<endl;
                 }            
                 if(child_node->token=="IDENTIFIER")
                 {
@@ -380,6 +385,7 @@ public:
                 root->identifier=identifier1;  
                 root->dims=variable_dims; 
                 root->type=righthand_type;
+                // cout<<child_node->identifier<<" "<<child_node->dims<<endl;
                 if(righthand_dims>0)
                 {
                     if(variable_dims!=righthand_dims)
