@@ -306,7 +306,7 @@ public:
             string field_type="";
             int field_type_dims= 0;
             bool new_used = false;
-            string left_type="", right_type="";
+            // string left_type="", right_type="";
             vector<tuple<string,int,string>> identifier_type_list;
             for(auto child_node: root-> children)
             {
@@ -315,7 +315,7 @@ public:
                     field_type= child_node->lexeme;
                 if(child_node->val=="UnannReferenceType")
                 {
-                    left_type=child_node->type;
+                    // left_type=child_node->type;
                     field_type=child_node->type;
                     field_type_dims=child_node->dims;
                 }
@@ -329,30 +329,30 @@ public:
             }
             for(auto [ele_identifier, ele_dims,ele_type ]: identifier_type_list)
             {
-                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
-                entry->type=field_type;
-                cout << field_type << endl;
-                if(ele_dims>0)
+                if( field_type != ele_type )
                 {
-                    entry->entry_type="array";
-                    entry->no_dimensions=ele_dims;
-                    helper->checktypearrayacess(entry,field_type,root->lineno);
-                }
+                    helper->throwerror("Line number: " +to_string(root->lineno)+ " Type "+field_type+" doesn't match with "+ele_type);
+                } 
                 else 
                 {
-                    if( new_used )
+                    SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
+                    entry->type=field_type;
+                    // cout << field_type << endl;
+                    if(ele_dims>0)
                     {
-                        if( left_type != ele_type )
-                        {
-                            helper->throwerror("Line number: " +to_string(root->lineno)+ " ReferenceType "+left_type+" doesn't match with "+ele_type);
-                        }
-                    } 
+                        entry->entry_type="array";
+                        entry->no_dimensions=ele_dims;
+                        helper->checktypearrayacess(entry,field_type,root->lineno);
+                    }
                     else 
                     {
-                        helper->checktypevariable(entry,field_type,root->lineno);
+                       if( not new_used )
+                        {
+                           helper->checktypevariable(entry,field_type,root->lineno);
+                        }
                     }
+                    addEntry(entry);
                 }
-                addEntry(entry);
             }
         }
         else if( root->val == "UnannReferenceType" )
@@ -512,7 +512,6 @@ public:
                 }    
                 if(child_node->token=="IDENTIFIER")
                 {
-
                     vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
                     if(entry[0])
                         if( entry[0]->type == "class" ) exp_type=entry[0]->lexeme;
@@ -537,6 +536,10 @@ public:
                 } 
                 if(child_node->val=="MethodInvocation")
                     exp_type=child_node->type;
+                if( child_node->val == "PreIncrementExpression" || child_node->val == "PostIncrementExpression" || child_node->val == "PreDecrementExpression" || child_node->val == "PostDecrementExpression" )
+                {
+                    exp_type = child_node->type;
+                }
             }
             if( new_used )
             {
@@ -619,6 +622,7 @@ public:
             {
                 helper->throwerror("Line number "+to_string(root->lineno)+": variable expected with the given unary operator");
             }
+            root->type = type;
         }
         // else if(helper->isUnaryOperator(root->val))
         // {

@@ -12,7 +12,7 @@ public class OperatorExample {
         int ac = !++a;
         int ad = -~x;
         int ae = +a+4-8;
-        int af = (int)+a;
+        int af = +a;
 
         boolean ag = true;
         int k = ++ag;
@@ -21,7 +21,7 @@ public class OperatorExample {
         int h = ++a;
         int i = --b;
         int j = c++;
-        int k = d--;
+        boolean k = d--;
         
         // relational operators
         boolean l = (a == b);
