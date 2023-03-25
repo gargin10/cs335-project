@@ -7,14 +7,14 @@ public class ArraySum {
   }
   void main(int x, int y, int z)
   {
-    int x = ( y> z)? y+2 : z-2;
+    // int x = ( y> z)? y+2 : z-2;
     // int x=0;
     // double y = 3.0, z=4.0;
     // Obj obj= new Obj();
 
     // obj.foo(x,y);
-    // int arr[][] = new int[10][5];
-    // x= arr[4][3];
+    int arr[][][] = new int[10][5][2];
+    int x= arr[7][3][1];
     // double y=(double)x;
 
     // XYZ obj;
