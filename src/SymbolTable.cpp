@@ -14,6 +14,7 @@ public:
     SymbolTable* parent;
     vector<SymbolTable*> children;
     string scope = "";
+    int offset=0;
 
     SymbolTable()
     {
@@ -27,11 +28,13 @@ public:
     void insert(SymbolEntry* entry)
     {
         string x=entry->hash();
+        entry->offset=offset;
         if(entries.find(x)==entries.end())
         {
             vector<SymbolEntry*> temp;
             entries[x]=temp;
             entries[entry->hash()].push_back(entry);
+            offset+=entry->size;
         }
         else
         {
@@ -43,7 +46,10 @@ public:
             if(type!="method")
                 cout<<"Line number: "<<entry->line_number<<" Redeclaration of the variable "<<entry->lexeme<<endl;
             else
+            {
                 entries[entry->hash()].push_back(entry);
+                offset+=entry->size;
+            }
         }
     }
 

@@ -3,6 +3,7 @@
     #include <bits/stdc++.h>
     #include "AST.cpp"
     #include "type_checker.cpp"
+    #include "type_checker_pass1.cpp"
     #include "3AC_generator.cpp"
     
     extern int lineno;
@@ -1285,12 +1286,18 @@ ForStatement:
                     }
 |   EnhancedForStatement  {
                         vector<Node*> v{$1};
-                        $$=createNode( "ForStatement", v ); 
+                        $$=createNode( "EnhancedForStatement", v ); 
                     }
 
 ForStatementNoShortIf:
-    BasicForStatementNoShortIf  { $$ = $1; }
-|   EnhancedForStatementNoShortIf  { $$ = $1; }
+    BasicForStatementNoShortIf  {
+                        vector<Node*> v{$1};
+                        $$=createNode( "ForStatement", v ); 
+                    }
+|   EnhancedForStatementNoShortIf  {
+                        vector<Node*> v{$1};
+                        $$=createNode( "EnhancedForStatement", v ); 
+                    }
 
 BasicForStatement:
     FOR BRACESTART SEMICOLON SEMICOLON BRACEEND Statement {
@@ -2599,9 +2606,12 @@ int main(int argc, char *argv[]) {
 
     ofstream ofs1("symbol_table.txt");
 
+    SymbolTableBuilder1* builder1 = new SymbolTableBuilder1();
+    builder1->build(root);
+
     SymbolTableBuilder* builder = new SymbolTableBuilder();
-    builder->build(root);
-    display(builder->curr_symtable,ofs1);
+    builder->build(root); 
+    display(builder->curr_symtable, ofs1);
 
     ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
     generator->build(root);
