@@ -44,10 +44,21 @@ public:
     string generatetemp()
     {
         co_temps++;
-        string temp="$"+to_string(co_temps);
+        string temp="$t"+to_string(co_temps);
         return temp;
     }
 
+    int getsize(string type){
+        if(type=="INT" || type=="FLOAT")
+            return 4;
+        else if(type=="DOUBLE" || type=="LONG")
+            return 8;
+        else if(type=="CHAR")
+            return 1;
+        else if(type=="BOOLEAN")
+            return 1;
+        return 4;
+    }
     void set_break_gotos(Node* node, string label)
     {
         for(auto ele: node->code_entries)
@@ -75,7 +86,7 @@ public:
                 build(child_node); 
             }
         }
-        else if(root->val=="MethodDeclaration")
+        else if(root->val=="MethodDeclaration" || root->val=="ConstructorDeclaration")
         {
             Node* methodDeclarator;
             root->label_entry=root->identifier;
@@ -91,6 +102,30 @@ public:
             set_method_file(class_scope+"."+root->identifier);
             builder->display(root,method_file);
             root->code_entries.clear();
+        }
+        else if(root->val == "FormalParameter")
+        {
+            Node* node;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);         
+                if(child_node->val=="VariableDeclaratorId")    
+                {
+                    node=child_node;
+                } 
+            }
+            string temp = generatetemp();
+            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->arg1=temp;
+            entry->arg2="PopParameter";
+
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->arg1=node->label_entry;
+            entry->arg2=temp;
+
+            root->code_entries.push_back(entry);
         }
         else if(root->val=="VariableDeclaratorId")
         {
@@ -463,15 +498,21 @@ public:
 
             string temp=generatetemp();
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="CALL";
+            entry->arg2=root->label_entry;
+
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
             entry->arg1=temp;
-            entry->arg2="CALL";
-            entry->arg3=root->label_entry;
+            entry->arg2="PopParameter";
 
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
             entry->type="param";
-            entry->arg1="popparams";
+            entry->arg1="PopParameters";
 
             root->code_entries.push_back(entry);
             root->label_entry=temp;
@@ -540,6 +581,190 @@ public:
 
             root->code_entries.push_back(entry);
             root->label_entry=label1;
+        }
+        else if(root->val=="ArrayAccess")
+        {
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries);               
+            }
+            Node* identifier= root->children[0];
+            Node* expression= root->children[1];
+
+            string temp = generatetemp();
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            entry->type="pointer";
+            entry->arg1=temp;
+            entry->arg2=identifier->identifier;
+
+            root->code_entries.push_back(entry);
+
+            
+            auto ele = curr_symtable->lookup(identifier->label_entry);
+            SymbolEntry* sym_entry;
+            int size=0;
+            if(ele.size()>0)
+            {
+                sym_entry=ele[0];
+                size = getsize(sym_entry->type);
+            }
+
+            string size_temp=generatetemp();
+            entry = new ThreeAddressCodeEntry();
+            entry->arg1=size_temp;
+            entry->arg2=expression->label_entry;
+            entry->arg3="*";
+            entry->arg4=to_string(size);
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->arg1=temp;
+            entry->arg2=temp;
+            entry->arg3="+";
+            entry->arg4=size_temp;
+            root->code_entries.push_back(entry);
+
+            root->label_entry=temp;
+            root->identifier=identifier->identifier;
+        }
+        else if(root->val=="ArrayCreationExpression")
+        {
+            Node* node1;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries);
+                if(child_node->val=="DimExprs")
+                    node1=child_node;
+            }
+            Node* node2=root->children[1];
+            int size=getsize(node2->type);
+
+            string size_temp=generatetemp();
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            entry->arg1=size_temp;
+            entry->arg2=node1->label_entry;
+            entry->arg3="*";
+            entry->arg4=to_string(size);
+            root->code_entries.push_back(entry);
+
+            string token=generatetemp();
+            entry = new ThreeAddressCodeEntry();
+            entry->arg1=token;
+            entry->arg2="alloc_memory";
+            entry->arg3=size_temp;
+            root->code_entries.push_back(entry);
+
+            root->label_entry=token;
+        }
+        else if(root->val=="UnqualifiedClassInstanceCreationExpression")
+        {
+            Node* node1;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries);
+            }
+            Node* node2=root->children[1];
+
+            string size_temp=generatetemp();
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            entry->arg1=size_temp;
+            entry->arg2="size_of_"+node2->lexeme;
+            root->code_entries.push_back(entry);
+
+            string temp=generatetemp();
+            entry = new ThreeAddressCodeEntry();
+            entry->arg1=temp;
+            entry->arg2="alloc_memory";
+            entry->arg3=size_temp;
+            root->code_entries.push_back(entry);
+
+            root->label_entry=temp;
+        }
+        else if(root->val=="DimExprs")
+        {
+            Node* node1;
+            Node* node2;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries);               
+            }
+            if(root->children.size()>1)
+            {
+                node1=root->children[0];
+                node2=root->children[1];
+
+                ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+                string temp=generatetemp();
+                entry->arg1=temp;
+                entry->arg2=node1->label_entry;
+                entry->arg3="*";
+                entry->arg4=node2->label_entry;
+
+                root->code_entries.push_back(entry);
+                root->label_entry=temp;
+            }
+            else
+            {
+                node1=root->children[0];
+                ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+                string temp=generatetemp();
+                entry->arg1=temp;
+                entry->arg2=node1->label_entry;
+
+                root->code_entries.push_back(entry);
+                root->label_entry=temp;
+            }
+        }
+        else if(root->val=="CastExpression")
+        {
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries);               
+            }
+            Node* final_type=root->children[0];
+            Node* exp=root->children[1];
+            string cast_string="cast_to_"+final_type->lexeme;
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            string temp=generatetemp();
+            entry->arg1=temp;
+            entry->arg2=cast_string;
+            entry->arg3=exp->label_entry;
+
+            root->code_entries.push_back(entry);
+            root->label_entry=temp;
+        }
+        else if(root->val=="FieldAccess"|| root->val=="ExpressionName")
+        {
+            Node* object_access;
+            Node* object_field;
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries); 
+                if(child_node->token=="IDENTIFIER")
+                    object_field=child_node;              
+            }
+            object_access=root->children[0];
+
+            string temp = generatetemp();
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            entry->type="pointer";
+            entry->arg1=temp;
+            entry->arg2=object_access->identifier;
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->arg1=temp;
+            entry->arg2=temp;
+            entry->arg3="OFFSET_"+object_field->lexeme;
+            root->code_entries.push_back(entry);
+
+            root->label_entry="*"+temp;
         }
         else if(root->token=="LITERAL")
         {

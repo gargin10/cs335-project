@@ -766,6 +766,10 @@ public:
                     if(!ans)
                         helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect type in dimensions specification expression");
                 }
+                if(child_node->val=="DimExprs")
+                {
+                    variable_dims+=child_node->dims;
+                }
             }
             root->dims = variable_dims;
         }
@@ -801,8 +805,15 @@ public:
                 {
                     arguments_type.push_back(child_node->type);
                 }
+                if(child_node->val=="ArgumentList"){
+                    arguments_type.insert(arguments_type.end(),child_node->arguments_type.begin(),child_node->arguments_type.end());
+                }
             }
             root->arguments_type=arguments_type;
+        }
+        else if(root->token=="IDENTIFIER")
+        {
+            root->identifier=root->lexeme;
         }
         else
         {
