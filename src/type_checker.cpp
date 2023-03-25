@@ -17,6 +17,7 @@ public:
     SymbolTable* curr_symtable;
     SymbolTable* prev_symtable;
     Helper* helper;
+    int offset=0;
     SymbolTableBuilder()
     {
         createValidTypes();
@@ -76,6 +77,11 @@ public:
         assert(curr_symtable!=NULL);
         entry->size=type_to_size(entry->type);
         entry->line_number=line_number;
+        if(entry->entry_type!="method"&& entry->entry_type!="class")
+        {
+            entry->offset=offset;
+            offset+=entry->size;
+        }
         curr_symtable->insert(entry);
     }
     void createValidTypes()
@@ -143,6 +149,7 @@ public:
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
+            offset=0;
             curr_symtable -> setParent(prev_symtable);
 
             string identifier_method="";
@@ -237,6 +244,7 @@ public:
             {
                 entry->entry_type="array";
                 entry->no_dimensions=root->dims;
+                entry->token="ARRAY";
             }
             addEntry(entry, root->lineno);
         }
@@ -293,6 +301,7 @@ public:
                     entry->entry_type="array";
                     entry->no_dimensions=ele_dims;
                     helper->checktypearrayacess(entry,field_type,root->lineno);
+                    entry->token="ARRAY";
                 }
                 else 
                 {

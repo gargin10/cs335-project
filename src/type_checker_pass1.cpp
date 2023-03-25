@@ -17,6 +17,7 @@ public:
     SymbolTable* curr_symtable;
     SymbolTable* prev_symtable;
     Helper* helper;
+    int offset=0;
     SymbolTableBuilder1()
     {
         createValidTypes();
@@ -76,6 +77,11 @@ public:
         assert(curr_symtable!=NULL);
         entry->size=type_to_size(entry->type);
         entry->line_number=line_number;
+        if(entry->entry_type!="method"&& entry->entry_type!="class")
+        {
+            entry->offset=offset;
+            offset+=entry->size;
+        }
         curr_symtable->insert(entry);
     }
     void createValidTypes()
@@ -98,6 +104,7 @@ public:
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
+            offset=0;
             curr_symtable -> setParent(prev_symtable);
             root->symtable=curr_symtable;
             for(auto child_node: root-> children)
@@ -111,6 +118,7 @@ public:
 
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
+            offset=0;
             curr_symtable -> setParent(prev_symtable);
             root->symtable=curr_symtable;
             SymbolTable *thissymtable = curr_symtable;
@@ -129,7 +137,7 @@ public:
             curr_symtable -> scope = identifier_class;
             curr_symtable = curr_symtable -> parent;
 
-            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
+            SymbolEntry* entry = new SymbolEntry("CLASS", identifier_class);
             entry->type="class";
             addEntry(entry, root->lineno);
             root->identifier=identifier_class;
@@ -138,6 +146,7 @@ public:
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
+            offset=0;
             curr_symtable -> setParent(prev_symtable);
 
             string identifier_method="";
@@ -167,7 +176,7 @@ public:
             curr_symtable -> scope = identifier_method;
             curr_symtable = curr_symtable -> parent;
 
-            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_method);
+            SymbolEntry* entry = new SymbolEntry("METHOD", identifier_method);
             entry->type=method_type;
             entry->type_arguments=arguments_type;
             entry->no_arguments=arguments_type.size();
@@ -226,7 +235,7 @@ public:
             root->type=parameter_type;
             root->dims=parameter_type_dims;
 
-            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier);
+            SymbolEntry* entry = new SymbolEntry("ARRAY", identifier);
             entry->type=parameter_type;
             if(parameter_type_dims>0)
             {
@@ -287,6 +296,7 @@ public:
                 {
                     entry->entry_type="array";
                     entry->no_dimensions=ele_dims;
+                    entry->token="ARRAY";
                     // helper->checktypearrayacess(entry,field_type,root->lineno);
                 }
                 else 

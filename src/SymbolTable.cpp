@@ -11,10 +11,10 @@ class SymbolTable {
 public:
 
     map<string, vector<SymbolEntry*> > entries;
+    vector<string> order_entries;
     SymbolTable* parent;
     vector<SymbolTable*> children;
     string scope = "";
-    int offset=0;
 
     SymbolTable()
     {
@@ -28,13 +28,12 @@ public:
     void insert(SymbolEntry* entry)
     {
         string x=entry->hash();
-        entry->offset=offset;
         if(entries.find(x)==entries.end())
         {
             vector<SymbolEntry*> temp;
             entries[x]=temp;
             entries[entry->hash()].push_back(entry);
-            offset+=entry->size;
+            order_entries.push_back(entry->hash());
         }
         else
         {
@@ -48,19 +47,9 @@ public:
             else
             {
                 entries[entry->hash()].push_back(entry);
-                offset+=entry->size;
             }
         }
     }
-
-    // void insert(vector<SymbolEntry*> entries)
-    // {
-    //     for(auto ele:entries)
-    //     {
-    //         if(!ele->temp)
-    //         this->entries[ele->hash()].push_back(ele);
-    //     }
-    // }
 
     vector<SymbolEntry*> lookup(string lexeme)
     {
@@ -80,15 +69,13 @@ public:
     void display(std::ofstream& ofs)
     {
         ofs << "Scope : "<< scope <<"\n";
-        for(auto [_, entry]: entries)
+        for(auto order_id: order_entries)
         {
-            for( auto ele : entry ){
+            for( auto ele : entries[order_id] ){
                 ele->display(ofs);
             }
         }
         ofs<<"\n";
-        // if(parent)
-        //     parent->display(outputfile);
     }
     void display()
     {

@@ -30,7 +30,7 @@ public:
 
     void set_method_file(string filename)
     {
-        method_file=filename;
+        method_file=filename+".3ac";
         co_labels=0;
         array_size=0;
     }
