@@ -1,6 +1,6 @@
 public class RecordAndEnumExample {
     
-    public static void main() {
+    public static void main(s) {
         
         // Create a new record and assign values to its fields
         Person person = new Person("John", "Doe", Gender.MALE, 30);

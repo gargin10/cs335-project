@@ -13,6 +13,9 @@ public class OperatorExample {
         int ad = -~x;
         int ae = +a+4-8;
         int af = (int)+a;
+
+        boolean ag = true;
+        int k = ++ag;
         
         // increment and decrement operators
         int h = ++a;
@@ -49,6 +52,7 @@ public class OperatorExample {
         d /= e;
         e %= f;
         f &= g;
+        aa *= 2;
         
         // ternary operator
         int result = (a > b) ? c : d;
