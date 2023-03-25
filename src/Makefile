@@ -16,6 +16,7 @@ test:
 	./myASTGenerator ../tests/test_10.java
 
 clean:
+	rm output/*
 	rm myASTGenerator
 	rm parser.tab.c parser.tab.h parser.output
 	rm lex.yy.c

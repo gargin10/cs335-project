@@ -2611,7 +2611,7 @@ int main(int argc, char *argv[]) {
 
     SymbolTableBuilder* builder = new SymbolTableBuilder();
     builder->build(root); 
-    display(builder->curr_symtable, ofs1);
+    display(builder->curr_symtable);
 
     ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
     generator->build(root);

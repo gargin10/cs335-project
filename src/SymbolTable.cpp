@@ -15,6 +15,8 @@ public:
     SymbolTable* parent;
     vector<SymbolTable*> children;
     string scope = "";
+    string table_type="";
+    int line_number=0;
 
     SymbolTable()
     {

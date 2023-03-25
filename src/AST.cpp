@@ -29,15 +29,35 @@ struct Node{
     vector<Node*> children;
 };
 
+string curr_file="";
+string class_file="";
+std::ofstream ofs;
 
-void display(SymbolTable* curr, std::ofstream& ofs)
+void display(SymbolTable* curr)
 {
     assert(curr!=NULL);
-    curr->display(ofs);
-    for(auto ele:curr->children)
+    if(curr->table_type=="cunit")
     {
-        display(ele,ofs);
+        curr_file="./output/compilation_unit.csv";
+        ofs.close();
+        ofs.open(curr_file,ios::out | std::ofstream::trunc);
     }
+    else if(curr->table_type=="class")
+    {
+        curr_file="./output/"+curr->scope+".csv";
+        class_file=curr->scope;
+        ofs.close();
+        ofs.open(curr_file,ios::out | std::ofstream::trunc);
+    }
+    else if(curr->table_type == "method")
+    {
+        curr_file="./output/"+class_file+"."+curr->scope+to_string(curr->line_number)+".csv";
+        ofs.close();
+        ofs.open(curr_file,ios::out | std::ofstream::trunc);
+    }
+    curr->display(ofs);
+    for(auto ele: curr->children)
+        display(ele);
 }
 
 void str_replace(char *target, const char *needle, const char *replacement)

@@ -106,7 +106,8 @@ public:
             // curr_symtable = new SymbolTable(root->val);
             // curr_symtable -> setParent(prev_symtable);
             curr_symtable=root->symtable;
-            
+            curr_symtable->table_type="cunit";
+            curr_symtable->line_number=root->lineno;
 
             for(auto child_node: root-> children)
             {
@@ -122,6 +123,8 @@ public:
             // curr_symtable = new SymbolTable(root->val);
             // curr_symtable -> setParent(prev_symtable);
             curr_symtable=root->symtable;
+            curr_symtable->table_type="class";
+            curr_symtable->line_number=root->lineno;
             // curr_symtable->children.clear();
 
             string identifier_class="";
@@ -149,6 +152,8 @@ public:
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
+            curr_symtable->table_type="method";
+            curr_symtable->line_number=root->lineno;
             offset=0;
             curr_symtable -> setParent(prev_symtable);
 
