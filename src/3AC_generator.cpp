@@ -16,9 +16,9 @@ public:
     SymbolTable* curr_symtable;
     Helper* helper;
     ThreeAddressCodeBuilder* builder;
-    int nextinstr=0;
     int co_labels=0;
     int co_temps=0;
+    int array_size=0;
     string class_scope="";
     string method_file="";
     ThreeAddressCodeGenerator()
@@ -32,7 +32,7 @@ public:
     {
         method_file=filename;
         co_labels=0;
-        co_temps=0;
+        array_size=0;
     }
     string generatelabel()
     {
@@ -636,49 +636,88 @@ public:
         }
         else if(root->val=="ArrayAccess")
         {
+            Node* identifier=NULL;
+            Node* arrayaccess=NULL;
+            Node* expression=NULL;
             for(auto child_node: root-> children)
             {
-                build(child_node);
-                builder->merge_entries(root,child_node->code_entries);               
+                if(child_node->token=="IDENTIFIER")
+                    identifier=child_node;
+                if(child_node->val=="ArrayAccess")
+                    arrayaccess=child_node;
+                if(child_node->val=="Expression")
+                    expression=child_node;
             }
-            Node* identifier= root->children[0];
-            Node* expression= root->children[1];
-
-            string temp = generatetemp();
-            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            entry->type="pointer";
-            entry->arg1=temp;
-            entry->arg2=identifier->identifier;
-
-            root->code_entries.push_back(entry);
-
-            
-            auto ele = curr_symtable->lookup(identifier->label_entry);
-            SymbolEntry* sym_entry;
-            int size=0;
-            if(ele.size()>0)
+            if(arrayaccess!=NULL)
             {
-                sym_entry=ele[0];
-                size = getsize(sym_entry->type);
+                build(expression);
+                builder->merge_entries(root,expression->code_entries);
+                root->array_invocation.push_back(expression->label_entry);
+                arrayaccess->array_invocation=root->array_invocation;
+                build(arrayaccess);
+                // cout<<"here5"<<endl;
+                builder->merge_entries(root,arrayaccess->code_entries);
+                root->label_entry=arrayaccess->label_entry;
+                // cout<<"here6"<<endl;
+                return;
+            }
+            else if(identifier!=NULL)
+            {
+                build(identifier);
+                build(expression);
+                builder->merge_entries(root,expression->code_entries);
+                root->array_invocation.push_back(expression->label_entry);
+
+                // cout<<"here"<<endl;
+                SymbolEntry* sym_entry=curr_symtable->lookup(identifier->lexeme)[0];
+                int dims=sym_entry->no_dimensions;
+                string size=to_string(getsize(sym_entry->type));
+                // cout<<"here2"<<endl;
+
+                ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+                string ans=generatetemp();
+                entry->arg1=ans;
+                entry->arg2=identifier->lexeme;
+                entry->type="pointer";
+                // cout<<"here3"<<endl;
+
+                root->code_entries.push_back(entry);
+
+                for(int i=0;i<sym_entry->no_dimensions;i++)
+                {
+                    entry = new ThreeAddressCodeEntry();
+                    string t2=generatetemp();
+                    entry->arg1=t2;
+                    entry->arg2=root->array_invocation[i];
+                    entry->arg3="*";
+                    entry->arg4=size;
+                    root->code_entries.push_back(entry);
+
+                    entry = new ThreeAddressCodeEntry();
+                    entry->arg1=ans;
+                    entry->arg2=ans;
+                    entry->arg3="+";
+                    entry->arg4=t2;
+                    root->code_entries.push_back(entry);
+
+                    if(i<sym_entry->no_dimensions-1)
+                    {
+                        entry = new ThreeAddressCodeEntry();
+                        string t3=generatetemp();
+                        entry->arg1=t3;
+                        entry->arg2=root->array_invocation[i];
+                        entry->arg3="*";
+                        entry->arg4="dimension_size"+to_string(sym_entry->no_dimensions-i);
+                        root->code_entries.push_back(entry);
+
+                        size=t3;
+                    }
+                }
+                // cout<<"here4"<<endl;
+
+                root->label_entry=ans;
             }
 
-            string size_temp=generatetemp();
-            entry = new ThreeAddressCodeEntry();
-            entry->arg1=size_temp;
-            entry->arg2=expression->label_entry;
-            entry->arg3="*";
-            entry->arg4=to_string(size);
-            root->code_entries.push_back(entry);
-
-            entry = new ThreeAddressCodeEntry();
-            entry->arg1=temp;
-            entry->arg2=temp;
-            entry->arg3="+";
-            entry->arg4=size_temp;
-            root->code_entries.push_back(entry);
-
-            root->label_entry=temp;
-            root->identifier=identifier->identifier;
         }
         else if(root->val=="ArrayCreationExpression")
         {

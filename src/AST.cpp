@@ -21,6 +21,8 @@ struct Node{
     SymbolTable* symtable;
     vector<ThreeAddressCodeEntry*> code_entries;
     string label_entry="";
+    vector<int> array_dims;
+    vector<string> array_invocation;
 
     bool expression_new_used = false;
     string tempval="";
