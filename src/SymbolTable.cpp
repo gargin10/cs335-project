@@ -31,8 +31,20 @@ public:
         {
             vector<SymbolEntry*> temp;
             entries[x]=temp;
+            entries[entry->hash()].push_back(entry);
         }
-        entries[entry->hash()].push_back(entry);
+        else
+        {
+            string type="";
+            for(auto ele: entries[x])
+            {
+                type=ele->entry_type;
+            }
+            if(type!="method")
+                cout<<"Line number: "<<entry->line_number<<" Redeclaration of the variable "<<entry->lexeme<<endl;
+            else
+                entries[entry->hash()].push_back(entry);
+        }
     }
 
     // void insert(vector<SymbolEntry*> entries)

@@ -40,28 +40,29 @@ public:
         entry->type_arguments={type};
         entry->no_arguments=1;
         entry->entry_type="method";
-        addEntry(entry);
+        addEntry(entry, 0);
 
         SymbolEntry* entry1 = new SymbolEntry("IDENTIFIER", "print");
         entry1->type_arguments={type};
         entry1->no_arguments=1;
         entry1->entry_type="method";
-        addEntry(entry1);
+        addEntry(entry1,0);
     }
 
     void addemptyprint()
     {
         SymbolEntry* entry = new SymbolEntry("IDENTIFIER", "println");
         entry->entry_type="method";
-        addEntry(entry);
+        addEntry(entry,0);
 
         SymbolEntry* entry1 = new SymbolEntry("IDENTIFIER", "print");
         entry1->entry_type="method";
-        addEntry(entry1);
+        addEntry(entry1,0);
     }
-    void addEntry(SymbolEntry* entry)
+    void addEntry(SymbolEntry* entry, int line_number)
     {
         assert(curr_symtable!=NULL);
+        entry->line_number=line_number;
         curr_symtable->insert(entry);
     }
     void createValidTypes()
@@ -113,7 +114,7 @@ public:
 
             SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
             entry->type="class";
-            addEntry(entry);
+            addEntry(entry, root->lineno);
             root->identifier=identifier_class;
         }
         else if(root->val=="MethodDeclaration"|| root->val=="ConstructorDeclaration")
@@ -154,7 +155,7 @@ public:
             entry->type_arguments=arguments_type;
             entry->no_arguments=arguments_type.size();
             entry->entry_type="method";
-            addEntry(entry);
+            addEntry(entry, root->lineno);
 
             root->identifier=identifier_method;
         }
@@ -215,7 +216,7 @@ public:
                 entry->entry_type="array";
                 entry->no_dimensions=root->dims;
             }
-            addEntry(entry);
+            addEntry(entry, root->lineno);
         }
         else if(root->val=="VariableDeclaratorId")
         {
@@ -285,7 +286,7 @@ public:
                         helper->checktypevariable(entry,field_type,root->lineno);
                     }
                 }
-                addEntry(entry);
+                addEntry(entry, root->lineno);
             }
         }
         else if( root->val == "UnannReferenceType" )
