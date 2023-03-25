@@ -3,6 +3,8 @@
 #include "SymbolEntry.cpp"
 #include "SymbolTable.cpp"
 #include "helper.cpp"
+#include "3AC.cpp"
+
 #include <map>
 #include <iostream>
 #include <cstdio>
@@ -15,7 +17,6 @@ public:
     SymbolTable* curr_symtable;
     SymbolTable* prev_symtable;
     Helper* helper;
-    int method_invocation_flag=0;
 
     SymbolTableBuilder()
     {
@@ -23,36 +24,13 @@ public:
         curr_symtable=NULL;
         prev_symtable=NULL;
         helper=new Helper();
-        helper->display_flag=0;
     }
 
-    void setMethodInvocationFlag(int method_invocation_flag)
-    {
-        this->method_invocation_flag=method_invocation_flag;
-        if(!method_invocation_flag)
-            helper->display_flag=0;
-        else
-            helper->display_flag=1;
-    }
     void addEntry(SymbolEntry* entry)
     {
-        if(method_invocation_flag)
-            return;
         assert(curr_symtable!=NULL);
         curr_symtable->insert(entry);
     }
-    // bool presentEntry(SymbolEntry* entry)
-    // {
-    //     if(method_invocation_flag)
-    //         return true;
-    //     // assert(curr_symtable!=NULL);
-    //     vector<SymbolEntry*> entries = curr_symtable->lookup(entry->lexeme);
-    //     for( auto symboltable_entry : entries )
-    //     {
-    //         if( symboltable_entry->token == entry->token and symboltable_entry->type == entry->type ) return true;
-    //     }
-    //     return false;
-    // }
     void createValidTypes()
     {
         validtypes.insert("BYTE");
@@ -69,65 +47,23 @@ public:
     }
     void build (Node* root)
     {
-        if(method_invocation_flag)
-            curr_symtable=root->symtable;
         if(root->val=="CompilationUnit")
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable(root->val);
-                curr_symtable -> setParent(prev_symtable);
-            }
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
 
             for(auto child_node: root-> children)
             {
                 build(child_node);                
             }
         }
-        // else if(root->val=="ClassBody")
-        // {
-        //     if(!method_invocation_flag)
-        //     {
-        //         prev_symtable = curr_symtable;
-        //         curr_symtable = new SymbolTable(root->val);
-        //         curr_symtable -> setParent(prev_symtable);
-        //     }
-        //     string identifier_class="";
-        //     for(auto child_node: root-> children)
-        //     {
-        //         build(child_node); 
-        //         if( child_node->val == "NormalClassDeclaration")
-        //         {
-        //             // if( identifier_class == "" ) continue;
-        //             vector<SymbolEntry*> entries = curr_symtable->lookup(identifier_class);
-        //             for( auto entry : entries )
-        //             {
-        //                 helper->throwerror("Class Redeclared " + identifier_class);
-        //             }
-        //             if( entries[0] == NULL )
-        //             {
-        //                 SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
-        //                 entry->type="class";
-        //                 cout << "Addng Entry" << endl;
-        //                 addEntry(entry);
-        //             }
-        //         }
-        //     }
-
-        //     assert(curr_symtable!=NULL);
-        //     curr_symtable -> scope = identifier_class;
-        //     curr_symtable = curr_symtable -> parent;
-
-        // }
         else if(root->val=="NormalClassDeclaration")
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable(root->val);
-                curr_symtable -> setParent(prev_symtable);
-            }
+
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
 
             string identifier_class="";
             for(auto child_node: root-> children)
@@ -142,34 +78,16 @@ public:
             curr_symtable -> scope = identifier_class;
             curr_symtable = curr_symtable -> parent;
 
-            // if( !method_invocation_flag )
-            // {
-            //     vector<SymbolEntry*> entries = curr_symtable->lookup(identifier_class);
-            //     for( auto entry : entries )
-            //     {
-            //         helper->throwerror("Class Redeclared " + identifier_class);
-            //     }
-                // if( entries[0] == NULL )
-                // {
-                //     SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
-                //     entry->type="class";
-                //     cout << "Addng Entry" << endl;
-                //     addEntry(entry);
-                // }
-            // }
-
             SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_class);
             entry->type="class";
             addEntry(entry);
+            root->identifier=identifier_class;
         }
         else if(root->val=="MethodDeclaration"|| root->val=="ConstructorDeclaration")
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable(root->val);
-                curr_symtable -> setParent(prev_symtable);
-            }
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
 
             string identifier_method="";
             string method_type="";
@@ -204,15 +122,14 @@ public:
             entry->no_arguments=arguments_type.size();
             entry->entry_type="method";
             addEntry(entry);
+
+            root->identifier=identifier_method;
         }
         else if(strcmp(root->val,"{")==0)
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable("Block Line number "+to_string(root->lineno));
-                curr_symtable -> setParent(prev_symtable);
-            }            
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable("Block Line number "+to_string(root->lineno));
+            curr_symtable -> setParent(prev_symtable);                
         }
         else if(strcmp(root->val,"}")==0)
         {
@@ -461,12 +378,9 @@ public:
         }
         else if(root->val == "ForStatement")
         {
-            if(!method_invocation_flag)
-            {
-                prev_symtable = curr_symtable;
-                curr_symtable = new SymbolTable(root->val);
-                curr_symtable -> setParent(prev_symtable);
-            }
+            prev_symtable = curr_symtable;
+            curr_symtable = new SymbolTable(root->val);
+            curr_symtable -> setParent(prev_symtable);
 
             for(auto child_node: root-> children)
             {
@@ -492,9 +406,10 @@ public:
                 }    
                 if(child_node->token=="IDENTIFIER")
                 {
-                    SymbolEntry* entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                    if(entry)
-                        exp_type=entry->type;
+                    vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    if(entry[0])
+                        if( entry[0]->type == "class" ) exp_type=entry[0]->lexeme;
+                        else exp_type=entry[0]->type;
                 }   
                 if(child_node->token=="LITERAL")
                 {
@@ -663,13 +578,12 @@ public:
                         vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
                         if(entry[0])
                             type1=entry[0]->type;
-                        arg1=child_node->lexeme;
                     }
                     else
                     {
-                        SymbolEntry* entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                        if(entry)
-                            type2=entry->type;
+                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry[0])
+                            type2=entry[0]->type;
                     }     
                 }
                 if(child_node->val=="ArrayAccess")
@@ -683,13 +597,14 @@ public:
                             type2=entry->type;
                     }
                 }
-                if(helper->isOperator(child_node->val)|| child_node->val=="Expression"|| child_node->token=="LITERAL")
+                if(helper->isOperator(child_node->val))
                 {
                     if(type1=="")
                         type1=child_node->type;
                     else
                         type2=child_node->type;
-                }  if(child_node->val=="Expression")
+                }   
+                if(child_node->val=="Expression")
                 {
                     if(type1=="")
                     {
@@ -787,6 +702,10 @@ public:
                     if(!ans)
                         helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect type in dimensions specification expression");
                 }
+                if(child_node->val=="DimExprs")
+                {
+                    variable_dims+=child_node->dims;
+                }
             }
             root->dims = variable_dims;
         }
@@ -808,12 +727,9 @@ public:
             }
             root->identifier=identifier;
             root->arguments_type=arguments_type;
-            if(method_invocation_flag)
-            {
-                SymbolEntry* entry = helper->checkmethod(identifier,arguments_type,curr_symtable,root->lineno);
-                if(entry)
-                    root->type=entry->type;
-            }
+            SymbolEntry* entry = helper->checkmethod(identifier,arguments_type,curr_symtable,root->lineno);
+            if(entry)
+                root->type=entry->type;
         }
         else if(root->val=="ArgumentList")
         {
@@ -825,8 +741,15 @@ public:
                 {
                     arguments_type.push_back(child_node->type);
                 }
+                if(child_node->val=="ArgumentList"){
+                    arguments_type.insert(arguments_type.end(),child_node->arguments_type.begin(),child_node->arguments_type.end());
+                }
             }
             root->arguments_type=arguments_type;
+        }
+        else if(root->token=="IDENTIFIER")
+        {
+            root->identifier=root->lexeme;
         }
         else
         {
