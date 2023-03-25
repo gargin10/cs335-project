@@ -225,6 +225,58 @@ public:
             }
             root->label_entry=root->children[0]->label_entry;
         }
+        else if(root->val=="?:")
+        {
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries); 
+            }
+                        
+            Node* condition = root->children[0];
+            Node* trueexp = root->children[1];
+            Node* falseexp = root->children[2];
+
+            string else_label=generatelabel();
+            ThreeAddressCodeEntry* label_entry_2= new ThreeAddressCodeEntry();
+            label_entry_2->arg1=else_label;
+            label_entry_2->type="label";
+
+            string end_label=generatelabel();
+            ThreeAddressCodeEntry* label_entry_3= new ThreeAddressCodeEntry();
+            label_entry_3->arg1=end_label;
+            label_entry_3->type="label";
+            
+            ThreeAddressCodeEntry* entry1= new ThreeAddressCodeEntry();
+            entry1->type="if";
+            entry1->arg1="IfFalse";
+            entry1->arg2=condition->label_entry;
+            entry1->arg3="goto";
+            entry1->arg4=else_label;
+
+            ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
+            entry2->type="goto";
+            entry2->arg1="goto";
+            entry2->arg2=end_label;
+
+            string temp=generatetemp();
+            ThreeAddressCodeEntry* entry3= new ThreeAddressCodeEntry();
+            entry3->arg1=temp;
+            entry3->arg2=trueexp->label_entry;
+
+            ThreeAddressCodeEntry* entry4= new ThreeAddressCodeEntry();
+            entry4->arg1=temp;
+            entry4->arg2=falseexp->label_entry;
+
+            root->code_entries.push_back(entry3);
+            root->code_entries.push_back(entry1);
+            root->code_entries.push_back(label_entry_2);
+            root->code_entries.push_back(entry4);
+            root->code_entries.push_back(entry2);
+            root->code_entries.push_back(label_entry_3);
+
+            root->label_entry=temp;
+        }
         else if(root->val=="IfThenStatement")
         {
             for(auto child_node: root-> children)
