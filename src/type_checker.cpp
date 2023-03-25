@@ -21,11 +21,44 @@ public:
     SymbolTableBuilder()
     {
         createValidTypes();
-        curr_symtable=NULL;
+        curr_symtable=new SymbolTable();
+        addprintmethods("STRING");
+        addprintmethods("BOOLEAN");
+        addprintmethods("CHAR");
+        addprintmethods("INT");
+        addprintmethods("LONG");
+        addprintmethods("FLOAT");
+        addprintmethods("DOUBLE");
+        addemptyprint();
         prev_symtable=NULL;
         helper=new Helper();
     }
 
+    void addprintmethods(string type)
+    {
+        SymbolEntry* entry = new SymbolEntry("IDENTIFIER", "println");
+        entry->type_arguments={type};
+        entry->no_arguments=1;
+        entry->entry_type="method";
+        addEntry(entry);
+
+        SymbolEntry* entry1 = new SymbolEntry("IDENTIFIER", "print");
+        entry1->type_arguments={type};
+        entry1->no_arguments=1;
+        entry1->entry_type="method";
+        addEntry(entry1);
+    }
+
+    void addemptyprint()
+    {
+        SymbolEntry* entry = new SymbolEntry("IDENTIFIER", "println");
+        entry->entry_type="method";
+        addEntry(entry);
+
+        SymbolEntry* entry1 = new SymbolEntry("IDENTIFIER", "print");
+        entry1->entry_type="method";
+        addEntry(entry1);
+    }
     void addEntry(SymbolEntry* entry)
     {
         assert(curr_symtable!=NULL);

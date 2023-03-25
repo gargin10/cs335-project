@@ -16,14 +16,14 @@ public:
     string hash_key;
 
     bool temp;
-    int line_number;
-    int size;
-    int offset;
+    int line_number=0;
+    int size=0;
+    int offset=0;
 
-    int no_arguments;
+    int no_arguments=0;
     vector<string> type_arguments;
 
-    int no_dimensions;
+    int no_dimensions=0;
     
     SymbolEntry()
     {
