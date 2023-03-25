@@ -331,6 +331,7 @@ public:
             {
                 SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
                 entry->type=field_type;
+                cout << field_type << endl;
                 if(ele_dims>0)
                 {
                     entry->entry_type="array";
@@ -555,6 +556,7 @@ public:
                 if( child_node->token == "IDENTIFIER" )
                 {
                    type1=child_node->type;
+                   cout << "Identifier *= " << type1 << endl;
                 }
                 if( child_node->token == "ExpressionName" )
                 {
@@ -580,6 +582,42 @@ public:
             {
                 string opr = root->val;
                 helper->throwerror("Line Number: "+to_string(root->lineno)+" Incorrect type conversion from "+type2+" to "+type1);
+            }
+        }
+        else if( root->val == "PreIncrementExpression" || root->val == "PostDecrementExpression" || root->val == "PreDecrementExpression" || root->val == "PostIncrementExpression" )
+        {
+            bool isIdentifier = false;
+            string type="";
+            for( auto child_node : root->children )
+            {
+                build(child_node);
+                if( child_node->token == "IDENTIFIER" )
+                {
+                    vector<SymbolEntry*> entries = curr_symtable->lookup(child_node->lexeme);
+                    for( auto entry : entries )
+                    {
+                        if( entry->entry_type == "variable" )
+                        {
+                            type = entries[0]->type;
+                            isIdentifier = true;
+                        }  
+                    }
+                }
+            }
+            if( isIdentifier )
+            {
+                if( type == "CHAR" || type == "BYTE" || type == "SHORT" || type == "INT" || type == "FLOAT" || type == "LONG" || type == "DOUBLE" )
+                {
+                    ;
+                }
+                else 
+                {
+                    helper->throwerror("Line number "+to_string(root->lineno)+": only numeric type variable expected with the given unary operator");
+                }
+            } 
+            else
+            {
+                helper->throwerror("Line number "+to_string(root->lineno)+": variable expected with the given unary operator");
             }
         }
         // else if(helper->isUnaryOperator(root->val))
