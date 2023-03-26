@@ -639,8 +639,7 @@ public:
                     vector<SymbolEntry*> entry= helper->checkvariable(root->children[0]->lexeme,curr_symtable,root->lineno);
                     if(entry.size()>0)
                         type=entry[0]->type;
-                } 
-                type = root->children[0]->type;
+                } else type = root->children[0]->type;
                 if( type == "CHAR" || type == "BYTE" || type == "SHORT" || type == "INT" || type == "LONG" || type == "FLOAT" || type == "DOUBLE" )
                 {
                     root->type = type;

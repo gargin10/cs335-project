@@ -1,31 +1,30 @@
-public class RecordAndEnumExample {
-    
-    public static void main(s) {
-        
-        // Create a new record and assign values to its fields
-        Person person = new Person("John", "Doe", Gender.MALE, 30);
-        
-        // Print the record's fields
-        System.out.println("Name: " + person.firstName() + " " + person.lastName());
-        System.out.println("Gender: " + person.gender());
-        System.out.println("Age: " + person.age());
-        
-        // Use the enum to perform a conditional action
-        if (person.gender() == Gender.MALE) {
-            System.out.println(person.firstName() + " is a male.");
-        } else if (person.gender() == Gender.FEMALE) {
-            System.out.println(person.firstName() + " is a female.");
+public class ArrayDeclaration {
+    public static void main(String args[]) {
+        int numbers[] = new int[3];
+        int len = 5;
+        String fruits[] = new String[3];
+        fruits[0] = "apple";
+        fruits[1] = "banana";
+        fruits[2] = "orange";
+  
+        System.out.println("The numbers are:");
+        for (int i = 0; i < len; i++) {
+            System.out.print(numbers[i] + " ");
         }
+        System.out.println();
+  
+        System.out.println("The fruits are:");
+        for (int i = 0; i < 3; i++){
+            System.out.print(fruits[i]);
+        }
+        System.out.println();
+  
+        int sum = 0;
+        int number=0;
+        for (int i = 0; i < len; i++) {
+          sum += number;
+        }
+        double average = sum / len;
+        System.out.println("The average of the numbers is: " + average);
     }
-    
-    // Define an enum for gender
-    // public enum Gender {
-    //     MALE,
-    //     FEMALE
-    // }
-    
-    // Define a record for a person
-    // public record Person(String firstName, String lastName, Gender gender, int age) {}
-    public record Person(String firstName, String lastName, int age) {}
-}
-
+  }

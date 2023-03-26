@@ -1,40 +1,24 @@
-public class MyGenericClass<T> {
+public class Matrix {
+  public static void main(String args[]) {
+      int rows = 3;
+      int cols = 4;
 
-  private T myArray [];
+      // allocate memory for a 3x4 matrix
+      int matrix[][] = new int[rows][cols][];
 
-  public MyGenericClass(T array []) {
-    this.myArray = array;
-  }
+      // assign values to the elements of the matrix
+      for ( i = 0; i < rows; i++) {
+          for (int j = 0; j < cols; j++) {
+              matrix[i][j] = i * j;
+          }
+      }
 
-  public void setValue(int index, T value) throws IndexOutOfBoundsException {
-    if (index < 0 || index >= myArray.length) {
-      throw new IndexOutOfBoundsException("Invalid index!");
-    }
-    myArray[index] = value;
-  }
-
-  public T getValue(int index) throws IndexOutOfBoundsException {
-    if (index < 0 || index >= myArray.length) {
-      throw new IndexOutOfBoundsException("Invalid index!");
-    }
-    return myArray[index];
-  }
-
-  public static void main(String[] args) {
-    Integer intArray [] = {1, 2, 3, 4, 5};
-    MyGenericClass<Integer> myIntClass = new MyGenericClass<>(intArray);
-
-    try {
-      myIntClass.setValue(6, 6);
-    } catch (IndexOutOfBoundsException e) {
-      System.out.println("Caught exception: " + e.getMessage());
-    }
-
-    try {
-      Integer value = myIntClass.getValue(6);
-    } catch (IndexOutOfBoundsException e) {
-      System.out.println("Caught exception: " + e.getMessage());
-    }
+      // print the elements of the matrix
+      for (int i = 0; i < rows; i++) {
+          for (int j = 0; j < cols; j++) {
+              System.out.print(matrix[i][j] + " ");
+          }
+          System.out.println();
+      }
   }
 }
-

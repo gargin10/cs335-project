@@ -77,6 +77,7 @@ public:
     }
     void build (Node* root)
     {
+        if(root->symtable)
         curr_symtable=root->symtable;
         if(root->val=="NormalClassDeclaration")
         {
@@ -700,7 +701,7 @@ public:
                 if(child_node->val=="Expression")
                     expression=child_node;
             }
-            if(arrayaccess!=NULL)
+            if(arrayaccess)
             {
                 build(expression);
                 builder->merge_entries(root,expression->code_entries);
@@ -713,7 +714,7 @@ public:
                 // cout<<"here6"<<endl;
                 return;
             }
-            else if(identifier!=NULL)
+            else if(identifier)
             {
                 build(identifier);
                 build(expression);
@@ -721,6 +722,7 @@ public:
                 root->array_invocation.push_back(expression->label_entry);
 
                 // cout<<"here"<<endl;
+                // cout<<identifier->lexeme<<" "<<curr_symtable->scope<<endl;
                 SymbolEntry* sym_entry=curr_symtable->lookup(identifier->lexeme)[0];
                 int dims=sym_entry->no_dimensions;
                 string size=to_string(getsize(sym_entry->type));
@@ -765,7 +767,7 @@ public:
                         size=t3;
                     }
                 }
-                // cout<<"here4"<<endl;
+                //cout<<"here4"<<endl;
 
                 root->label_entry=ans;
             }
@@ -918,7 +920,7 @@ public:
             entry->arg4="OFFSET_"+object_field->identifier;
             root->code_entries.push_back(entry);
 
-            if(root->children.size()>2)
+            if(root->children.size()>=5)
             {
                 builder->merge_entries(root,root->children[3]->code_entries);
             }
@@ -940,6 +942,6 @@ public:
                 builder->merge_entries(root,child_node->code_entries);               
             }
         }
-        root->symtable=curr_symtable;
+        // root->symtable=curr_symtable;
     }
 };

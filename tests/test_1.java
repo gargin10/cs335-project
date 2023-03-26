@@ -1,7 +1,11 @@
-public class ArraySum {
+public class ArraySum { 
   
-  private static int arr[][][] = {{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}};
+  private static int arr[][][] = new int[10][20][30];
 
+  private static int addNumbers(int a, int b) {
+    return a + b;
+  }
+  
   public static void main() {
     int sum = 0;
     for (int i = 0; i < 2; ++i) {
@@ -44,7 +48,5 @@ public class ArraySum {
     System.out.println("Result of addNumbers method: " + result);
   }
   
-  private static int addNumbers(int a, int b) {
-    return a + b;
-  }
+  
 }

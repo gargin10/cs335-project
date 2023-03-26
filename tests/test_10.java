@@ -3,6 +3,7 @@ public class OperatorExample {
         // arithmetic operators
         int a = 10;
         int b = 5;
+        int x = 3;
         int c = a + b;
         int d = a - b;
         int e = a * b;
@@ -12,16 +13,13 @@ public class OperatorExample {
         int ac = !++a;
         int ad = -~x;
         int ae = +a+4-8;
-        int af = +a;
-
-        boolean ag = true;
-        int k = ++ag;
+        int af = (int)+a;
         
         // increment and decrement operators
         int h = ++a;
         int i = --b;
         int j = c++;
-        boolean k = d--;
+        int k = d--;
         
         // relational operators
         boolean l = (a == b);
@@ -52,7 +50,6 @@ public class OperatorExample {
         d /= e;
         e %= f;
         f &= g;
-        aa *= 2;
         
         // ternary operator
         int result = (a > b) ? c : d;
