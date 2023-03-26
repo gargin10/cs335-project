@@ -558,8 +558,12 @@ public:
                 {
                     vector<SymbolEntry*> entry= helper->checkvariable(child_node->identifier,curr_symtable,root->lineno);
                     if(entry.size()>0)
+                    {
                         if( entry[0]->type == "class" ) exp_type=entry[0]->lexeme;
                         else exp_type=entry[0]->type;
+                        child_node->type=exp_type;
+                    }
+                        
                     // child_node->definite_literal_used = false;
                 }   
                 if(child_node->token=="LITERAL")
@@ -573,6 +577,7 @@ public:
                     if(entry)
                     {
                         exp_type=entry->type;
+                        child_node->type=exp_type;
                     }
                     // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }   
@@ -638,8 +643,13 @@ public:
                 if( root->children[0]->token == "IDENTIFIER" ){
                     vector<SymbolEntry*> entry= helper->checkvariable(root->children[0]->lexeme,curr_symtable,root->lineno);
                     if(entry.size()>0)
+                    {
                         type=entry[0]->type;
-                } else type = root->children[0]->type;
+                        root->children[0]->type=type;
+                    }
+                } 
+                else 
+                    type = root->children[0]->type;
                 if( type == "CHAR" || type == "BYTE" || type == "SHORT" || type == "INT" || type == "LONG" || type == "FLOAT" || type == "DOUBLE" )
                 {
                     root->type = type;
@@ -658,15 +668,22 @@ public:
                     { 
                         if(type1=="") 
                         { 
-                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                        if(entry.size()>0)
-                            type1=entry[0]->type;
+                            vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                            if(entry.size()>0)
+                            {
+                                type1=entry[0]->type;
+                                child_node->type=type1;
+                            }
                         }
                         else
                         {
-                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                        if(entry.size()>0)
-                            type2=entry[0]->type;
+                            vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                            if(entry.size()>0)
+                            {
+                                type2=entry[0]->type;
+                                child_node->type=type2;
+                            }
+                                
                         }    
                         // child_node->definite_literal_used = false; 
                     }
@@ -679,6 +696,7 @@ public:
                                 type1=entry->type;
                             else
                                 type2=entry->type;
+                            child_node->type=entry->type;
                         }
                         // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                     }
@@ -819,10 +837,15 @@ public:
                     {
                         vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
                         if(entry.size()>0)
+                        {
                             if( entry[0]->type == "class" ) type2=entry[0]->lexeme;
                             else type2=entry[0]->type;
+
+                            child_node->type=entry[0]->type;
+                        }
+                            
                     // child_node->definite_literal_used = false;
-                        }   
+                    }   
                     if(child_node->token=="LITERAL")
                     {
                         type2=child_node->type;
@@ -834,6 +857,7 @@ public:
                         if(entry)
                         {
                             type2=entry->type;
+                            child_node->type=type2;
                         }
                         // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                     }   
@@ -890,7 +914,11 @@ public:
                 {
                     vector<SymbolEntry*> entry = helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
                     if(entry.size()>0)
-                    type = entry[0]->type;
+                    {
+                        type = entry[0]->type;
+                        child_node->type=type;
+                    }
+                    
                     // else cout << "Sumbol Table not giving entry for variable. " << endl;
                     // cout << "Identifier " << type << endl;
                 }
@@ -985,6 +1013,7 @@ public:
                         {
                             type = entries[0]->type;
                             isIdentifier = true;
+                            child_node->type=type;
                         }  
                     }
                 }
@@ -1258,7 +1287,10 @@ public:
                 {
                     vector<SymbolEntry*> entries= helper->checkvariable(left_node->identifier,curr_symtable,root->lineno);
                     if(entries.size()>0)
+                    {
                         object_type=entries[0]->type;
+                        left_node->type=object_type;
+                    }
                 }
                 SymbolEntry* entry= helper->checkfieldaccess(object_type,right_node->identifier,curr_symtable,root->lineno);
                 if(entry)
@@ -1286,7 +1318,10 @@ public:
                 {
                     vector<SymbolEntry*> entries= helper->checkvariable(left_node->identifier,curr_symtable,root->lineno);
                     if(entries.size()>0)
+                    {
                         object_type=entries[0]->type;
+                        left_node->type=object_type;
+                    }
                 }
                 // cout<<"here3"<<endl;
                 SymbolEntry* entry= helper->checkmethodaccess(object_type,right_node->identifier,arguments_type,curr_symtable,root->lineno);
