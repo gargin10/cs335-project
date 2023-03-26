@@ -14,6 +14,7 @@ public:
     string type;
     string entry_type;
     string hash_key;
+    vector<string> modifiers;
 
     bool temp;
     int line_number=0;
@@ -74,11 +75,15 @@ public:
         ofs<< this->lexeme<<"\t"<<this->token <<"\t"<< this->type << "\t"
                     << this->line_number << "\t" << this->size <<"\t" << this->offset<<"\t";   
 
+        for(auto ele: modifiers)
+        {
+            ofs << ele << "\t";
+        }
         if(entry_type=="method")
         {
             ofs<< this->no_arguments << "\t"; 
             for(auto ele: type_arguments)   
-                ofs << ele << " ";
+                ofs << ele << "\t";
         }
         
         if(entry_type=="array")
@@ -106,50 +111,3 @@ public:
         cout<<"\n";
     }
 };
-
-// class SymbolMethodEntry: public SymbolEntry
-// {
-
-// public:
-//     string returntype;
-//     int no_arguments;
-//     vector<string> type_arguments;
-
-//     SymbolMethodEntry() : SymbolEntry()
-//     {
-//     }
-//     SymbolMethodEntry(string token, string lexeme) : SymbolEntry(token,lexeme)
-//     {
-//     }
-//     void display(std::ofstream& ofs)
-//     {
-//         this->SymbolEntry::display(ofs);
-//         ofs<< this->returntype<<"\t"<<this->no_arguments << "\t"; 
-//         for(auto ele: type_arguments)   
-//             ofs << ele << " ";
-//         ofs <<"\n";
-//     }
-// };
-
-// class SymbolArrayEntry: public SymbolEntry
-// {
-
-// public:
-//     int no_dimensions;
-//     vector<int> dim_size;
-
-//     SymbolArrayEntry() : SymbolEntry()
-//     {
-//     }
-//     SymbolArrayEntry(string token, string lexeme) : SymbolEntry(token,lexeme)
-//     {
-//     }
-//     void display(std::ofstream& ofs)
-//     {
-//         this->SymbolEntry::display(ofs);
-//         ofs<< this->no_dimensions<< "\t"; 
-//         for(auto ele: dim_size)   
-//             ofs << ele << " ";
-//         ofs <<"\n";
-//     }
-// };

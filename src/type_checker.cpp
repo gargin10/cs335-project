@@ -14,6 +14,7 @@ class SymbolTableBuilder {
 
 public:
     set<string> validtypes;
+    set<string> validmodifiers;
     SymbolTable* curr_symtable;
     SymbolTable* prev_symtable;
     string curr_class="";
@@ -22,6 +23,7 @@ public:
     SymbolTableBuilder(Helper* helper)
     {
         createValidTypes();
+        createValidModifiers();
         curr_symtable=new SymbolTable();
         addprintmethods("STRING");
         addprintmethods("BOOLEAN");
@@ -98,6 +100,16 @@ public:
         validtypes.insert("DOUBLE");
         validtypes.insert("VAR");
         validtypes.insert("STRING");
+    }
+
+    void createValidModifiers()
+    {
+        validmodifiers.insert("PUBLIC");
+        validmodifiers.insert("PRIVATE");
+        validmodifiers.insert("PROTECTED");
+        validmodifiers.insert("ABSTRACT");
+        validmodifiers.insert("FINAL");
+        validmodifiers.insert("STATIC");
     }
     void build (Node* root)
     {
@@ -280,6 +292,7 @@ public:
             bool new_used = false;
             string left_type="", right_type="";
             vector<tuple<string,int,string>> identifier_type_list;
+            vector<string> modifiers;
             for(auto child_node: root-> children)
             {
                 build(child_node);  
@@ -298,11 +311,14 @@ public:
                         new_used = true;
                     }
                 }
+                if(validmodifiers.find(child_node->lexeme)!=validmodifiers.end())
+                    modifiers.push_back(child_node->lexeme);
             }
             for(auto [ele_identifier, ele_dims,ele_type ]: identifier_type_list)
             {
                 SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
                 entry->type=field_type;
+                entry->modifiers=modifiers;
                 if(ele_dims>0)
                 {
                     entry->entry_type="array";
@@ -883,12 +899,18 @@ public:
 
                 // cout<<"here\n";
                 // cout<<left_node->identifier<<" "<<right_node->identifier<<" "<<root->lineno<< endl;
-                // string object_type="";
-                vector<SymbolEntry*> entries= helper->checkvariable(left_node->identifier,curr_symtable,root->lineno);
-                // if(entries.size()>0)
-                //     object_type=entries[0]->type;
-
-                SymbolEntry* entry= helper->checkfieldaccess(left_node->identifier,right_node->identifier,curr_symtable,root->lineno);
+                string object_type="";
+                
+                string class_name=left_node->identifier;
+                if(class_name.length()>=5 && class_name.substr(class_name.length()-4,4)=="this")
+                    object_type=class_name;
+                else
+                {
+                    vector<SymbolEntry*> entries= helper->checkvariable(left_node->identifier,curr_symtable,root->lineno);
+                    if(entries.size()>0)
+                        object_type=entries[0]->type;
+                }
+                SymbolEntry* entry= helper->checkfieldaccess(object_type,right_node->identifier,curr_symtable,root->lineno);
                 if(entry)
                     exp_type=entry->type;
                 // cout<<"here2 "<< exp_type<<endl;
@@ -906,12 +928,18 @@ public:
                 if(arguments!=NULL)
                     arguments_type=arguments->arguments_type;
 
-                // string object_type="";
-                vector<SymbolEntry*> entries= helper->checkvariable(left_node->identifier,curr_symtable,root->lineno);
-                // if(entries.size()>0)
-                //     object_type=entries[0]->type;
+                string object_type="";
+                string class_name=left_node->identifier;
+                if(class_name.length()>=5 && class_name.substr(class_name.length()-4,4)=="this")
+                    object_type=class_name;
+                else
+                {
+                    vector<SymbolEntry*> entries= helper->checkvariable(left_node->identifier,curr_symtable,root->lineno);
+                    if(entries.size()>0)
+                        object_type=entries[0]->type;
+                }
                 // cout<<"here3"<<endl;
-                SymbolEntry* entry= helper->checkmethodaccess(left_node->identifier,right_node->identifier,arguments_type,curr_symtable,root->lineno);
+                SymbolEntry* entry= helper->checkmethodaccess(object_type,right_node->identifier,arguments_type,curr_symtable,root->lineno);
                 if(entry)
                     exp_type=entry->type;
                 // cout<<"here2 "<< exp_type<<endl;

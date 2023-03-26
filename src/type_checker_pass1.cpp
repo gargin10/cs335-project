@@ -14,6 +14,7 @@ class SymbolTableBuilder1 {
 
 public:
     set<string> validtypes;
+    set<string> validmodifiers;
     SymbolTable* curr_symtable;
     SymbolTable* prev_symtable;
     Helper* helper;
@@ -21,6 +22,7 @@ public:
     SymbolTableBuilder1(Helper* helper)
     {
         createValidTypes();
+        createValidModifiers();
         curr_symtable=new SymbolTable();
         addprintmethods("STRING");
         addprintmethods("BOOLEAN");
@@ -98,6 +100,15 @@ public:
         validtypes.insert("VAR");
         validtypes.insert("STRING");
     }
+    void createValidModifiers()
+    {
+        validmodifiers.insert("PUBLIC");
+        validmodifiers.insert("PRIVATE");
+        validmodifiers.insert("PROTECTED");
+        validmodifiers.insert("ABSTRACT");
+        validmodifiers.insert("FINAL");
+        validmodifiers.insert("STATIC");
+    }
     void build (Node* root)
     {
         if(root->val=="CompilationUnit")
@@ -124,12 +135,14 @@ public:
             SymbolTable *thissymtable = curr_symtable;
 
             string identifier_class="";
+            vector<string> modifiers;
             for(auto child_node: root-> children)
             {
                 build(child_node);  
                 if(child_node->token=="IDENTIFIER")
                     identifier_class=child_node->lexeme;
-                       
+                if(validmodifiers.find(child_node->val)!=validmodifiers.end())
+                    modifiers.push_back(child_node->val);
             }
             curr_symtable->children.clear();
 
@@ -141,6 +154,7 @@ public:
 
             SymbolEntry* entry = new SymbolEntry("CLASS", identifier_class);
             entry->type="class";
+            entry->modifiers=modifiers;
             addEntry(entry, root->lineno);
             root->identifier=identifier_class;
         }
@@ -155,6 +169,7 @@ public:
             string method_type="";
             int method_type_dims=0;
             vector<string> arguments_type;
+            vector<string> modifiers;
             for(auto child_node: root-> children)
             {
                 build(child_node);  
@@ -172,6 +187,8 @@ public:
                     method_type=child_node->type;
                     method_type_dims=child_node->dims;
                 }
+                if(validmodifiers.find(child_node->lexeme)!=validmodifiers.end())
+                    modifiers.push_back(child_node->lexeme);
             }
             
             assert(curr_symtable!=NULL);
@@ -183,6 +200,7 @@ public:
             entry->type_arguments=arguments_type;
             entry->no_arguments=arguments_type.size();
             entry->entry_type="method";
+            entry->modifiers=modifiers;
             addEntry(entry, root->lineno);
 
             root->identifier=identifier_method;
