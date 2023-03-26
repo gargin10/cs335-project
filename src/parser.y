@@ -1710,35 +1710,35 @@ ClassInstanceCreationExpression:
 UnqualifiedClassInstanceCreationExpression:
     NEW ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND {
                     vector<Node*> v{$1,$2};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND ClassBody {
                     vector<Node*> v{$1,$2,$5};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND {
                     vector<Node*> v{$1,$2,$4};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND ClassBody {
                     vector<Node*> v{$1,$2,$4,$6};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND {
                     vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART BRACEEND ClassBody {
                     vector<Node*> v{$1,$2,$3,$6};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND {
                     vector<Node*> v{$1,$2,$3,$5};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 |   NEW TypeArguments ClassOrInterfaceTypeToInstantiate BRACESTART ArgumentList BRACEEND ClassBody {
                     vector<Node*> v{$1,$2,$3,$5,$7};
-                    $$=createNode( "UnqualifiedClassInstanceCreationExpression", v );
+                    $$=createNode( NULL, v );
                 } 
 
 ClassOrInterfaceTypeToInstantiate:

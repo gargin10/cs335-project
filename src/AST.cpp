@@ -15,8 +15,8 @@ struct Node{
 
     int dims=0;
     string type="";
-    vector<tuple<string,int,string>> identifier_type_list;
-    vector<string> arguments_type;
+    vector<tuple<string,int,string,bool>> identifier_type_list;
+    vector<string> arguments_type; // also, used for storing 2 types of ternary operator
     string identifier="";
     SymbolTable* symtable;
     vector<ThreeAddressCodeEntry*> code_entries;
@@ -24,6 +24,8 @@ struct Node{
     vector<int> array_dims;
     vector<string> array_invocation;
 
+    // bool definite_literal_used = true;
+    // bool assign=false;
     bool expression_new_used = false;
     string tempval="";
     vector<Node*> children;
@@ -133,7 +135,7 @@ Node* createNode( char* lexeme, char* token)
     temp1->val=ans;
     temp1->lexeme=lexeme;
     if( strcmp( token, "INT_LITERAL") == 0 ){
-        temp1->type = "INT";
+        temp1->type = "BYTE";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "FLOAT_LITERAL") == 0 ){
         temp1->type = "FLOAT";
@@ -175,7 +177,7 @@ Node* createNode( char* lexeme, char* token, int lineno)
     temp1->val=ans;
     temp1->lexeme=lexeme;
     if( strcmp( token, "INT_LITERAL") == 0 ){
-        temp1->type = "INT";
+        temp1->type = "BYTE";
         temp1->token = "LITERAL";
     } else if( strcmp( token, "FLOAT_LITERAL") == 0 ){
         temp1->type = "FLOAT";

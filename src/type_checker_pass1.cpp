@@ -174,7 +174,7 @@ public:
             {
                 build(child_node);  
                 if(child_node->token=="IDENTIFIER")
-                    identifier_method=child_node->lexeme;
+                    identifier_method=child_node->identifier;
                 if(child_node->val=="MethodDeclarator"|| child_node->val=="ConstructorDeclarator")
                 {
                     identifier_method=child_node->identifier;
@@ -224,7 +224,7 @@ public:
             {
                 build(child_node);  
                 if(child_node->token=="IDENTIFIER")
-                    identifier=child_node->lexeme;
+                    identifier=child_node->identifier;
                 if(child_node->val=="FormalParameter")
                     arguments_type.push_back(child_node->type);
             }
@@ -239,7 +239,7 @@ public:
             for(auto child_node: root-> children)
             {
                 build(child_node);  
-                if(child_node->token=="VariableDeclaratorId")
+                if(child_node->val=="VariableDeclaratorId")
                 {
                     identifier=child_node->identifier;
                     parameter_type_dims=child_node->dims;
@@ -255,12 +255,13 @@ public:
             root->type=parameter_type;
             root->dims=parameter_type_dims;
 
-            SymbolEntry* entry = new SymbolEntry("ARRAY", identifier);
+            SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier);
             entry->type=parameter_type;
             if(parameter_type_dims>0)
             {
                 entry->entry_type="array";
                 entry->no_dimensions=root->dims;
+                entry->token="ARRAY";
             }
             addEntry(entry, root->lineno);
         }
@@ -272,7 +273,7 @@ public:
             {
                 build(child_node);  
                 if(child_node->token=="IDENTIFIER")
-                    identifier=child_node->lexeme;
+                    identifier=child_node->identifier;
                 if(strcmp(child_node->val,"[]")==0)
                 {
                     variable_dims++;
@@ -287,8 +288,11 @@ public:
             string field_type="";
             int field_type_dims= 0;
             bool new_used = false;
-            string left_type="", right_type="";
-            vector<tuple<string,int,string>> identifier_type_list;
+            // bool assign_used = false;
+            vector<string> arguments_type;
+            // string left_type="", right_type="";
+            vector<tuple<string,int,string, bool>> identifier_type_list;
+            vector<string> modifiers;
             for(auto child_node: root-> children)
             {
                 build(child_node);  
@@ -296,7 +300,7 @@ public:
                     field_type= child_node->lexeme;
                 if(child_node->val=="UnannReferenceType")
                 {
-                    left_type=child_node->type;
+                    // left_type=child_node->type;
                     field_type=child_node->type;
                     field_type_dims=child_node->dims;
                 }
@@ -306,34 +310,49 @@ public:
                     {
                         new_used = true;
                     }
+                    // assign_used = child_node->assign;
+                    arguments_type = child_node->arguments_type; 
                 }
             }
-            for(auto [ele_identifier, ele_dims,ele_type ]: identifier_type_list)
+            // if( arguments_type.size() > 0 ){
+            //     if( ! helper->castit( arguments_type[0], field_type) ){
+            //         helper->throwerror("line number "+to_string(root->lineno)+": Incompatible conversion from "+arguments_type[0]+" to "+field_type);
+            //     } else if( ! helper->castit( arguments_type[1], field_type) ){
+            //         helper->throwerror("line number "+to_string(root->lineno)+": Incompatible conversion from "+arguments_type[1]+" to "+field_type);
+            //     } 
+            // }
+            for(auto [ele_identifier, ele_dims,ele_type, ele_assign ]: identifier_type_list)
             {
-                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
-                entry->type=field_type;
-                if(ele_dims>0)
+                if( field_type != ele_type and validtypes.find(field_type) == validtypes.end() )
                 {
-                    entry->entry_type="array";
-                    entry->no_dimensions=ele_dims;
-                    entry->token="ARRAY";
-                    // helper->checktypearrayacess(entry,field_type,root->lineno);
-                }
+                    // if( ele_assign ) helper->throwerror("Line number: " +to_string(root->lineno)+ " Type "+field_type+" doesn't match with "+ele_type);
+                } 
                 else 
-                {
-                    if( new_used )
+                {   
+                    if( !helper->castit(ele_type, field_type) )
                     {
-                        if( left_type != ele_type )
-                        {
-                            // helper->throwerror("Line number: " +to_string(root->lineno)+ " ReferenceType "+left_type+" doesn't match with "+ele_type);
-                        }
-                    } 
+                        // if( ele_assign ) helper->throwerror("Line number "+to_string(root->lineno)+": Implicit Conversion not possible from "+ele_type+" to "+field_type);
+                    }
+                    SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
+                    entry->type=field_type;
+                    entry->modifiers=modifiers;
+                    // cout << field_type << endl;
+                    if(ele_dims>0)
+                    {
+                        entry->entry_type="array";
+                        entry->no_dimensions=ele_dims;
+                        // helper->checktypearrayacess(entry,field_type,root->lineno);
+                        entry->token="ARRAY";
+                    }
                     else 
                     {
-                        // helper->checktypevariable(entry,field_type,root->lineno);
+                       if( not new_used )
+                        {
+                        //    helper->checktypevariable(entry,field_type,root->lineno);
+                        }
                     }
+                    addEntry(entry, root->lineno);
                 }
-                addEntry(entry, root->lineno);
             }
         }
         else if( root->val == "UnannReferenceType" )
@@ -358,47 +377,57 @@ public:
         }
         else if(root->val=="VariableDeclaratorList")
         {
-            vector<tuple<string,int,string>> identifier_type_list;
+            vector<tuple<string,int,string,bool>> identifier_type_list;
             string type="";
             bool new_used = false;
+            // bool assign_used = false;
+            vector<string> arguments_type;
             for(auto child_node: root-> children)
             {
                 build(child_node);       
                 if(child_node->val=="VariableDeclaratorId")
                 {
-                    identifier_type_list.push_back({child_node->identifier,child_node->dims,""});
-                    // cout<<child_node->identifier<<" "<<child_node->dims<<endl;
+                    identifier_type_list.push_back({child_node->identifier,child_node->dims,"", false});
                 }  
                 if(strcmp(child_node->val,"=")==0)
                 {
-                    identifier_type_list.push_back({child_node->identifier,child_node->dims,child_node->type});
+                    identifier_type_list.push_back({child_node->identifier,child_node->dims,child_node->type, true});
                     type=child_node->type;
                     if( child_node->expression_new_used )
                     {
                         new_used = true;
                     }
+                    // assign_used = true;
+                    if( child_node->arguments_type.size() > 0 )
+                    {
+                        arguments_type = child_node->arguments_type;
+                    }
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }
             }
             if( new_used )
             {
                 root->expression_new_used = true;
-            } 
+            }
+            root->arguments_type = arguments_type;
             root->identifier_type_list=identifier_type_list;
             root->type=type;
+            // root->assign = assign_used;
         }
         else if(strcmp(root->val,"=")==0)
         {
             string identifier1="";
-            string righthand_type="";
+            string righthand_type="", lefthand_type="";
             int variable_dims=0;
             int array_dims=0;
             int f=0;
             int righthand_dims=0;
             bool new_used = false;
+            vector<string> arguments_type;
             for(auto child_node: root-> children)
             {
                 build(child_node);    
-                if(child_node->token=="VariableDeclaratorId")
+                if(child_node->val=="VariableDeclaratorId")
                 {
                     f=1;
                     identifier1=child_node->identifier;
@@ -407,28 +436,40 @@ public:
                 }            
                 if(child_node->token=="IDENTIFIER")
                 {
-                    identifier1=child_node->lexeme;
+                    identifier1=child_node->identifier;
                 }
                 if(child_node->val=="Expression")
                 {
                     righthand_type=child_node->type;
                     righthand_dims=child_node->dims;
+                    if( child_node->arguments_type.size() > 0 )
+                    {
+                        // check for ?: operator
+                        arguments_type = child_node->arguments_type;
+                    }
                     if( child_node->expression_new_used )
                     {
                         new_used = true;
                     }
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }
-                if(child_node->token=="ArrayAccess")
+                if(child_node->val=="ArrayAccess")
                 {
                     identifier1=child_node->identifier;
                     array_dims=child_node->dims;
                 }     
+                if(child_node-> val == "FieldAccess" || child_node->val=="ExpressionName")
+                {
+                    identifier1=child_node->identifier;
+                    lefthand_type=child_node->type;
+                    f=2;
+                }
             }
             if( new_used )
             {
                 root->expression_new_used = true;
             }
-            if(f)
+            if(f==1)
             {
                 root->identifier=identifier1;  
                 root->dims=variable_dims; 
@@ -451,6 +492,16 @@ public:
                 //     if(check)
                 //         root->type=righthand_type;
                 // }
+            }
+            else if(f==2)
+            {
+                // cout<<"here 7 "<<endl;
+                // if( !helper->castit( righthand_type, lefthand_type) ) 
+                // {
+                //     helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect type conversion of Identifier '"+identifier1+"' declared as "+lefthand_type+" to type as "+ righthand_type);
+                // }
+                // cout<<"here 8 "<<endl;
+                root->type=lefthand_type;
             }
             else
             {
@@ -502,15 +553,16 @@ public:
                 {
                     exp_type=child_node->type;
                 } 
-                if(child_node->token=="ArrayAccess")
+                if(child_node->val=="ArrayAccess")
                 {
                     // SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
                     // if(entry)
                     // {
                     //     exp_type=entry->type;
                     // }
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }   
-                if(child_node->token=="ArrayCreationExpression")
+                if(child_node->val=="ArrayCreationExpression")
                 {
                     exp_type=child_node->type;
                     dims=child_node->dims;
@@ -520,6 +572,21 @@ public:
                 if( child_node->val == "PreIncrementExpression" || child_node->val == "PostIncrementExpression" || child_node->val == "PreDecrementExpression" || child_node->val == "PostDecrementExpression" )
                 {
                     exp_type = child_node->type;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                }
+                if(child_node->val=="ExpressionName" || child_node->type=="FieldAccess")
+                    exp_type=child_node->type;
+                if( strcmp(child_node->val,"?:")==0 || strcmp(child_node->val,"||")==0 || strcmp(child_node->val,"&&")==0 || strcmp(child_node->val,"^")==0 || strcmp(child_node->val, "|")==0 || strcmp(child_node->val, "&")==0 || strcmp(child_node->val, "!=")==0 || strcmp(child_node->val, "==")==0 || strcmp(child_node->val, "<=")==0 || strcmp(child_node->val, ">=")==0 || strcmp(child_node->val, "<")==0 || strcmp(child_node->val,">")==0 || strcmp(child_node->val, "<<")==0 || strcmp(child_node->val, ">>")==0 || strcmp(child_node->val, ">>>")==0 || strcmp(child_node->val,"~")==0 || strcmp(child_node->val,"!")==0 || strcmp(child_node->val,"%")==0 )
+                {
+                    exp_type = child_node->type;
+                    // cout << "EXPERSSION " << exp_type << endl;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                }
+                if( child_node->val == "Expression" )
+                {
+                    exp_type = child_node->type;
+                    // cout << "EXPERSSION Expression " << exp_type << endl;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }
             }
             if( new_used )
@@ -541,15 +608,15 @@ public:
                 {
                    type1=child_node->type;
                 }
-                if( child_node->token == "ExpressionName" )
+                if( child_node->val == "ExpressionName" )
                 {
                    type1=child_node->type;
                 }
-                if( child_node->token == "FieldAccess" )
+                if( child_node->val == "FieldAccess" )
                 {
                    type1=child_node->type;
                 }
-                if( child_node->token == "ArrayAccess" )
+                if( child_node->val == "ArrayAccess" )
                 {
                    type1=child_node->type;
                 }
@@ -739,7 +806,7 @@ public:
             {
                 build(child_node);  
                 if(child_node->token=="IDENTIFIER")
-                    identifier=child_node->lexeme;
+                    identifier=child_node->identifier;
                 if(child_node->val=="Expression")
                 {
                     array_dims++;
@@ -807,18 +874,27 @@ public:
         {
             string identifier="";
             vector<string> arguments_type;
+            int dot_flag=0;
             for(auto child_node: root-> children)
             {
                 build(child_node);       
                 if(child_node->token=="IDENTIFIER")
                 {
-                    identifier=child_node->lexeme;
+                    identifier=child_node->identifier;
                 }  
                 if(child_node->val=="ArgumentList")
                 {
                     arguments_type=child_node->arguments_type;
                 }
+                if(child_node->val==".")
+                {
+                    dot_flag=1;
+                    root->identifier=child_node->identifier;
+                    root->type=child_node->type;
+                }
             }
+            if(dot_flag)
+                return;
             root->identifier=identifier;
             root->arguments_type=arguments_type;
             // SymbolEntry* entry = helper->checkmethod(identifier,arguments_type,curr_symtable,root->lineno);

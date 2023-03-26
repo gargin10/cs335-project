@@ -290,8 +290,10 @@ public:
             string field_type="";
             int field_type_dims= 0;
             bool new_used = false;
-            string left_type="", right_type="";
-            vector<tuple<string,int,string>> identifier_type_list;
+            // bool assign_used = false;
+            vector<string> arguments_type;
+            // string left_type="", right_type="";
+            vector<tuple<string,int,string, bool>> identifier_type_list;
             vector<string> modifiers;
             for(auto child_node: root-> children)
             {
@@ -300,7 +302,7 @@ public:
                     field_type= child_node->lexeme;
                 if(child_node->val=="UnannReferenceType")
                 {
-                    left_type=child_node->type;
+                    // left_type=child_node->type;
                     field_type=child_node->type;
                     field_type_dims=child_node->dims;
                 }
@@ -310,38 +312,54 @@ public:
                     {
                         new_used = true;
                     }
+                    // assign_used = child_node->assign;
+                    arguments_type = child_node->arguments_type; 
                 }
                 if(validmodifiers.find(child_node->lexeme)!=validmodifiers.end())
                     modifiers.push_back(child_node->lexeme);
             }
-            for(auto [ele_identifier, ele_dims,ele_type ]: identifier_type_list)
+            if( arguments_type.size() > 0 ){
+                if( ! helper->castit( arguments_type[0], field_type) ){
+                    helper->throwerror("line number "+to_string(root->lineno)+": Incompatible conversion from "+arguments_type[0]+" to "+field_type);
+                } else if( ! helper->castit( arguments_type[1], field_type) ){
+                    helper->throwerror("line number "+to_string(root->lineno)+": Incompatible conversion from "+arguments_type[1]+" to "+field_type);
+                } 
+            }
+            for(auto [ele_identifier, ele_dims,ele_type, ele_assign ]: identifier_type_list)
             {
-                SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
-                entry->type=field_type;
-                entry->modifiers=modifiers;
-                if(ele_dims>0)
+                // cout << "1" << ele_identifier << " " << ele_type << " " << ele_assign << " " << field_type << endl;
+                // if( ele_type == field_type ) cout << "YES"<< endl;
+                if( field_type != ele_type and validtypes.find(field_type) == validtypes.end() )
                 {
-                    entry->entry_type="array";
-                    entry->no_dimensions=ele_dims;
-                    helper->checktypearrayacess(entry,field_type,root->lineno);
-                    entry->token="ARRAY";
-                }
+                    if( ele_assign ) helper->throwerror("Line number: " +to_string(root->lineno)+ " Type "+field_type+" doesn't match with "+ele_type);
+                } 
                 else 
-                {
-                    if( new_used )
+                {   
+                    if( !helper->castit(ele_type, field_type) )
                     {
-                        if( left_type != ele_type )
-                        {
-                            helper->throwerror("Line number: " +to_string(root->lineno)+ " ReferenceType "+left_type+" doesn't match with "+ele_type);
-                        }
-                    } 
+                        if( ele_assign ) helper->throwerror("Line number "+to_string(root->lineno)+": Implicit Conversion not possible from "+ele_type+" to "+field_type);
+                    }
+                    SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
+                    entry->type=field_type;
+                    entry->modifiers=modifiers;
+                    // cout << field_type << endl;
+                    if(ele_dims>0)
+                    {
+                        entry->entry_type="array";
+                        entry->no_dimensions=ele_dims;
+                        helper->checktypearrayacess(entry,field_type,root->lineno);
+                        entry->token="ARRAY";
+                    }
                     else 
                     {
-                        helper->checktypevariable(entry,field_type,root->lineno);
+                       if( not new_used )
+                        {
+                           helper->checktypevariable(entry,field_type,root->lineno);
+                        }
                     }
+                    if(root->val!="FieldDeclaration")
+                        addEntry(entry, root->lineno);
                 }
-                if(root->val!="FieldDeclaration")
-                    addEntry(entry, root->lineno);
             }
         }
         else if( root->val == "UnannReferenceType" )
@@ -366,33 +384,43 @@ public:
         }
         else if(root->val=="VariableDeclaratorList")
         {
-            vector<tuple<string,int,string>> identifier_type_list;
+            vector<tuple<string,int,string,bool>> identifier_type_list;
             string type="";
             bool new_used = false;
+            // bool assign_used = false;
+            vector<string> arguments_type;
             for(auto child_node: root-> children)
             {
                 build(child_node);       
                 if(child_node->val=="VariableDeclaratorId")
                 {
-                    identifier_type_list.push_back({child_node->identifier,child_node->dims,""});
-                    // cout<<child_node->identifier<<" "<<child_node->dims<<endl;
+                    identifier_type_list.push_back({child_node->identifier,child_node->dims,"", false});
                 }  
                 if(strcmp(child_node->val,"=")==0)
                 {
-                    identifier_type_list.push_back({child_node->identifier,child_node->dims,child_node->type});
+                    identifier_type_list.push_back({child_node->identifier,child_node->dims,child_node->type, true});
                     type=child_node->type;
                     if( child_node->expression_new_used )
                     {
                         new_used = true;
                     }
+                    // assign_used = true;
+                    if( child_node->arguments_type.size() > 0 )
+                    {
+                        arguments_type = child_node->arguments_type;
+                    }
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }
             }
             if( new_used )
             {
                 root->expression_new_used = true;
-            } 
+                // cout << get<0>(identifier_type_list[0]) <<" "<<get<1>(identifier_type_list[0]) << " "<< get<2>(identifier_type_list[0])<<endl; 
+            }
+            root->arguments_type = arguments_type;
             root->identifier_type_list=identifier_type_list;
             root->type=type;
+            // root->assign = assign_used;
         }
         else if(strcmp(root->val,"=")==0)
         {
@@ -403,6 +431,7 @@ public:
             int f=0;
             int righthand_dims=0;
             bool new_used = false;
+            vector<string> arguments_type;
             for(auto child_node: root-> children)
             {
                 build(child_node);    
@@ -421,10 +450,16 @@ public:
                 {
                     righthand_type=child_node->type;
                     righthand_dims=child_node->dims;
+                    if( child_node->arguments_type.size() > 0 )
+                    {
+                        // check for ?: operator
+                        arguments_type = child_node->arguments_type;
+                    }
                     if( child_node->expression_new_used )
                     {
                         new_used = true;
                     }
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }
                 if(child_node->val=="ArrayAccess")
                 {
@@ -455,6 +490,7 @@ public:
                         helper->throwerror("Line number: "+to_string(root->lineno)+" Required array access dimensions as "+to_string(variable_dims)+" but found "+to_string(righthand_dims));
                     }
                 }
+                // cout << identifier1 << " " << root->type << endl;
             }
             else if(array_dims>0)
             {
@@ -486,6 +522,7 @@ public:
                         root->type=righthand_type;
                 }
             }
+            root->arguments_type = arguments_type;
         }
         else if(root->val == "ForStatement")
         {
@@ -504,6 +541,7 @@ public:
             string exp_type="";
             int dims=0;
             bool new_used = false;
+            // bool definite_literal_used = true;
             for(auto child_node: root-> children)
             {
                 build(child_node);  
@@ -514,6 +552,7 @@ public:
                 if(helper->isOperator(child_node->val))
                 {
                     exp_type=child_node->type;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }    
                 if(child_node->token=="IDENTIFIER")
                 {
@@ -521,10 +560,12 @@ public:
                     if(entry.size()>0)
                         if( entry[0]->type == "class" ) exp_type=entry[0]->lexeme;
                         else exp_type=entry[0]->type;
+                    // child_node->definite_literal_used = false;
                 }   
                 if(child_node->token=="LITERAL")
                 {
                     exp_type=child_node->type;
+                    // cout << exp_type << endl;
                 } 
                 if(child_node->val=="ArrayAccess")
                 {
@@ -533,20 +574,40 @@ public:
                     {
                         exp_type=entry->type;
                     }
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }   
                 if(child_node->val=="ArrayCreationExpression")
                 {
                     exp_type=child_node->type;
                     dims=child_node->dims;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 } 
                 if(child_node->val=="MethodInvocation")
+                {
                     exp_type=child_node->type;
+                    // cout << exp_type << endl;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                }
                 if( child_node->val == "PreIncrementExpression" || child_node->val == "PostIncrementExpression" || child_node->val == "PreDecrementExpression" || child_node->val == "PostDecrementExpression" )
                 {
                     exp_type = child_node->type;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                 }
                 if(child_node->val=="ExpressionName" || child_node->type=="FieldAccess")
                     exp_type=child_node->type;
+                if( strcmp(child_node->val,"?:")==0 || strcmp(child_node->val,"||")==0 || strcmp(child_node->val,"&&")==0 || strcmp(child_node->val,"^")==0 || strcmp(child_node->val, "|")==0 || strcmp(child_node->val, "&")==0 || strcmp(child_node->val, "!=")==0 || strcmp(child_node->val, "==")==0 || strcmp(child_node->val, "<=")==0 || strcmp(child_node->val, ">=")==0 || strcmp(child_node->val, "<")==0 || strcmp(child_node->val,">")==0 || strcmp(child_node->val, "<<")==0 || strcmp(child_node->val, ">>")==0 || strcmp(child_node->val, ">>>")==0 || strcmp(child_node->val,"~")==0 || strcmp(child_node->val,"!")==0 || strcmp(child_node->val,"%")==0 )
+                {
+                    exp_type = child_node->type;
+                    root->arguments_type = child_node->arguments_type;
+                    // cout << "EXPERSSION " << exp_type << endl;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                }
+                if( child_node->val == "Expression" )
+                {
+                    exp_type = child_node->type;
+                    // cout << "EXPERSSION Expression " << exp_type << endl;
+                    // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                }
             }
             if( new_used )
             {
@@ -554,6 +615,320 @@ public:
             }
             root->type=exp_type;
             root->dims=dims;
+            // cout << root->expression_new_used << " " << exp_type << endl;
+        }
+        // else if( root->val == "Assignment" )
+        // {
+        //     for( auto child_node : root->children )
+        //     {
+        //         build(child_node);
+        //         if( strcmp( root->val,"=")==0 )
+        //         {
+        //             // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+        //             ;
+        //         }
+        //     }
+        // }
+        else if( strcmp(root->val,"||")==0 || strcmp(root->val,"&&")==0 || strcmp(root->val,"^")==0 || strcmp(root->val, "|")==0 || strcmp(root->val, "&")==0 || strcmp(root->val, "!=")==0 || strcmp(root->val, "==")==0 || strcmp(root->val, ">=")==0 || strcmp(root->val, "<=")==0 || strcmp(root->val,">")==0 || strcmp(root->val,"<")==0 || strcmp(root->val, "<<")==0 || strcmp(root->val, ">>")==0 || strcmp(root->val, ">>>")==0 || strcmp(root->val,"+")==0 || strcmp(root->val,"-")==0 || strcmp(root->val,"*")==0 || strcmp(root->val,"/")==0 || strcmp(root->val,"%")==0 )
+        {
+            if( root->children.size() == 1 )
+            {
+                build(root->children[0]);
+                string type = ""; // root->children[0]->type;
+                if( root->children[0]->token == "IDENTIFIER" ){
+                    vector<SymbolEntry*> entry= helper->checkvariable(root->children[0]->lexeme,curr_symtable,root->lineno);
+                    if(entry.size()>0)
+                        type=entry[0]->type;
+                } 
+                type = root->children[0]->type;
+                if( type == "CHAR" || type == "BYTE" || type == "SHORT" || type == "INT" || type == "LONG" || type == "FLOAT" || type == "DOUBLE" )
+                {
+                    root->type = type;
+                } else {
+                    helper->throwerror("Line number "+to_string(root->lineno)+": Numeric type expected with the unary operator");
+                    root->type = type;
+                }
+                // if( root->children[0]->definite_literal_used == false ) root->definite_literal_used = false;
+            } else {
+                string type1="";
+                string type2="";
+                for(auto child_node: root-> children)
+                {
+                    build(child_node);   
+                    if(child_node->token=="IDENTIFIER") 
+                    { 
+                        if(type1=="") 
+                        { 
+                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry.size()>0)
+                            type1=entry[0]->type;
+                        }
+                        else
+                        {
+                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry.size()>0)
+                            type2=entry[0]->type;
+                        }    
+                        // child_node->definite_literal_used = false; 
+                    }
+                    if(child_node->val=="ArrayAccess")
+                    {
+                        SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
+                        if(entry)
+                        {
+                            if(type1=="")
+                                type1=entry->type;
+                            else
+                                type2=entry->type;
+                        }
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }
+                    if(helper->isOperator(child_node->val)|| child_node->val=="Expression"|| child_node->token=="LITERAL")
+                    {
+                        if(type1=="")
+                            type1=child_node->type;
+                        else
+                            type2=child_node->type;
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }   
+                    if( child_node->val == "PreIncrementExpression" || child_node->val == "PostDecrementExpression" || child_node->val == "PreDecrementExpression" || child_node->val == "PostIncrementExpression" )
+                    {
+                        if(type1=="")
+                            type1=child_node->type;
+                        else
+                            type2=child_node->type;
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }
+                }
+                string type = helper->biggertype(type1,type2);
+                if( strcmp(root->val,"/")==0 )
+                {
+                    if( type == "DOUBLE" || type == "FLOAT" || type == "STRING" || type == "" || type == "BOOLEAN" )
+                    {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible operation / on "+type1 + " and "+type2);
+                    }
+                }
+                if( strcmp(root->val,"+")==0 )
+                {
+                    if( type == "" || type == "BOOLEAN" )
+                    {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible operation + on "+type1 + " and "+type2);
+                    }
+                }
+                if( strcmp(root->val,"*")==0 )
+                {
+                    if( type == "STRING" || type == "" || type == "BOOLEAN" )
+                    {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible operation * on "+type1 + " and "+type2);
+                    }
+                }
+                if( strcmp(root->val,"-")==0 )
+                {
+                    if( type == "STRING" || type == "" || type == "BOOLEAN" )
+                    {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible operation - on "+type1 + " and "+type2);
+                    }
+                }
+                if( strcmp(root->val,"%")==0 )
+                {
+                    if( type == "STRING" || type == "" || type == "BOOLEAN" )
+                    {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible operation % on "+type1 + " and "+type2);
+                    }
+                }
+                if( strcmp(root->val, "<<")==0 || strcmp(root->val, ">>")==0 || strcmp(root->val, ">>>")==0 )
+                {
+                    if( type1 == "" || type2 == "" || type1 == "STRING" || type2 == "STRING" || type1 == "FLOAT" || type1 == "DOUBLE" || type1 == "BOOLEAN" || type2 == "BOOLEAN" || type2 == "FLOAT" || type2 == "DOUBLE" )
+                    {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible shift operator on "+type1 + " and "+type2);
+                    }
+                    type = "INT";
+                }
+                if( strcmp(root->val, ">=")==0 || strcmp(root->val, "<=")==0 || strcmp(root->val,">")==0 || strcmp(root->val,"<")==0 )
+                {
+                    if( type1 == "" || type2 == "" || type1 == "STRING" || type2 == "STRING" || type1 == "BOOLEAN" || type2 == "BOOLEAN" )
+                    {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible relational operator on "+type1 + " and "+type2);
+                    }
+                    type = "BOOLEAN";
+                }
+                if( strcmp(root->val, "!=")==0 || strcmp(root->val, "==")==0 )
+                {
+                    if( ( not (type1 == "CHAR" || type1 == "BYTE" || type1 == "SHORT" || type1 == "INT" || type1 == "LONG" || type1 == "FLOAT" || type1 == "DOUBLE" ) || not (type2 == "CHAR" || type2 == "BYTE" || type2 == "SHORT" || type2 == "INT" || type2 == "LONG" || type2 == "FLOAT" || type2 == "DOUBLE" ) ) and (type1 != type2) ) 
+                    {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible relational operator on "+type1 + " and "+type2);
+                    }
+                    type = "BOOLEAN";
+                }
+                if( strcmp(root->val, "^")==0 || strcmp(root->val, "|")==0 || strcmp(root->val, "&")==0 )
+                {
+                    if( type1 == "BOOLEAN" and type2 == "BOOLEAN" ) type = "BOOLEAN";
+                    else if( (type1 == "CHAR" || type1 == "BYTE" || type1 == "SHORT" || type1 == "INT" || type1 == "LONG") and (type2 == "CHAR" || type2 == "BYTE" || type2 == "SHORT" || type2 == "INT" || type2 == "LONG") ){
+                        type = helper->biggertype(type1, type2);
+                    } else {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible bitwise operator on "+type1 + " and "+type2);
+                    }
+                }
+                if(  strcmp(root->val,"||")==0 || strcmp(root->val,"&&")==0  )
+                {
+                    if( type1 == "BOOLEAN" and type2 == "BOOLEAN" ) type = "BOOLEAN";
+                    else {
+                        helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible conditional operator on "+type1 + " and "+type2);
+                    }
+                }
+                root->type = type;
+                // cout << root->val << " " << type << " " << type1 << " " << type2 << endl;
+                // cout << root->val << " " << type << " " << type1 << " " << type2 << endl;
+            }
+        }
+        else if(strcmp(root->val,"?:")==0)
+        {
+            string type1 = "", type2 = "";
+            int i = 1;
+            int dims=0;
+            bool new_used = false;
+            vector<string> arguments_type; 
+            for( auto child_node : root->children ){
+                build(child_node);
+                if( i == 1 )
+                {
+                    if( child_node->val == "Expression" )
+                    {
+                        // type = child_node->type;
+                        if( child_node->type != "BOOLEAN" )
+                        {
+                            helper->throwerror("Line number "+to_string(root->lineno)+": Boolean type expected before ?.");
+                        }
+                    }
+                } else if( i == 2 ){
+                    if( child_node->val == "Expression" )
+                    {
+                        type1 = child_node->type ;
+                        // cout << "1 1" << type1 << endl;
+                    }
+                } else if( i == 3 ){
+                    if( child_node->lexeme=="NEW")
+                    {
+                        new_used = true;
+                    }    
+                    if(helper->isOperator(child_node->val))
+                    {
+                        type2=child_node->type;
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }    
+                    if(child_node->token=="IDENTIFIER")
+                    {
+                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                        if(entry.size()>0)
+                            if( entry[0]->type == "class" ) type2=entry[0]->lexeme;
+                            else type2=entry[0]->type;
+                    // child_node->definite_literal_used = false;
+                        }   
+                    if(child_node->token=="LITERAL")
+                    {
+                        type2=child_node->type;
+                        // cout << exp_type << endl;
+                    } 
+                    if(child_node->token=="ArrayAccess")
+                    {
+                        SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
+                        if(entry)
+                        {
+                            type2=entry->type;
+                        }
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }   
+                    if(child_node->token=="ArrayCreationExpression")
+                    {
+                        type2=child_node->type;
+                        dims=child_node->dims;
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    } 
+                    if(child_node->val=="MethodInvocation")
+                    {
+                        type2=child_node->type;
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }
+                    if( child_node->val == "PreIncrementExpression" || child_node->val == "PostIncrementExpression" || child_node->val == "PreDecrementExpression" || child_node->val == "PostDecrementExpression" )
+                    {
+                        type2 = child_node->type;
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }
+                    if( strcmp(child_node->val,"||")==0 || strcmp(child_node->val,"&&")==0 || strcmp(child_node->val,"^")==0 || strcmp(child_node->val, "|")==0 || strcmp(child_node->val, "&")==0 || strcmp(child_node->val, "!=")==0 || strcmp(child_node->val, "==")==0 || strcmp(child_node->val, "<=")==0 || strcmp(child_node->val, ">=")==0 || strcmp(child_node->val, "<")==0 || strcmp(child_node->val,">")==0 || strcmp(child_node->val, "<<")==0 || strcmp(child_node->val, ">>")==0 || strcmp(child_node->val, ">>>")==0 || strcmp(child_node->val,"~")==0 || strcmp(child_node->val,"!")==0 || strcmp(child_node->val,"%")==0 )
+                    {
+                        type2 = child_node->type;
+                        // cout << "EXPERSSION " << exp_type << endl;
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }
+                    if( child_node->val == "Expression" )
+                    {
+                        type2 = child_node->type;
+                        // cout << "EXPERSSION Expression " << exp_type << endl;
+                        // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                    }
+                }
+                i++;
+            }
+            if( new_used )
+            {
+                root->expression_new_used = true;
+            }
+            // root->dims=dims;
+            // cout << type1 << " " << type2 << endl;
+            arguments_type.push_back(type1);
+            arguments_type.push_back(type2);
+            root->type = helper->biggertype(type1, type2);
+            root->arguments_type = arguments_type;
+
+        }
+        else if(strcmp(root->val,"~")==0)
+        {
+            string type = "";
+            for( auto child_node : root->children )
+            {   
+                build(child_node);
+                if( child_node->token == "IDENTIFIER" )
+                {
+                    vector<SymbolEntry*> entry = helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    if(entry.size()>0)
+                    type = entry[0]->type;
+                    // else cout << "Sumbol Table not giving entry for variable. " << endl;
+                    // cout << "Identifier " << type << endl;
+                }
+                if( child_node->token == "LITERAL" || child_node->token == "Expression" || child_node->val == "PreIncrementExpression" || child_node->val == "PostDecrementExpression" || child_node->val == "PreDecrementExpression" || child_node->val == "PostIncrementExpression" )
+                {
+                    type = child_node->type;
+                }
+                // cout<<type<<endl;
+            }
+            if( not (type == "CHAR" || type == "BYTE" || type == "SHORT" || type == "INT" || type == "LONG") )
+            {
+                helper->throwerror("Line number "+to_string(root->lineno)+": Primitive Integer type expected with the ~ unary operator");
+            }
+            root->type = type;
+        }
+        else if(strcmp(root->val,"!")==0)
+        {
+            string type = "";
+            for( auto child_node : root->children )
+            {   
+                build(child_node);
+                if( child_node->val == "IDENTIFIER" )
+                {
+                    vector<SymbolEntry*> entry = helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    if(entry.size()>0)
+                    type = entry[0]->type;
+                }
+                if( child_node->token == "LITERAL" || child_node->token == "Expression" || child_node->val == "PreIncrementExpression" || child_node->val == "PostDecrementExpression" || child_node->val == "PreDecrementExpression" || child_node->val == "PostIncrementExpression" )
+                {
+                    type = child_node->type;
+                }
+            }
+            if( type != "BOOLEAN" )
+            {
+                helper->throwerror("Line number "+to_string(root->lineno)+": Boolean type expected with the ! unary operator");
+            }
+            root->type = type;
         }
         else if( helper->Assign_Operator(root->val) )
         {
@@ -566,6 +941,7 @@ public:
                 if( child_node->token == "IDENTIFIER" )
                 {
                    type1=child_node->type;
+                //    cout << "Identifier *= " << type1 << endl;
                 }
                 if( child_node->val == "ExpressionName" )
                 {
@@ -602,7 +978,8 @@ public:
                 build(child_node);
                 if( child_node->token == "IDENTIFIER" )
                 {
-                    vector<SymbolEntry*> entries = curr_symtable->lookup(child_node->identifier);
+                    vector<SymbolEntry*> entries = helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    if(entries.size()==0 ) continue; // check for NULL 
                     for( auto entry : entries )
                     {
                         if( entry->entry_type == "variable" )
@@ -615,11 +992,7 @@ public:
             }
             if( isIdentifier )
             {
-                if( type == "CHAR" || type == "BYTE" || type == "SHORT" || type == "INT" || type == "FLOAT" || type == "LONG" || type == "DOUBLE" )
-                {
-                    ;
-                }
-                else 
+                if( not ( type == "CHAR" || type == "BYTE" || type == "SHORT" || type == "INT" || type == "FLOAT" || type == "LONG" || type == "DOUBLE") )
                 {
                     helper->throwerror("Line number "+to_string(root->lineno)+": only numeric type variable expected with the given unary operator");
                 }
@@ -628,6 +1001,7 @@ public:
             {
                 helper->throwerror("Line number "+to_string(root->lineno)+": variable expected with the given unary operator");
             }
+            // cout << "PostIncrementExpression " << type << endl;
             root->type = type;
         }
         // else if(helper->isUnaryOperator(root->val))
@@ -677,79 +1051,56 @@ public:
         //     }
         //     root->type=type1;
         // }
-        else if(helper->isOperator(root->val))
-        {
-            string type1="";
-            string type2="";
-            for(auto child_node: root-> children)
-            {
-                build(child_node);   
-                if(child_node->token=="IDENTIFIER")
-                {
-                    if(type1=="")
-                    {
-                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->identifier,curr_symtable,root->lineno);
-                        if(entry.size()>0)
-                            type1=entry[0]->type;
-                    }
-                    else
-                    {
-                        vector<SymbolEntry*> entry= helper->checkvariable(child_node->identifier,curr_symtable,root->lineno);
-                        if(entry.size()>0)
-                            type2=entry[0]->type;
-                    }     
-                }
-                if(child_node->val=="ArrayAccess")
-                {
-                    SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
-                    if(entry)
-                    {
-                        if(type1=="")
-                            type1=entry->type;
-                        else
-                            type2=entry->type;
-                    }
-                }
-                if(helper->isOperator(child_node->val))
-                {
-                    if(type1=="")
-                        type1=child_node->type;
-                    else
-                        type2=child_node->type;
-                }   
-                if(child_node->val=="Expression")
-                {
-                    if(type1=="")
-                    {
-                        type1=child_node->type;
-                    }
-                    else
-                    {
-                        type2=child_node->type;
-                    }
-                }  
-                if(child_node->token=="LITERAL")
-                {
-                    if(type1=="")
-                    {
-                        type1=child_node->type;
-                    }
-                    else
-                    {
-                        type2=child_node->type;
-                    }
-                }  
-            }
-            if( root->children.size() == 1 )
-            {
-                type2 = type1;
-            }
-            if(!helper->castit(type1,type2))
-            {
-                helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible types i.e. conversion from "+type1 + " to "+type2);
-            }
-            root->type=type1;
-        }
+        // else if(helper->isOperator(root->val))
+        // {
+        //     string type1="";
+        //     string type2="";
+        //     for(auto child_node: root-> children)
+        //     {
+        //         build(child_node);   
+        //         if(child_node->token=="IDENTIFIER")
+        //         {
+        //             if(type1=="")
+        //             {
+        //                 vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+        //                 if(entry[0])
+        //                     type1=entry[0]->type;
+        //             }
+        //             else
+        //             {
+        //                 vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+        //                 if(entry[0])
+        //                     type2=entry[0]->type;
+        //             }     
+        //         }
+        //         if(child_node->val=="ArrayAccess")
+        //         {
+        //             SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
+        //             if(entry)
+        //             {
+        //                 if(type1=="")
+        //                     type1=entry->type;
+        //                 else
+        //                     type2=entry->type;
+        //             }
+        //         }
+        //         if(helper->isOperator(child_node->val)|| child_node->val=="Expression"|| child_node->token=="LITERAL")
+        //         {
+        //             if(type1=="")
+        //                 type1=child_node->type;
+        //             else
+        //                 type2=child_node->type;
+        //         }   
+        //     }
+        //     if( root->children.size() == 1 )
+        //     {
+        //         type2 = type1;
+        //     }
+        //     if(!helper->castit(type1,type2))
+        //     {
+        //         helper->throwerror("Line number: "+to_string(root->lineno)+" Incompatible types i.e. conversion from "+type1 + " to "+type2);
+        //     }
+        // }
         else if(root->val=="ArrayAccess")
         {
             string identifier="";

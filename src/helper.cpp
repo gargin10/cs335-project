@@ -21,32 +21,37 @@ public:
         }
         if( arg2 == "BYTE" )
         {
-            if( arg1 == "BYTE" ) return "BYTE";
+            if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || "DOUBLE" ) return arg1;
+            if( arg1 == "CHAR" ) return arg2;
             // else return false;
         }
         if( arg2 == "SHORT" )
         {
-            if( arg1 == "BYTE" || arg1 == "SHORT" ) return "SHORT";
+            if( arg1 == "CHAR" || "BYTE" || arg1 == "SHORT" ) return "SHORT";
+            else if( arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || "DOUBLE" ) return arg1;
             // else return false;
         }
         if( arg2 == "CHAR" )
         {
-            if( arg1 == "CHAR" ) return "CHAR";
+            if( arg1 == "CHAR" || arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || "DOUBLE" ) return arg1;
             // return false;
         }
         if( arg2 == "INT" )
         {
             if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "CHAR" ) return "INT";
+            if( arg1 == "LONG" || arg1 == "FLOAT" || arg1 == "DOUBLE" ) return arg2;
             // else return false;
         }
         if( arg2 == "LONG" )
         {
             if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "CHAR"  ) return "LONG";
+            if( arg1 == "FLOAT" || arg1 == "DOUBLE" ) return arg1;
             // else return false;
         }
         if( arg2 == "FLOAT" )
         {
             if( arg1 == "BYTE" || arg1 == "SHORT" || arg1 == "INT" || arg1 == "LONG" || arg1 == "FLOAT" || arg1 == "CHAR"  ) return "FLOAT";
+            if( arg1 == "DOUBLE" ) return arg1;
             // else return false;
         }
         if( arg2 == "DOUBLE" )
@@ -61,10 +66,10 @@ public:
     // arg1 is where it is used and arg2 is the entry type inside the symbol table i.e. type during declaration time.
     bool castit( string arg1, string arg2){
         if( arg1 == arg2 ) return true;
-        if( arg1 == "STRING"|| arg2 == "STRING")
-        {
-            return true;
-        }
+        // if( arg1 == "STRING" || arg2 == "STRING")
+        // {
+        //     return true;
+        // }
         if( arg1 == "BOOLEAN")
         {
             if(arg2 == "BOOLEAN") return true;
@@ -148,7 +153,7 @@ public:
 
     bool isOperator(string str)
     {
-        vector<string> v{"=",">","<","?",":","->","==",">=","<=","!=","&&","||","+","-","*",
+        vector<string> v{"=",">","<","?:","->","==",">=","<=","!=","&&","||","+","-","*",
         "/","&","|","^","%","<<",">>",">>>"};
 
         set<string> s;
