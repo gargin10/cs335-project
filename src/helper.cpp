@@ -8,7 +8,7 @@ class Helper
 {
 public:
     map<string,SymbolTable*> class_fields;
-
+    map<string,SymbolTable*> class_methods;
     // returns "" if no definite type can be produced
     string biggertype( string arg1, string arg2){
         if( arg1 == "STRING" || arg2 == "STRING")
@@ -279,7 +279,43 @@ public:
             if( flag == 0 ) continue;
             return entry;
         }
-        throwerror("Line number: "+to_string(lineno)+" No such matching function found '"+method_name+"' with the given arguments Line number: "+to_string(lineno));
+        throwerror("Line number: "+to_string(lineno)+" No such matching function found '"+method_name+"' with the given arguments");
+        return NULL;
+    }
+
+    SymbolEntry* checkmethodaccess(string class_name,string method_name,vector<string> type_arguments,SymbolTable* symbol_table, int lineno)
+    {
+        assert(symbol_table!=NULL);
+        int no_arguments=type_arguments.size();
+        if(class_methods.find(class_name)==class_methods.end())
+        {
+            throwerror("Line number: "+to_string(lineno)+" No such class type '"+class_name+"' found");
+            return NULL;
+        }
+        SymbolTable* class_symtable=class_methods[class_name];
+        auto entries=class_symtable->entries;
+        if(entries.find(method_name)==entries.end())
+        {
+            throwerror("Line number: "+to_string(lineno)+" No such matching function found of class type as'"+class_name+"' with method name '"+method_name);
+            return NULL;
+        }
+        auto list_entries=entries[method_name];
+        int flag = 1;
+        for(auto entry : list_entries){
+            flag = 1;
+            // cout<<entry->lexeme<<" "<<entry->entry_type<<endl;
+            if(entry->lexeme != method_name) continue;
+            if( entry->entry_type != "method" ) continue;
+            if( entry->no_arguments != no_arguments ) continue;
+            for( int i = 0 ; i < no_arguments ; i++ ){
+                // cout<<"here"<<endl;
+                // cout<<type_arguments[i]<<" "<<entry->type_arguments[i]<<endl;
+                if( !castit( type_arguments[i], entry->type_arguments[i]) ) flag = 0;
+            }
+            if( flag == 0 ) continue;
+            return entry;
+        }
+        throwerror("Line number: "+to_string(lineno)+" No such matching function found of class type as'"+class_name+"' with method name '"+method_name+"' with the given arguments");
         return NULL;
     }
 

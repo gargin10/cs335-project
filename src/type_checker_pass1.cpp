@@ -136,6 +136,7 @@ public:
             assert(curr_symtable!=NULL);
             curr_symtable -> scope = identifier_class;
             helper->class_fields[curr_symtable->scope]=curr_symtable;
+            helper->class_methods[curr_symtable->scope]=curr_symtable;
             curr_symtable = curr_symtable -> parent;
 
             SymbolEntry* entry = new SymbolEntry("CLASS", identifier_class);

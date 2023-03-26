@@ -808,6 +808,7 @@ public:
         {
             string identifier="";
             vector<string> arguments_type;
+            int dot_flag=0;
             for(auto child_node: root-> children)
             {
                 build(child_node);       
@@ -819,7 +820,15 @@ public:
                 {
                     arguments_type=child_node->arguments_type;
                 }
+                if(child_node->val==".")
+                {
+                    dot_flag=1;
+                    root->identifier=child_node->identifier;
+                    root->type=child_node->type;
+                }
             }
+            if(dot_flag)
+                return;
             root->identifier=identifier;
             root->arguments_type=arguments_type;
             SymbolEntry* entry = helper->checkmethod(identifier,arguments_type,curr_symtable,root->lineno);
@@ -845,26 +854,53 @@ public:
         else if(root->val == ".")
         {
             string exp_type="";
+            // cout<<"here4"<<endl;
             for(auto child_node: root-> children)
             {
                 build(child_node);    
             }
-            Node* left_node=root->children[0];
-            Node* right_node=root->children[1];
+            if(root->children.size()==2)
+            {
+                Node* left_node=root->children[0];
+                Node* right_node=root->children[1];
 
-            // cout<<"here\n";
-            // cout<<left_node->identifier<<" "<<right_node->identifier<<" "<<root->lineno<< endl;
-            string object_type="";
-            vector<SymbolEntry*> entries= helper->checkvariable(left_node->lexeme,curr_symtable,root->lineno);
-            if(entries.size()>0)
-                object_type=entries[0]->type;
+                // cout<<"here\n";
+                // cout<<left_node->identifier<<" "<<right_node->identifier<<" "<<root->lineno<< endl;
+                string object_type="";
+                vector<SymbolEntry*> entries= helper->checkvariable(left_node->lexeme,curr_symtable,root->lineno);
+                if(entries.size()>0)
+                    object_type=entries[0]->type;
 
-            SymbolEntry* entry= helper->checkfieldaccess(object_type,right_node->identifier,curr_symtable,root->lineno);
-            if(entry)
-                exp_type=entry->type;
-            // cout<<"here2 "<< exp_type<<endl;
-            root->type=exp_type;
-            root->identifier=left_node->identifier + "." + right_node->identifier;
+                SymbolEntry* entry= helper->checkfieldaccess(object_type,right_node->identifier,curr_symtable,root->lineno);
+                if(entry)
+                    exp_type=entry->type;
+                // cout<<"here2 "<< exp_type<<endl;
+                root->type=exp_type;
+                root->identifier=left_node->identifier + "." + right_node->identifier;
+            }
+            else
+            {
+                // cout<<"here"<<endl;
+                Node* left_node=root->children[0];
+                Node* right_node=root->children[1];
+                Node* arguments=root->children[3];
+                vector<string> arguments_type;
+                // cout<<"here2"<<endl;
+                if(arguments!=NULL)
+                    arguments_type=arguments->arguments_type;
+
+                string object_type="";
+                vector<SymbolEntry*> entries= helper->checkvariable(left_node->identifier,curr_symtable,root->lineno);
+                if(entries.size()>0)
+                    object_type=entries[0]->type;
+                // cout<<"here3"<<endl;
+                SymbolEntry* entry= helper->checkmethodaccess(object_type,right_node->identifier,arguments_type,curr_symtable,root->lineno);
+                if(entry)
+                    exp_type=entry->type;
+                // cout<<"here2 "<< exp_type<<endl;
+                root->type=exp_type;
+                root->identifier=left_node->identifier + "." + right_node->identifier;
+            }
         }
         else if(root->val=="FieldAccess" || root->val == "ExpressionName")
         {

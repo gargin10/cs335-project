@@ -1775,28 +1775,42 @@ MethodInvocation:
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   TypeName PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   IDENTIFIER PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   ExpressionName PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   Primary PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   SUPER PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   TypeName PERIOD SUPER PERIOD IDENTIFIER BRACESTART BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2,$4,$5,$6};
+                    $4=createNode(".",v1);
+                    vector<Node*> v2{$4};
+                    $$=createNode( "MethodInvocation", v2 );
                 } 
 |   TypeName PERIOD TypeArguments IDENTIFIER BRACESTART BRACEEND  {
                     vector<Node*> v{$1,$2,$3,$4};
@@ -1827,28 +1841,42 @@ MethodInvocation:
                     $$=createNode( "MethodInvocation", v );
                 } 
 |   TypeName PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$5};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5,$6};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   IDENTIFIER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$5};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5,$6};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   ExpressionName PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$5};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5,$6};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   Primary PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$5};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5,$6};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   SUPER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$5};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3,$4,$5,$6};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "MethodInvocation", v1 );
                 } 
 |   TypeName PERIOD SUPER PERIOD IDENTIFIER BRACESTART ArgumentList BRACEEND {
-                    vector<Node*> v{$1,$2,$3,$4,$5,$7};
-                    $$=createNode( "MethodInvocation", v );
+                    vector<Node*> v{$1,$3};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2,$5,$6,$7,$8};
+                    $4=createNode(".",v);
+                    vector<Node*> v2{$4};
+                    $$=createNode( "MethodInvocation", v2 );
                 } 
 |   TypeName PERIOD TypeArguments IDENTIFIER BRACESTART ArgumentList BRACEEND  {
                     vector<Node*> v{$1,$2,$3,$4,$6};
