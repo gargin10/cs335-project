@@ -596,6 +596,10 @@ public:
             }
             root->label_entry=root->identifier;
 
+            if(root->children[0]->val==".")
+            {
+                root->label_entry=root->children[0]->label_entry;
+            }
             string temp=generatetemp();
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
             entry->type="param";
@@ -893,17 +897,18 @@ public:
             Node* object_field;
             for(auto child_node: root-> children)
             {
-                build(child_node);
-                builder->merge_entries(root,child_node->code_entries); 
+                build(child_node); 
             }
             object_access=root->children[0];
             object_field=root->children[1];
 
+            builder->merge_entries(root,object_access->code_entries);
+            builder->merge_entries(root,object_field->code_entries);
             string temp = generatetemp();
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->type="pointer";
             entry->arg1=temp;
-            entry->arg2=object_access->identifier;
+            entry->arg2=object_access->label_entry;
             root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();
@@ -913,6 +918,10 @@ public:
             entry->arg4="OFFSET_"+object_field->identifier;
             root->code_entries.push_back(entry);
 
+            if(root->children.size()>2)
+            {
+                builder->merge_entries(root,root->children[3]->code_entries);
+            }
             root->label_entry=temp;
         }
         else if(root->token=="LITERAL")

@@ -806,6 +806,21 @@ public:
         }
         else if(root->val=="MethodInvocation")
         {
+            if(root->children[0]->val=="." && (root->children[0]->children[1]->lexeme=="println" || root->children[0]->children[1]->lexeme=="print"))
+            {
+                if(root->children[0]->children[0]->children.size()>0 && root->children[0]->children[0]->children[0]->val=="." )
+                {
+                    // cout<<"here 2"<<endl;
+                    Node* x=root->children[0]->children[0]->children[0];
+                    if(x->children[0]->lexeme=="System" && x->children[1]->lexeme=="out")
+                    {
+                        // cout<<"here 1"<<endl;
+                        if(root->children[0]->children[3]->arguments_type.size()>=2)
+                            helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect number of arguments in print function call");
+                        return;
+                    }
+                }
+            }
             string identifier="";
             vector<string> arguments_type;
             int dot_flag=0;
