@@ -129,12 +129,17 @@ public:
         }
         else if(root->val=="VariableDeclaratorId")
         {
+            Node* node;
             for(auto child_node: root-> children)
             {
                 build(child_node);
-                builder->merge_entries(root,child_node->code_entries);               
+                builder->merge_entries(root,child_node->code_entries);  
+                if(child_node->token=="IDENTIFIER")   
+                    node=child_node;
             }
+            vector<SymbolEntry*> entry= helper->checkvariable(node->identifier,curr_symtable,root->lineno);
             root->label_entry=root->identifier;
+            root->type=entry[0]->type;
         }
         else if(strcmp(root->val,"=")==0)
         {
@@ -144,14 +149,31 @@ public:
             }
             Node* node1=root->children[0];
             Node* node2=root->children[1];
-            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-
-            entry->arg1=node1->label_entry;
-            entry->arg2=node2->label_entry;
-
             builder->merge_entries(root,node1->code_entries);
             builder->merge_entries(root,node2->code_entries);
-            root->code_entries.push_back(entry);
+
+            if(node2->type!=node1->type)
+            {
+                // cout<<node1->type << " "<< node2->type<<endl;
+                string temp=generatetemp();
+                ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+                entry->arg1=temp;
+                entry->arg2="cast_to_"+node1->type;
+                entry->arg3=node2->label_entry;
+                root->code_entries.push_back(entry);
+
+                entry = new ThreeAddressCodeEntry();
+                entry->arg1=node1->label_entry;
+                entry->arg2=temp;
+                root->code_entries.push_back(entry);
+            }
+            else
+            {
+                ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+                entry->arg1=node1->label_entry;
+                entry->arg2=node2->label_entry;
+                root->code_entries.push_back(entry);
+            }      
             root->label_entry=node1->label_entry;
         }
         else if(helper->Assign_Operator(root->val))
@@ -164,20 +186,46 @@ public:
             Node* node1=root->children[0];
             Node* node2=root->children[1];
 
-            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            string label1=generatetemp();
-            entry->arg1=label1;
-            entry->arg2=node1->label_entry;
+            if(node2->type!=node1->type)
+            {
+                string temp=generatetemp();
+                ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+                entry->arg1=temp;
+                entry->arg2="cast_to_"+node1->type;
+                entry->arg3=node2->label_entry;
+                root->code_entries.push_back(entry);
 
-            root->code_entries.push_back(entry);
+                entry = new ThreeAddressCodeEntry();
+                string label1=generatetemp();
+                entry->arg1=label1;
+                entry->arg2=temp;
+                root->code_entries.push_back(entry);
 
-            entry = new ThreeAddressCodeEntry();
-            entry->arg1=node1->label_entry;
-            entry->arg2=label1;
-            entry->arg3=root->val[0];
-            entry->arg4=node2->label_entry;
+                entry = new ThreeAddressCodeEntry();
+                entry->arg1=node1->label_entry;
+                entry->arg2=label1;
+                entry->arg3=root->val[0];
+                entry->arg4=node2->label_entry;
+                root->code_entries.push_back(entry);
+            }
+            else
+            {
+                ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+                string label1=generatetemp();
+                entry->arg1=label1;
+                entry->arg2=node1->label_entry;
 
-            root->code_entries.push_back(entry);
+                root->code_entries.push_back(entry);
+
+                entry = new ThreeAddressCodeEntry();
+                entry->arg1=node1->label_entry;
+                entry->arg2=label1;
+                entry->arg3=root->val[0];
+                entry->arg4=node2->label_entry;
+                root->code_entries.push_back(entry);
+            }      
+
+            root->label_entry=node1->label_entry;
         }
         else if(helper->isOperator(root->val))
         {
@@ -829,7 +877,17 @@ public:
             root->code_entries.push_back(entry);
             root->label_entry=temp;
         }
-        else if(root->val=="FieldAccess"|| root->val=="ExpressionName")
+        else if(root->val == "ExpressionName" || root->val == "FieldAccess")
+        {
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries); 
+            }
+
+            root->label_entry=root->children[0]->label_entry;
+        }
+        else if(root->val==".")
         {
             Node* object_access;
             Node* object_field;
@@ -837,10 +895,9 @@ public:
             {
                 build(child_node);
                 builder->merge_entries(root,child_node->code_entries); 
-                if(child_node->token=="IDENTIFIER")
-                    object_field=child_node;              
             }
             object_access=root->children[0];
+            object_field=root->children[1];
 
             string temp = generatetemp();
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
@@ -852,10 +909,11 @@ public:
             entry = new ThreeAddressCodeEntry();
             entry->arg1=temp;
             entry->arg2=temp;
-            entry->arg3="OFFSET_"+object_field->lexeme;
+            entry->arg3="+";
+            entry->arg4="OFFSET_"+object_field->identifier;
             root->code_entries.push_back(entry);
 
-            root->label_entry="*"+temp;
+            root->label_entry=temp;
         }
         else if(root->token=="LITERAL")
         {

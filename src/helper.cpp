@@ -7,6 +7,8 @@ using namespace std;
 class Helper
 {
 public:
+    map<string,SymbolTable*> class_fields;
+
     // returns "" if no definite type can be produced
     string biggertype( string arg1, string arg2){
         if( arg1 == "STRING" || arg2 == "STRING")
@@ -174,11 +176,31 @@ public:
         {
             // symbol_table->display();
             throwerror("Line number: "+to_string(lineno)+" Identifier not declared: "+lexeme);
-            return {NULL};
         }
         return list_entries;
     }
 
+    SymbolEntry* checkfieldaccess(string class_name,string field_name,SymbolTable* symbol_table, int lineno)
+    {
+        assert(symbol_table!=NULL);
+        if(class_fields.find(class_name)==class_fields.end())
+        {
+            throwerror("Line number: "+to_string(lineno)+" No such class type '"+class_name+"' found");
+            return NULL;
+        }
+        SymbolTable* class_symtable=class_fields[class_name];
+        for(auto [_,vec]: class_symtable->entries)
+        {
+            auto ele=vec[0];
+            // cout<<ele->lexeme<<" ";
+            if(ele->type!="method" && ele->lexeme==field_name)
+            {
+                return ele;
+            }
+        }
+        throwerror("Line number: "+to_string(lineno)+" No such object field in the class type '"+class_name+"' with field name'"+field_name+"' found");
+        return NULL;
+    }
     SymbolEntry* checkarray(string array_identifier, int dims,SymbolTable* symbol_table, int lineno)
     {
         assert(symbol_table!=NULL);
@@ -205,7 +227,7 @@ public:
         }
         if( !castit( type, entry->type) ) 
         {
-            throwerror("Line number: "+to_string(lineno)+" Incorrect type conversion of Identifier '"+entry->lexeme+"' declared as "+entry->type+" to type as "+ type+ " Line number: "+to_string(lineno));
+            throwerror("Line number: "+to_string(lineno)+" Incorrect type conversion of Identifier '"+entry->lexeme+"' declared as "+entry->type+" to type as "+ type);
             return false;
         }
         return true;
@@ -220,7 +242,7 @@ public:
         }
         if( !castit( type, entry->type) ) 
         {
-            throwerror("Line number: "+to_string(lineno)+" Incorrect type conversion of Identifier '"+entry->lexeme+"' declared as "+entry->type+" to type as "+ type+ " Line number: "+to_string(lineno));
+            throwerror("Line number: "+to_string(lineno)+" Incorrect type conversion of Identifier '"+entry->lexeme+"' declared as "+entry->type+" to type as "+ type);
             return false;
         }
         return true;

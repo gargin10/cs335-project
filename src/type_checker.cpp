@@ -18,7 +18,7 @@ public:
     SymbolTable* prev_symtable;
     Helper* helper;
     int offset=0;
-    SymbolTableBuilder()
+    SymbolTableBuilder(Helper* helper)
     {
         createValidTypes();
         curr_symtable=new SymbolTable();
@@ -31,7 +31,7 @@ public:
         addprintmethods("DOUBLE");
         addemptyprint();
         prev_symtable=NULL;
-        helper=new Helper();
+        this->helper=helper;
     }
 
     void addprintmethods(string type)
@@ -322,7 +322,8 @@ public:
                         helper->checktypevariable(entry,field_type,root->lineno);
                     }
                 }
-                addEntry(entry, root->lineno);
+                if(root->val!="FieldDeclaration")
+                    addEntry(entry, root->lineno);
             }
         }
         else if( root->val == "UnannReferenceType" )
@@ -378,7 +379,7 @@ public:
         else if(strcmp(root->val,"=")==0)
         {
             string identifier1="";
-            string righthand_type="";
+            string righthand_type="", lefthand_type="";
             int variable_dims=0;
             int array_dims=0;
             int f=0;
@@ -412,12 +413,18 @@ public:
                     identifier1=child_node->identifier;
                     array_dims=child_node->dims;
                 }     
+                if(child_node-> val == "FieldAccess" || child_node->val=="ExpressionName")
+                {
+                    identifier1=child_node->identifier;
+                    lefthand_type=child_node->type;
+                    f=2;
+                }
             }
             if( new_used )
             {
                 root->expression_new_used = true;
             }
-            if(f)
+            if(f==1)
             {
                 root->identifier=identifier1;  
                 root->dims=variable_dims; 
@@ -441,10 +448,20 @@ public:
                         root->type=righthand_type;
                 }
             }
-            else
+            else if(f==2)
+            {
+                // cout<<"here 7 "<<endl;
+                if( !helper->castit( righthand_type, lefthand_type) ) 
+                {
+                    helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect type conversion of Identifier '"+identifier1+"' declared as "+lefthand_type+" to type as "+ righthand_type);
+                }
+                // cout<<"here 8 "<<endl;
+                root->type=lefthand_type;
+            }
+            else 
             {
                 vector<SymbolEntry*> entry= helper->checkvariable(identifier1,curr_symtable,root->lineno);
-                if(entry[0])
+                if(entry.size()>0)
                 {
                     bool check = helper->checktypevariable(entry[0],righthand_type, root->lineno);
                     if(check)
@@ -483,7 +500,7 @@ public:
                 if(child_node->token=="IDENTIFIER")
                 {
                     vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                    if(entry[0])
+                    if(entry.size()>0)
                         if( entry[0]->type == "class" ) exp_type=entry[0]->lexeme;
                         else exp_type=entry[0]->type;
                 }   
@@ -510,6 +527,8 @@ public:
                 {
                     exp_type = child_node->type;
                 }
+                if(child_node->val=="ExpressionName" || child_node->type=="FieldAccess")
+                    exp_type=child_node->type;
             }
             if( new_used )
             {
@@ -652,13 +671,13 @@ public:
                     if(type1=="")
                     {
                         vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                        if(entry[0])
+                        if(entry.size()>0)
                             type1=entry[0]->type;
                     }
                     else
                     {
                         vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                        if(entry[0])
+                        if(entry.size()>0)
                             type2=entry[0]->type;
                     }     
                 }
@@ -823,22 +842,44 @@ public:
             }
             root->arguments_type=arguments_type;
         }
-        else if(root->val == "FieldAccess")
+        else if(root->val == ".")
         {
             string exp_type="";
             for(auto child_node: root-> children)
             {
                 build(child_node);    
-                if(child_node->token=="IDENTIFIER")
-                {
-                    vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
-                    if(entry[0])
-                        exp_type=entry[0]->type;
-                }            
             }
+            Node* left_node=root->children[0];
+            Node* right_node=root->children[1];
+
+            // cout<<"here\n";
+            // cout<<left_node->identifier<<" "<<right_node->identifier<<" "<<root->lineno<< endl;
+            string object_type="";
+            vector<SymbolEntry*> entries= helper->checkvariable(left_node->lexeme,curr_symtable,root->lineno);
+            if(entries.size()>0)
+                object_type=entries[0]->type;
+
+            SymbolEntry* entry= helper->checkfieldaccess(object_type,right_node->identifier,curr_symtable,root->lineno);
+            if(entry)
+                exp_type=entry->type;
+            // cout<<"here2 "<< exp_type<<endl;
             root->type=exp_type;
+            root->identifier=left_node->identifier + "." + right_node->identifier;
         }
-        else if(root->token=="IDENTIFIER")
+        else if(root->val=="FieldAccess" || root->val == "ExpressionName")
+        {
+            Node* node=root->children[0];
+
+            for(auto child_node: root-> children)
+            {
+                build(child_node);    
+            }
+            root->type=node->type;
+            root->identifier=node->identifier;
+
+            // cout<<"here1 "<<root->identifier<<endl;
+        }
+        else if(root->token=="IDENTIFIER")  
         {
             root->identifier=root->lexeme;
         }

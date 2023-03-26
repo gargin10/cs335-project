@@ -1591,26 +1591,38 @@ VariableAccess:
 
 ExpressionName:
     IDENTIFIER PERIOD IDENTIFIER {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ExpressionName", v );
+                    vector<Node*> v{$1,$3};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "ExpressionName", v1 );
                 }
 |   ExpressionName PERIOD IDENTIFIER {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "ExpressionName", v );
+                    vector<Node*> v{$1,$3};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "ExpressionName", v1 );
                 }
 
 FieldAccess:
     Primary PERIOD IDENTIFIER {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "FieldAccess", v );
+                    vector<Node*> v{$1,$3};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "FieldAccess", v1 );
                 }
 |   SUPER PERIOD IDENTIFIER {
-                    vector<Node*> v{$1,$2,$3};
-                    $$=createNode( "FieldAccess", v );
+                    vector<Node*> v{$1,$3};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2};
+                    $$=createNode( "FieldAccess", v1 );
                 }
 |   TypeName PERIOD SUPER PERIOD IDENTIFIER {
-                    vector<Node*> v{$1,$2,$3,$4,$5};
-                    $$=createNode( "FieldAccess", v );
+                    vector<Node*> v{$1,$3};
+                    $2=createNode(".",v);
+                    vector<Node*> v1{$2,$5};
+                    $4=createNode(".",v);
+                    vector<Node*> v2{$4};
+                    $$=createNode( "FieldAccess", v2 );
                 }
 
 Primary:
@@ -2606,10 +2618,11 @@ int main(int argc, char *argv[]) {
 
     ofstream ofs1("symbol_table.txt");
 
-    SymbolTableBuilder1* builder1 = new SymbolTableBuilder1();
+    Helper* helper = new Helper();
+    SymbolTableBuilder1* builder1 = new SymbolTableBuilder1(helper);
     builder1->build(root);
 
-    SymbolTableBuilder* builder = new SymbolTableBuilder();
+    SymbolTableBuilder* builder = new SymbolTableBuilder(helper);
     builder->build(root); 
     display(builder->curr_symtable);
 

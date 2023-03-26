@@ -18,7 +18,7 @@ public:
     SymbolTable* prev_symtable;
     Helper* helper;
     int offset=0;
-    SymbolTableBuilder1()
+    SymbolTableBuilder1(Helper* helper)
     {
         createValidTypes();
         curr_symtable=new SymbolTable();
@@ -31,7 +31,7 @@ public:
         addprintmethods("DOUBLE");
         addemptyprint();
         prev_symtable=NULL;
-        helper=new Helper();
+        this->helper=helper;
     }
 
     void addprintmethods(string type)
@@ -135,6 +135,7 @@ public:
 
             assert(curr_symtable!=NULL);
             curr_symtable -> scope = identifier_class;
+            helper->class_fields[curr_symtable->scope]=curr_symtable;
             curr_symtable = curr_symtable -> parent;
 
             SymbolEntry* entry = new SymbolEntry("CLASS", identifier_class);
