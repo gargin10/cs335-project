@@ -170,6 +170,8 @@ public:
     vector<SymbolEntry*> checkvariable(string lexeme, SymbolTable* symbol_table, int lineno)
     {
         assert(symbol_table!=NULL);
+        if(lexeme.length()>=5 && lexeme.substr(lexeme.length()-4,4)=="this")
+            lexeme=lexeme.substr(0, lexeme.length()-5);
         // vector<SymbolEntry*> list_entries;
         vector<SymbolEntry*> list_entries=symbol_table->lookup(lexeme);
         if(list_entries.size()==0)
@@ -183,6 +185,8 @@ public:
     SymbolEntry* checkfieldaccess(string class_name,string field_name,SymbolTable* symbol_table, int lineno)
     {
         assert(symbol_table!=NULL);
+        if(class_name.length()>=5 && class_name.substr(class_name.length()-4,4)=="this")
+            class_name=class_name.substr(0, class_name.length()-5);
         if(class_fields.find(class_name)==class_fields.end())
         {
             throwerror("Line number: "+to_string(lineno)+" No such class type '"+class_name+"' found");
@@ -286,6 +290,8 @@ public:
     SymbolEntry* checkmethodaccess(string class_name,string method_name,vector<string> type_arguments,SymbolTable* symbol_table, int lineno)
     {
         assert(symbol_table!=NULL);
+        if(class_name.length()>=5 && class_name.substr(class_name.length()-4,4)=="this")
+            class_name=class_name.substr(0, class_name.length()-5);
         int no_arguments=type_arguments.size();
         if(class_methods.find(class_name)==class_methods.end())
         {
