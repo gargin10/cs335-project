@@ -20,3 +20,4 @@ clean:
 	rm myASTGenerator
 	rm parser.tab.c parser.tab.h parser.output
 	rm lex.yy.c
+	rm symbol_table.txt output.dot

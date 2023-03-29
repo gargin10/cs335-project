@@ -1,28 +1,24 @@
-public class Example {
-    public class Animal {
-      public void makeSound() {
-          System.out.println("The animal makes a sound");
-      }
-  }
-  
-  public class Dog extends Animal {
-      public void makeSound() {
-          System.out.println("The dog barks");
-      }
-  }
-  
-  public class Cat extends Animal {
-      public void makeSound() {
-          System.out.println("The cat meows");
-      }
-  }
-  
-  public class Main {
-      public static void main(String args[]) {
-          Animal animal1, animal2, animal3;
-          animal1= new Dog();
-          animal2 = new Cat();
-          animal3 = new Animal();
-      }
-  }
-  }
+class Tree {
+    public int climb;
+}
+
+class Flower {
+    int petal = 0;
+    public int getPollen(int bee)
+    {
+        return bee * 10;
+    }
+    public int getPetal() { return petal; }
+    void setPetal(int newPetal) { petal = newPetal; }
+}
+
+public class Main {
+    public static void main(String args[]) {
+        Tree obj1 =  new Tree();
+        obj1.climb = 8;
+        Flower flow = new Flower();
+        System.out.println("I got " + flow.getPollen(10) + " pollen.");
+        flow.setPetal(10);
+        System.out.println("I got " + flow.getPetal() + " petals.");
+    }
+}

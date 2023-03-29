@@ -66,19 +66,19 @@ public class OperatorExample {
         // int x = (a >>> 2.0);
         
         // // logical operators
-        // boolean y = (a > b) && (c < d);
-        // boolean z = (a < b) || (c > d);
-        // boolean aa = !(a > b);
-        // boolean t = !aa;
+        boolean yyy = (a > b) && (c < d);
+        boolean zzz = (a < b) || (c > d);
+        boolean aaaa = !(a > b);
+        boolean ttt = !aa;
 
         // // assignment operators
-        // a += b;
-        // b -= c;
-        // c *= d;
-        // d /= e;
-        // e %= f;
-        // f &= g;
-        // aa *= 2;
+        a += b;
+        b -= c;
+        c *= d;
+        d /= e;
+        e %= f;
+        f &= g;
+        aa *= 2;
         
         // // ternary operator
         
