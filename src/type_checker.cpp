@@ -80,6 +80,8 @@ public:
         assert(curr_symtable!=NULL);
         entry->size=type_to_size(entry->type);
         entry->line_number=line_number;
+        if(entry->entry_type == "array")
+            entry->size=8;
         if(entry->entry_type!="method"&& entry->entry_type!="class")
         {
             entry->offset=offset;
@@ -197,7 +199,11 @@ public:
             assert(curr_symtable!=NULL);
             curr_symtable -> scope = identifier_method;
             curr_symtable = curr_symtable -> parent;
-
+            SymbolEntry* entry = helper->checkmethod(identifier_method, arguments_type,curr_symtable,root->lineno);
+            if(entry)
+            {
+                entry -> offset = offset;
+            }
             // SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_method);
             // entry->type=method_type;
             // entry->type_arguments=arguments_type;
@@ -266,6 +272,7 @@ public:
                 entry->token="ARRAY";
             }
             addEntry(entry, root->lineno);
+            offset = 0;
         }
         else if(root->val=="VariableDeclaratorId")
         {

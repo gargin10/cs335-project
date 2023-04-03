@@ -79,6 +79,8 @@ public:
         assert(curr_symtable!=NULL);
         entry->size=type_to_size(entry->type);
         entry->line_number=line_number;
+        if(entry->entry_type == "array")
+            entry->size=8;
         if(entry->entry_type!="method"&& entry->entry_type!="class")
         {
             entry->offset=offset;
