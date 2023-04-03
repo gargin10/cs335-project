@@ -152,10 +152,9 @@ public:
             Node* node2=root->children[1];
             builder->merge_entries(root,node1->code_entries);
             builder->merge_entries(root,node2->code_entries);
-
-            if(node2->type!=node1->type)
+            if(node2->type!=node1->type && !(node2->token == "LITERAL" && node2->type == "BYTE" && (node1->type=="INT" ||node1->type =="LONG" || node1->type=="SHORT")))
             {
-                // cout<<node1->type << " "<< node2->type<<endl;
+                cout<<node1->type << " "<< node2->token << " "<<node2->type<<endl;
                 string temp=generatetemp();
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1=temp;
@@ -239,7 +238,7 @@ public:
             Node* node1=root->children[0];
             Node* node2=root->children[1];
 
-            if(node2->type!=node1->type)
+            if(node2->type!=node1->type && !(node2->token == "LITERAL" && node2->type == "BYTE" && (node1->type=="INT" ||node1->type =="LONG" || node1->type=="SHORT")))
             {
                 string temp=generatetemp();
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
@@ -305,7 +304,7 @@ public:
             Node* node2=root->children[1];
 
             string bigger_type=helper->biggertype(node1->type, node2->type);
-            if(node1->type!=bigger_type)
+            if(node1->type!=bigger_type&& !(node1->token=="LITERAL"&& node1->type == "BYTE" && (bigger_type=="INT" ||bigger_type =="LONG" || bigger_type=="SHORT")))
             {
                 // cout<<"Node1: "<<node1->type << "big "<< bigger_type<<endl;
                 
@@ -322,7 +321,7 @@ public:
                 root->code_entries.push_back(entry);
             }
 
-            if(node2->type!=bigger_type)
+            if(node2->type!=bigger_type&& !(node2->token=="LITERAL"&& node2->type == "BYTE" && (bigger_type=="INT" ||bigger_type =="LONG" || bigger_type=="SHORT")))
             {
                 // cout<<"Node2: "<<node2->type << "nig "<< bigger_type<<endl;
                 
@@ -359,6 +358,8 @@ public:
                 builder->merge_entries(root,child_node->code_entries);               
             }
             root->label_entry=root->children[0]->label_entry;
+            if(root->children[0]->token=="LITERAL")
+            root->token = root->children[0]->token;
         }
         else if(root->val=="IfThenStatement")
         {
