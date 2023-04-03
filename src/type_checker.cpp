@@ -444,6 +444,11 @@ public:
                 }            
                 if(child_node->token=="IDENTIFIER")
                 {
+                    vector<SymbolEntry*> entry= helper->checkvariable(root->children[0]->lexeme,curr_symtable,root->lineno);
+                    if(entry.size()>0)
+                    {
+                        child_node->type=entry[0]->type;
+                    }
                     identifier1=child_node->identifier;
                 }
                 if(child_node->val=="Expression")
@@ -465,6 +470,11 @@ public:
                 {
                     identifier1=child_node->identifier;
                     array_dims=child_node->dims;
+                    SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
+                    if(entry)
+                    {
+                        child_node->type=entry->type;
+                    }
                 }     
                 if(child_node-> val == "FieldAccess" || child_node->val=="ExpressionName")
                 {
@@ -967,7 +977,12 @@ public:
                 build(child_node);
                 if( child_node->token == "IDENTIFIER" )
                 {
-                   type1=child_node->type;
+                    vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    if(entry.size()>0)
+                    {
+                        type1=entry[0]->type;
+                        child_node->type=type1;
+                    }
                 //    cout << "Identifier *= " << type1 << endl;
                 }
                 if( child_node->val == "ExpressionName" )
@@ -980,7 +995,12 @@ public:
                 }
                 if( child_node->val == "ArrayAccess" )
                 {
-                   type1=child_node->type;
+                    SymbolEntry* entry= helper->checkarray(child_node->identifier,child_node->dims,curr_symtable,root->lineno);
+                    if(entry)
+                    {
+                        child_node->type=entry->type;
+                    }
+                    type1=child_node->type;
                 }
                 if( child_node->val == "Expression" )
                 {
@@ -1133,11 +1153,20 @@ public:
         {
             string identifier="";
             int array_dims= 0;
+            string type="";
             for(auto child_node: root-> children)
             {
                 build(child_node);  
                 if(child_node->token=="IDENTIFIER")
+                {
                     identifier=child_node->identifier;
+                    // vector<SymbolEntry*> entry= helper->checkvariable(child_node->lexeme,curr_symtable,root->lineno);
+                    // if(entry.size()>0)
+                    // {
+                    //     type=entry[0]->type;
+                    //     child_node->type=type;
+                    // }
+                }
                 if(child_node->val=="Expression")
                 {
                     array_dims++;
