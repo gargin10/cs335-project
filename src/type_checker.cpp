@@ -203,6 +203,7 @@ public:
             if(entry)
             {
                 entry -> offset = offset;
+                root -> sym_entry= entry;
             }
             // SymbolEntry* entry = new SymbolEntry("IDENTIFIER", identifier_method);
             // entry->type=method_type;
@@ -1250,6 +1251,7 @@ public:
                         // cout<<"here 1"<<endl;
                         if(root->children[0]->children[3]->arguments_type.size()>=2)
                             helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect number of arguments in print function call");
+                        root->children[0]->identifier="System.out.print";
                         return;
                     }
                 }
@@ -1293,9 +1295,9 @@ public:
                 {
                     arguments_type.push_back(child_node->type);
                 }
-                if(child_node->val=="ArgumentList"){
-                    arguments_type.insert(arguments_type.end(),child_node->arguments_type.begin(),child_node->arguments_type.end());
-                }
+                // if(child_node->val=="ArgumentList"){
+                //     arguments_type.insert(arguments_type.end(),child_node->arguments_type.begin(),child_node->arguments_type.end());
+                // }
             }
             root->arguments_type=arguments_type;
         }
@@ -1333,7 +1335,9 @@ public:
                     exp_type=entry->type;
                 // cout<<"here2 "<< exp_type<<endl;
                 root->type=exp_type;
-                root->identifier=left_node->identifier + "." + right_node->identifier;
+                // root->identifier=left_node->identifier + "." + right_node->identifier;
+                root->identifier=left_node->identifier;
+
             }
             else
             {
@@ -1365,8 +1369,10 @@ public:
                     exp_type=entry->type;
                 // cout<<"here2 "<< exp_type<<endl;
                 root->type=exp_type;
-                root->identifier=left_node->identifier + "." + right_node->identifier;
+                // root->identifier=left_node->identifier + "." + right_node->identifier;
+                root->identifier=left_node->identifier;            
             }
+            cout<<root->identifier<<endl;
         }
         else if(root->val=="FieldAccess" || root->val == "ExpressionName")
         {

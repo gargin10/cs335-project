@@ -315,6 +315,9 @@ public:
                     // assign_used = child_node->assign;
                     arguments_type = child_node->arguments_type; 
                 }
+                if( validmodifiers.find(child_node->lexeme)!=validmodifiers.end() ){
+                    modifiers.push_back(child_node->lexeme);
+                }
             }
             // if( arguments_type.size() > 0 ){
             //     if( ! helper->castit( arguments_type[0], field_type) ){

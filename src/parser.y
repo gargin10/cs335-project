@@ -1919,8 +1919,11 @@ ArgumentList:
                     $$=createNode( "ArgumentList", v );
                 } 
 |   ArgumentList COMMA Expression {
-                        vector<Node*> v{$1,$3};
-                        $$=createNode( "ArgumentList", v );
+                        // vector<Node*> v{$1,$3};
+                        // $$=createNode( "ArgumentList", v );
+                        vector<Node*> v{$1->children};
+                        v.insert(v.end(),$3);
+                        $$=createNode("ArgumentList",v);
                     }
     
 MethodReference: 

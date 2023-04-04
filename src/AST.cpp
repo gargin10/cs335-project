@@ -29,6 +29,8 @@ struct Node{
     bool expression_new_used = false;
     string tempval="";
     vector<Node*> children;
+    SymbolEntry* sym_entry;
+    int size=0;
 };
 
 string curr_file="";

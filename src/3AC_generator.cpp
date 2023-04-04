@@ -49,7 +49,7 @@ public:
     }
 
     int getsize(string type){
-        if(type=="INT" || type=="FLOAT")
+        if(type=="INT" || type=="FLOAT" || type =="BYTE")
             return 4;
         else if(type=="DOUBLE" || type=="LONG")
             return 8;
@@ -57,7 +57,9 @@ public:
             return 1;
         else if(type=="BOOLEAN")
             return 1;
-        return 4;
+        else if(type=="VOID")
+            return 0;
+        return 8;
     }
     void set_break_gotos(Node* node, string label)
     {
@@ -89,44 +91,121 @@ public:
         }
         else if(root->val=="MethodDeclaration" || root->val=="ConstructorDeclaration")
         {
-            Node* methodDeclarator;
             root->label_entry=root->identifier;
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->arg1=root->label_entry;
             entry->type="label";
             root->code_entries.push_back(entry);
+            root->size = getsize(root->children[0]->lexeme);
+            Node* block;
             for(auto child_node: root-> children)
             {
+                if(child_node->val == "Block")
+                {
+                    block=child_node;
+                    continue;
+                }
+                child_node->size=root->size;
                 build(child_node);
-                builder->merge_entries(root,child_node->code_entries);               
+                builder->merge_entries(root,child_node->code_entries); 
+                root->size = child_node->size;
             }
+            
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "stack";
+            entry->arg1 = "push";
+            entry->arg2 = "ebp";
+            entry->comment ="// Push base pointer to the stack";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="sub";
+            entry->arg2="stackpointer";
+            entry->arg3="8";
+            entry->comment ="// Allocate space in stack for base pointer";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->arg1="stackpointer";
+            entry->arg2="basepointer";
+            entry->comment ="// Update the base pointer to the current stack pointer";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="sub";
+            entry->arg2="stackpointer";
+            entry->arg3=to_string(root->sym_entry->offset);
+            entry->comment ="// Allocate space in stack for the local variables";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="sub";
+            entry->arg2="stackpointer";
+            entry->arg3="size(saved_registers)";
+            entry->comment ="// Allocate space in stack for saved registers";
+            root->code_entries.push_back(entry);
+
+            build(block);
+            builder->merge_entries(root,block->code_entries);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->arg1="basepointer";
+            entry->arg2="stackpointer";
+            entry->comment ="// Restore the stack pointer to the callee base pointer";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="add";
+            entry->arg2="stackpointer";
+            entry->arg3="8";
+            entry->comment ="// Pop the base pointer pushed to the stack";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="ret";
+            entry->comment ="// Return instruction to the saved return address";
+            root->code_entries.push_back(entry);
+
             set_method_file(class_scope+"."+root->identifier);
             builder->display(root,method_file);
             root->code_entries.clear();
         }
-        else if(root->val == "FormalParameter")
+        else if(root->val == "MethodDeclarator")
         {
-            Node* node;
             for(auto child_node: root-> children)
             {
-                build(child_node);         
-                if(child_node->val=="VariableDeclaratorId")    
-                {
-                    node=child_node;
-                } 
+                child_node->size = root ->size;
+                build(child_node);
+                builder->merge_entries(root,child_node->code_entries); 
+                root->size = child_node->size;
             }
-            string temp = generatetemp();
+        }
+        else if(root->val == "FormalParameter")
+        {
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+            }
+            root->size += getsize(root->type);
+            // string temp = generatetemp();
+            // ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            // entry->arg1=temp;
+            // entry->arg2="PopParameter";
+
+            // root->code_entries.push_back(entry);
+
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
-            entry->arg1=temp;
-            entry->arg2="PopParameter";
-
+            entry->arg1=root->children[1]->label_entry;
+            entry->arg2="load";
+            entry->arg3=to_string(root->size)+"(sp)";
+            entry->comment="// Load parameter from the caller saved stack address";
             root->code_entries.push_back(entry);
 
-            entry= new ThreeAddressCodeEntry();
-            entry->arg1=node->label_entry;
-            entry->arg2=temp;
-
-            root->code_entries.push_back(entry);
         }
         else if(root->val=="VariableDeclaratorId")
         {
@@ -608,21 +687,35 @@ public:
         }
         else if(root->val=="ArgumentList")
         {
+            reverse(root->children.begin(),root->children.end());
             Node* expression;
             for(auto child_node: root-> children)
             {
                 build(child_node);
                 builder->merge_entries(root,child_node->code_entries);
                 if(child_node->val=="Expression")
-                    expression=child_node;               
+                {
+                    expression=child_node; 
+                    ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+                    entry->type="param";
+                    entry->arg1="push";
+                    entry->arg2=expression->label_entry;
+                    entry->comment =" // Push formal parameter to the stack";
+                    root->code_entries.push_back(entry);
+
+                    int size = getsize(expression->type);
+                    // cout<< expression->type<<endl;
+                    entry= new ThreeAddressCodeEntry();
+                    entry->type="stack";
+                    entry->arg1="sub";
+                    entry->arg2="stackpointer";
+                    entry->arg3=to_string(size);
+                    entry->comment =" // Decrement stack pointer by size of variable";
+                    root->code_entries.push_back(entry);
+
+                    root->size +=size;
+                }            
             }
-
-            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
-            entry->type="param";
-            entry->arg1="pushparam";
-            entry->arg2=expression->label_entry;
-
-            root->code_entries.push_back(entry);
         }
         else if(root->val=="MethodInvocation")
         {
@@ -630,32 +723,86 @@ public:
             {
                 build(child_node);
                 builder->merge_entries(root,child_node->code_entries);
+                if(child_node->val == "ArgumentList")
+                    root->size = child_node->size;
+                if(child_node->val == ".")
+                    root->size = child_node->size;
             }
             root->label_entry=root->identifier;
 
             if(root->children[0]->val==".")
             {
                 root->label_entry=root->children[0]->label_entry;
+
+                ThreeAddressCodeEntry*  entry= new ThreeAddressCodeEntry();
+                entry->type="param";
+                entry->arg1="push";
+                entry->arg2="*"+root->children[0]->identifier;
+                entry->comment =" // Push object address to the stack";
+                root->code_entries.push_back(entry);
+
+                entry= new ThreeAddressCodeEntry();
+                entry->type="stack";
+                entry->arg1="sub";
+                entry->arg2="stackpointer";
+                entry->arg3="8";
+                entry->comment ="// Allocate space in stack for object address pointer";
+                root->code_entries.push_back(entry);
+                root->size+=8;
             }
-            string temp=generatetemp();
+            cout<< root->type<<endl;
+
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="sub";
+            entry->arg2="stackpointer";
+            entry->arg3=to_string(getsize(root->type));
+            entry->comment ="// Allocate space in stack for return value";
+            root->code_entries.push_back(entry);
+            root->size+=getsize(root->type);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="push";
+            entry->arg2="*ra";
+            entry->comment =" // Push return address to the stack";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="sub";
+            entry->arg2="stackpointer";
+            entry->arg3="8";
+            entry->comment ="// Allocate space in stack for return address pointer";
+            root->code_entries.push_back(entry);
+            root->size+=8;
+
+            entry= new ThreeAddressCodeEntry();
             entry->type="param";
             entry->arg1="CALL";
             entry->arg2=root->label_entry;
-
             root->code_entries.push_back(entry);
 
+            string temp=generatetemp();
             entry= new ThreeAddressCodeEntry();
             entry->arg1=temp;
-            entry->arg2="PopParameter";
-
+            entry->arg2="load";
+            entry->arg3="8(sp)";
             root->code_entries.push_back(entry);
+
+            // entry= new ThreeAddressCodeEntry();
+            // entry->type="param";
+            // entry->arg1="PopParameters";
+            // root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="param";
-            entry->arg1="PopParameters";
-
+            entry->type="stack";
+            entry->arg1="add";
+            entry->arg2="stackpointer";
+            entry->arg3=to_string(root->size);
+            entry->comment ="// Restore the stack before function call";
             root->code_entries.push_back(entry);
+
             root->label_entry=temp;
         }
         else if(root->val=="ReturnStatement")
@@ -668,11 +815,18 @@ public:
                     expression=child_node;
             }
 
-            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
-            entry->type="param";
-            entry->arg1="pushparam";
-            entry->arg2=expression->label_entry;
+            // ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            // entry->type="param";
+            // entry->arg1="pushparam";
+            // entry->arg2=expression->label_entry;
+            // root->code_entries.push_back(entry);
 
+            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="store";
+            entry->arg2=to_string(8+getsize(expression->type)) +"(basepointer)";
+            entry->arg3=expression->label_entry;
+            entry->comment="// Store the returned value at the return address";
             root->code_entries.push_back(entry);
         }
         else if(root->val=="PostIncrementExpression"|| root->val=="PostDecrementExpression")
@@ -936,6 +1090,8 @@ public:
             for(auto child_node: root-> children)
             {
                 build(child_node); 
+                if(child_node->val == "ArgumentList")
+                    root->size = child_node->size;
             }
             object_access=root->children[0];
             object_field=root->children[1];
