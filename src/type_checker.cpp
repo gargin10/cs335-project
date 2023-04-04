@@ -141,6 +141,7 @@ public:
             curr_symtable->table_type="class";
             curr_symtable->line_number=root->lineno;
             curr_class=curr_symtable->scope;
+            ((curr_symtable->parent->entries)[curr_symtable->scope][0])->symtab = curr_symtable;
             // curr_symtable->children.clear();
 
             string identifier_class="";
@@ -297,6 +298,7 @@ public:
         {
             string identifier="";
             string field_type="";
+            SymbolTable* symtab= NULL;
             int field_type_dims= 0;
             bool new_used = false;
             // bool assign_used = false;
@@ -334,6 +336,23 @@ public:
                     helper->throwerror("line number "+to_string(root->lineno)+": Incompatible conversion from "+arguments_type[1]+" to "+field_type);
                 } 
             }
+            // want symboltable of class field_type for object invocation
+            SymbolTable* temp = curr_symtable;
+            auto m =temp->entries;
+            while(temp)
+            {
+                m =temp->entries;
+                if(m.find(field_type)!=m.end()) break;
+                temp=temp->parent;
+            }
+            if(m.find(field_type)!=m.end()){
+                vector<SymbolEntry*> entries = m[field_type];
+                for( auto entry : entries ){
+                    if( entry->type != "class" ) continue;
+                    symtab = entry->symtab;
+                    break;
+                }
+            }
             for(auto [ele_identifier, ele_dims,ele_type, ele_assign ]: identifier_type_list)
             {
                 // cout << "1" << ele_identifier << " " << ele_type << " " << ele_assign << " " << field_type << ""<<new_used<<endl;
@@ -344,6 +363,7 @@ public:
                     SymbolEntry* entry = new SymbolEntry("OBJECT", ele_identifier);
                     entry->type=field_type;
                     entry->modifiers=modifiers;
+                    entry->symtab = symtab;
                     if(ele_dims>0)
                     {
                         entry->entry_type="objectarray";
@@ -370,6 +390,7 @@ public:
                     SymbolEntry* entry = new SymbolEntry("IDENTIFIER", ele_identifier);
                     entry->type=field_type;
                     entry->modifiers=modifiers;
+                    entry->symtab = symtab;
                     // cout << field_type << endl;
                     if(ele_dims>0)
                     {
@@ -1380,6 +1401,14 @@ public:
                         object_type=entries[0]->type;
                         left_node->type=object_type;
                     }
+                    vector<SymbolEntry*> modifier_entries = curr_symtable->lookup(left_node->lexeme); // symtable->display();
+                    assert(modifier_entries.size()>0);
+                    assert(modifier_entries[0]->symtab != NULL);
+                    vector<SymbolEntry*> ents = modifier_entries[0]->symtab->entries[right_node->lexeme];
+                    assert(ents.size()>0);
+                    for( auto modifier : ents[0]->modifiers ){
+                        if( modifier == "PRIVATE" ) helper->throwerror("Line number: "+to_string(root->lineno)+" Variable declared as private cannot be accessed outside the class.");
+                    }
                 }
                 SymbolEntry* entry= helper->checkfieldaccess(object_type,right_node->identifier,curr_symtable,root->lineno);
                 if(entry)
@@ -1412,6 +1441,14 @@ public:
                     {
                         object_type=entries[0]->type;
                         left_node->type=object_type;
+                    }
+                    vector<SymbolEntry*> modifier_entries = curr_symtable->lookup(left_node->lexeme);
+                    assert(modifier_entries.size()>0);
+                    assert(modifier_entries[0]->symtab != NULL);
+                    vector<SymbolEntry*> ents = modifier_entries[0]->symtab->entries[right_node->lexeme];
+                    assert(ents.size()>0);
+                    for( auto modifier : ents[0]->modifiers ){
+                        if( modifier == "PRIVATE" ) helper->throwerror("Line number: "+to_string(root->lineno)+" Method declared as private cannot be accessed outside the class.");
                     }
                 }
                 // cout<<"here3"<<endl;

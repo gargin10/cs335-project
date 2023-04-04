@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdio>
 #include <vector>
+#include "SymbolTable.h"
 using namespace std;
 
 
@@ -20,6 +21,7 @@ public:
     int line_number=0;
     int size=0;
     int offset=0;
+    SymbolTable* symtab;
 
     int no_arguments=0;
     vector<string> type_arguments;
@@ -37,6 +39,7 @@ public:
         temp=false;
         entry_type="variable";
         hash_key="";
+        symtab = NULL;
     }
 
     SymbolEntry(string token, string lexeme)
@@ -50,6 +53,7 @@ public:
         this->temp=false;
         entry_type="variable";
         hash_key="";
+        symtab=NULL;
     }
 
     string hash() 

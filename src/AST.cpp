@@ -18,7 +18,7 @@ struct Node{
     vector<tuple<string,int,string,bool>> identifier_type_list;
     vector<string> arguments_type; // also, used for storing 2 types of ternary operator
     string identifier="";
-    SymbolTable* symtable;
+    SymbolTable* symtable = NULL;
     vector<ThreeAddressCodeEntry*> code_entries;
     string label_entry="";
     vector<int> array_dims;
@@ -27,6 +27,7 @@ struct Node{
     // bool definite_literal_used = true;
     // bool assign=false;
     bool expression_new_used = false;
+    string access_modifier="";
     string tempval="";
     vector<Node*> children;
     SymbolEntry* sym_entry;
