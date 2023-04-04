@@ -213,6 +213,7 @@ public:
             // addEntry(entry, root->lineno);
 
             root->identifier=identifier_method;
+            root->type = method_type;
         }
         else if(strcmp(root->val,"{")==0)
         {

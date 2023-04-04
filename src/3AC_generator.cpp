@@ -83,7 +83,15 @@ public:
         curr_symtable=root->symtable;
         if(root->val=="NormalClassDeclaration")
         {
+            co_temps = 0;
             class_scope=root->identifier;
+            root->label_entry=root->identifier;
+            
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            entry->arg1=root->label_entry;
+            entry->type="label";
+            root->code_entries.push_back(entry);
+
             for(auto child_node: root-> children)
             {
                 build(child_node); 
@@ -92,12 +100,28 @@ public:
         }
         else if(root->val=="MethodDeclaration" || root->val=="ConstructorDeclaration")
         {
+            co_temps = 0;
             root->label_entry=root->identifier;
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->arg1=root->label_entry;
             entry->type="label";
             root->code_entries.push_back(entry);
-            root->size = getsize(root->children[0]->lexeme);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "stack";
+            entry->arg1 = "beginfunc";
+            root->code_entries.push_back(entry);
+
+            root->size = 16 + getsize(root->type);
+
+            string temp = generatetemp();
+            entry = new ThreeAddressCodeEntry();
+            entry->arg1 = temp ;
+            entry->arg2 = "load";
+            entry->arg3 = to_string(root->size)+"(stackpointer)";
+            entry->comment ="// Get object reference, implicit this pointer";
+            root->code_entries.push_back(entry);
+
             Node* block;
             for(auto child_node: root-> children)
             {
@@ -111,21 +135,21 @@ public:
                 builder->merge_entries(root,child_node->code_entries); 
                 root->size = child_node->size;
             }
-            
+
             entry = new ThreeAddressCodeEntry();
             entry->type = "stack";
             entry->arg1 = "push";
-            entry->arg2 = "ebp";
+            entry->arg2 = "basepointer";
             entry->comment ="// Push base pointer to the stack";
             root->code_entries.push_back(entry);
 
-            entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
-            entry->arg1="sub";
-            entry->arg2="stackpointer";
-            entry->arg3="8";
-            entry->comment ="// Allocate space in stack for base pointer";
-            root->code_entries.push_back(entry);
+            // entry= new ThreeAddressCodeEntry();
+            // entry->type="stack";
+            // entry->arg1="sub";
+            // entry->arg2="stackpointer";
+            // entry->arg3="8";
+            // entry->comment ="// Allocate space in stack for base pointer";
+            // root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
             entry->arg1="stackpointer";
@@ -170,6 +194,11 @@ public:
             entry->type="stack";
             entry->arg1="return";
             entry->comment ="// Return instruction to the saved return address";
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "stack";
+            entry->arg1 = "endfunc";
             root->code_entries.push_back(entry);
 
             // set_method_file(class_scope+"."+root->identifier);
@@ -707,13 +736,13 @@ public:
 
                     int size = getsize(expression->type);
                     // cout<< expression->type<<endl;
-                    entry= new ThreeAddressCodeEntry();
-                    entry->type="stack";
-                    entry->arg1="sub";
-                    entry->arg2="stackpointer";
-                    entry->arg3=to_string(size);
-                    entry->comment =" // Decrement stack pointer by size of variable";
-                    root->code_entries.push_back(entry);
+                    // entry= new ThreeAddressCodeEntry();
+                    // entry->type="stack";
+                    // entry->arg1="sub";
+                    // entry->arg2="stackpointer";
+                    // entry->arg3=to_string(size);
+                    // entry->comment =" // Decrement stack pointer by size of variable";
+                    // root->code_entries.push_back(entry);
 
                     root->size +=size;
                 }            
@@ -755,12 +784,12 @@ public:
 
             // cout<< root->type<<endl;
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
-            entry->arg1="sub";
-            entry->arg2="stackpointer";
-            entry->arg3="8";
-            entry->comment ="// Allocate space in stack for object address pointer";
-            root->code_entries.push_back(entry);
+            // entry->type="stack";
+            // entry->arg1="sub";
+            // entry->arg2="stackpointer";
+            // entry->arg3="8";
+            // entry->comment ="// Allocate space in stack for object address pointer";
+            // root->code_entries.push_back(entry);
             root->size+=8;
             int return_size = getsize(root->type);
 
@@ -1007,12 +1036,6 @@ public:
         }
         else if(root->val=="UnqualifiedClassInstanceCreationExpression")
         {
-            Node* node1;
-            for(auto child_node: root-> children)
-            {
-                build(child_node);
-                builder->merge_entries(root,child_node->code_entries);
-            }
             Node* node2=root->children[1];
 
             string size_temp=generatetemp();
@@ -1021,13 +1044,137 @@ public:
             entry->arg2="size_of_"+node2->lexeme;
             root->code_entries.push_back(entry);
 
-            string temp=generatetemp();
-            entry = new ThreeAddressCodeEntry();
-            entry->arg1=temp;
-            entry->arg2="alloc_memory";
-            entry->arg3=size_temp;
+            entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="push";
+            entry->arg2=size_temp;
+            entry->comment =" // Push formal parameter to the stack";
+            root->code_entries.push_back(entry); 
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="sub";
+            entry->arg2="stackpointer";
+            entry->arg3=to_string(8);
+            entry->comment ="// Allocate space in stack for return value";
             root->code_entries.push_back(entry);
 
+            entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="push";
+            entry->arg2="*ra";
+            entry->comment =" // Push return address to the stack";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="CALL";
+            entry->arg2="allocmemory";
+            entry->arg3="1";
+            root->code_entries.push_back(entry);
+
+            string temp=generatetemp();
+            entry= new ThreeAddressCodeEntry();
+            entry->arg1=temp;
+            entry->arg2="load";
+            entry->arg3=to_string(16)+"(stackpointer)";
+            root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="add";
+            entry->arg2="stackpointer";
+            entry->arg3=to_string(20);
+            entry->comment ="// Restore the stack after function call";
+            root->code_entries.push_back(entry);
+
+            // string temp=generatetemp();
+            // entry = new ThreeAddressCodeEntry();
+            // entry->arg1=temp;
+            // entry->arg2="alloc_memory";
+            // entry->arg3=size_temp;
+            // root->code_entries.push_back(entry);
+
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                if(child_node->val == "ArgumentList")
+                    root->size = child_node->size;
+                builder->merge_entries(root,child_node->code_entries);
+            }
+
+            root->label_entry=root->identifier;
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="push";
+            entry->arg2=temp;
+            entry->comment =" // Push curr class object address to the stack";
+            root->code_entries.push_back(entry); 
+
+
+            // cout<< root->type<<endl;
+            // ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            // entry->type="stack";
+            // entry->arg1="sub";
+            // entry->arg2="stackpointer";
+            // entry->arg3="8";
+            // entry->comment ="// Allocate space in stack for object address pointer";
+            // root->code_entries.push_back(entry);
+            root->size+=8;
+            int return_size = getsize(root->type);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="sub";
+            entry->arg2="stackpointer";
+            entry->arg3=to_string(return_size);
+            entry->comment ="// Allocate space in stack for return value";
+            root->code_entries.push_back(entry);
+            root->size+= return_size;
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="push";
+            entry->arg2="*ra";
+            entry->comment =" // Push return address to the stack";
+            root->code_entries.push_back(entry);
+
+            // entry= new ThreeAddressCodeEntry();
+            // entry->type="stack";
+            // entry->arg1="sub";
+            // entry->arg2="stackpointer";
+            // entry->arg3="8";
+            // entry->comment ="// Allocate space in stack for return address pointer";
+            // root->code_entries.push_back(entry);
+            root->size+=8;
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="param";
+            entry->arg1="CALL";
+            entry->arg2=root->label_entry;
+            root->code_entries.push_back(entry);
+
+            temp=generatetemp();
+            entry= new ThreeAddressCodeEntry();
+            entry->arg1=temp;
+            entry->arg2="load";
+            entry->arg3=to_string(8+return_size)+"(stackpointer)";
+            root->code_entries.push_back(entry);
+
+            // entry= new ThreeAddressCodeEntry();
+            // entry->type="param";
+            // entry->arg1="PopParameters";
+            // root->code_entries.push_back(entry);
+
+            entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="add";
+            entry->arg2="stackpointer";
+            entry->arg3=to_string(root->size);
+            entry->comment ="// Restore the stack after function call";
+            root->code_entries.push_back(entry);
+            
             root->label_entry=temp;
         }
         else if(root->val=="DimExprs")
