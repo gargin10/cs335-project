@@ -2657,9 +2657,9 @@ int main(int argc, char *argv[]) {
     builder->build(root); 
     display(builder->curr_symtable);
 
-    // ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
-    // generator->build(root);
-    // generator->builder->display(root,output_file_name);
+    ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
+    generator->build(root);
+    generator->builder->display(root,output_file_name);
     
     fclose(yyin);
     return 0;

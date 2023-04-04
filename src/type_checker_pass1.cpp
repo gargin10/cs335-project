@@ -18,7 +18,7 @@ public:
     SymbolTable* curr_symtable;
     SymbolTable* prev_symtable;
     Helper* helper;
-    int offset=0;
+    int offset=0, class_offset = 0;
     SymbolTableBuilder1(Helper* helper)
     {
         createValidTypes();
@@ -77,15 +77,18 @@ public:
     void addEntry(SymbolEntry* entry, int line_number)
     {
         assert(curr_symtable!=NULL);
-        entry->size=type_to_size(entry->type);
+        if(entry->type != "class")
+            entry->size=type_to_size(entry->type);
         entry->line_number=line_number;
         if(entry->entry_type == "array")
             entry->size=8;
-        if(entry->entry_type!="method"&& entry->entry_type!="class")
+        if(entry->entry_type!="method"&& entry->type!="class")
         {
-            entry->offset=offset;
-            offset+=entry->size;
+            entry->offset=class_offset;
+            class_offset+=entry->size;
         }
+        // if(entry->type=="class" || entry->entry_type != "method")
+        //     cout<<entry->lexeme<<" "<<entry->offset<<" "<<entry->size<<endl;
         curr_symtable->insert(entry);
     }
     void createValidTypes()
@@ -117,7 +120,7 @@ public:
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
-            offset=0;
+            // offset=0;
             curr_symtable -> setParent(prev_symtable);
             root->symtable=curr_symtable;
             for(auto child_node: root-> children)
@@ -131,7 +134,7 @@ public:
 
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
-            offset=0;
+            class_offset=0;
             curr_symtable -> setParent(prev_symtable);
             root->symtable=curr_symtable;
             SymbolTable *thissymtable = curr_symtable;
@@ -153,10 +156,12 @@ public:
             helper->class_fields[curr_symtable->scope]=curr_symtable;
             helper->class_methods[curr_symtable->scope]=curr_symtable;
             curr_symtable = curr_symtable -> parent;
-
+            
             SymbolEntry* entry = new SymbolEntry("CLASS", identifier_class);
             entry->type="class";
             entry->modifiers=modifiers;
+            entry->size=class_offset;
+            entry->offset=class_offset;
             addEntry(entry, root->lineno);
             root->identifier=identifier_class;
         }
@@ -164,7 +169,7 @@ public:
         {
             prev_symtable = curr_symtable;
             curr_symtable = new SymbolTable(root->val);
-            offset=0;
+            // offset=0;
             curr_symtable -> setParent(prev_symtable);
 
             string identifier_method="";
@@ -265,7 +270,7 @@ public:
                 entry->no_dimensions=root->dims;
                 entry->token="ARRAY";
             }
-            addEntry(entry, root->lineno);
+            // addEntry(entry, root->lineno);
         }
         else if(root->val=="VariableDeclaratorId")
         {
@@ -356,7 +361,8 @@ public:
                         //    helper->checktypevariable(entry,field_type,root->lineno);
                         }
                     }
-                    addEntry(entry, root->lineno);
+                    if(root->val == "FieldDeclaration")
+                        addEntry(entry, root->lineno);
                 }
             }
         }
