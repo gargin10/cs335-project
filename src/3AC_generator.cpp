@@ -87,6 +87,7 @@ public:
             for(auto child_node: root-> children)
             {
                 build(child_node); 
+                builder->merge_entries(root,child_node->code_entries); 
             }
         }
         else if(root->val=="MethodDeclaration" || root->val=="ConstructorDeclaration")
@@ -167,13 +168,13 @@ public:
 
             entry= new ThreeAddressCodeEntry();
             entry->type="stack";
-            entry->arg1="ret";
+            entry->arg1="return";
             entry->comment ="// Return instruction to the saved return address";
             root->code_entries.push_back(entry);
 
-            set_method_file(class_scope+"."+root->identifier);
-            builder->display(root,method_file);
-            root->code_entries.clear();
+            // set_method_file(class_scope+"."+root->identifier);
+            // builder->display(root,method_file);
+            // root->code_entries.clear();
         }
         else if(root->val == "MethodDeclarator")
         {

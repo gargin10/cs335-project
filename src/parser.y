@@ -2638,9 +2638,9 @@ int main(int argc, char *argv[]) {
         printf("ERROR: No Input file Specified.\n");
         return -1;
     }
-    if( output_file == 0 ) output_file_name = "output.dot";
+    if( output_file == 0 ) output_file_name = "output.3ac";
     yyin = fopen(input_file_name,"r");
-    dotfile = fopen(output_file_name,"w");
+    dotfile = fopen("output.dot","w");
 
     fprintf(dotfile,"digraph {\n");
     yyparse();
@@ -2659,6 +2659,7 @@ int main(int argc, char *argv[]) {
 
     ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
     generator->build(root);
+    generator->builder->display(root,output_file_name);
     
     fclose(yyin);
     return 0;
