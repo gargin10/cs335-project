@@ -342,14 +342,15 @@ public:
         return false;
     }
 
-    bool checkclass(string type, SymbolTable* symtable){
-        vector<SymbolEntry*> entries = symtable->lookup(type);
+    SymbolEntry* checkclass(string type, SymbolTable* symtable, int lineno){
+        vector<SymbolEntry*> entries = symtable->lookupclass(type);
         for( auto entry : entries )
         {
             if( entry->type == "class" ){
-                    return true;
+                    return entry;
             }
         }
-        return false;
+        throwerror("Line number: "+to_string(lineno)+" No such reference type "+type+" found");
+        return NULL;
     }
 };

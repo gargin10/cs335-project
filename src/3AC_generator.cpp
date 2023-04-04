@@ -176,7 +176,7 @@ public:
             // builder->display(root,method_file);
             // root->code_entries.clear();
         }
-        else if(root->val == "MethodDeclarator")
+        else if(root->val == "MethodDeclarator" || root->val == "ConstructorDeclarator")
         {
             for(auto child_node: root-> children)
             {
@@ -741,22 +741,30 @@ public:
                 entry->arg1="push";
                 entry->arg2="*"+root->children[0]->identifier;
                 entry->comment =" // Push object address to the stack";
-                root->code_entries.push_back(entry);
-
-                entry= new ThreeAddressCodeEntry();
-                entry->type="stack";
-                entry->arg1="sub";
-                entry->arg2="stackpointer";
-                entry->arg3="8";
-                entry->comment ="// Allocate space in stack for object address pointer";
-                root->code_entries.push_back(entry);
-                root->size+=8;
+                root->code_entries.push_back(entry); 
             }
-            // cout<< root->type<<endl;
+            else
+            {
+                ThreeAddressCodeEntry*  entry= new ThreeAddressCodeEntry();
+                entry->type="param";
+                entry->arg1="push";
+                entry->arg2="*this";
+                entry->comment =" // Push curr class object address to the stack";
+                root->code_entries.push_back(entry); 
+            }
 
+            // cout<< root->type<<endl;
+            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry->type="stack";
+            entry->arg1="sub";
+            entry->arg2="stackpointer";
+            entry->arg3="8";
+            entry->comment ="// Allocate space in stack for object address pointer";
+            root->code_entries.push_back(entry);
+            root->size+=8;
             int return_size = getsize(root->type);
 
-            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry= new ThreeAddressCodeEntry();
             entry->type="stack";
             entry->arg1="sub";
             entry->arg2="stackpointer";

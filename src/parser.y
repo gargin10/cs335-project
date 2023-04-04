@@ -751,13 +751,13 @@ SimpleTypeName:
 
 ConstructorBody:
     CURLYBRACESTART CURLYBRACEEND {
-                        vector<Node*> v;
-                        $$=createNode( "ConstructorBody",v);
+                        vector<Node*> v{$1,$2};
+                        $$=createNode( "Block",v);
                         $$->lineno=$1->lineno;
                     }
 |   CURLYBRACESTART BlockStatements CURLYBRACEEND {
-                        vector<Node*> v{$2};
-                        $$=createNode( "ConstructorBody",v);
+                        vector<Node*> v{$1,$2,$3};
+                        $$=createNode( "Block",v);
                     }
 |   CURLYBRACESTART ExplicitConstructorInvocation CURLYBRACEEND  {
                         vector<Node*> v{$2};

@@ -401,10 +401,7 @@ public:
                     type = child_node->identifier;
                 }
             }
-            if( !helper->checkclass( type, curr_symtable) )
-            {
-                helper->throwerror("Line number: "+to_string(root->lineno)+" No Reference Type "+type+" found.");
-            }
+            helper->checkclass( type, curr_symtable, root->lineno);
             root->type = type;
             // array of reference type not required to support.
             root->dims = 0;
@@ -573,7 +570,7 @@ public:
             }
             curr_symtable = curr_symtable -> parent;
         }
-        else if(root->val == "Expression" || root->val  == "Statement" || root->val == "UnqualifiedClassInstanceCreationExpression")
+        else if(root->val == "Expression" || root->val  == "Statement")
         {
             string exp_type="";
             int dims=0;
@@ -663,6 +660,32 @@ public:
             root->type=exp_type;
             root->dims=dims;
             // cout << root->expression_new_used << " " << exp_type << endl;
+        }
+        else if(root->val == "UnqualifiedClassInstanceCreationExpression")
+        {
+            string identifier="";
+            vector<string> arguments_type;
+
+            string exp_type="";
+            for(auto child_node: root-> children)
+            {
+                build(child_node);
+                if(child_node->token=="IDENTIFIER")
+                {
+                    identifier=child_node->identifier;
+                    
+                }   
+                if(child_node->val=="ArgumentList")
+                {
+                    arguments_type=child_node->arguments_type;
+                }
+            }
+            root->expression_new_used = true;
+            root->type=identifier;
+            root->identifier=identifier;
+            root->arguments_type=arguments_type;
+
+            SymbolEntry* entry= helper->checkmethod(identifier,arguments_type, curr_symtable,root->lineno);
         }
         // else if( root->val == "Assignment" )
         // {

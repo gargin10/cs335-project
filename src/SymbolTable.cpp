@@ -68,6 +68,22 @@ public:
         return {};
     }
 
+    vector<SymbolEntry*> lookupclass(string lexeme)
+    {
+        SymbolTable* temp= this;
+        while(temp)
+        {
+            auto m =temp->entries;
+            if(m.find(lexeme)!=m.end())
+            {
+                if(m[lexeme][0]->type=="class")
+                return m[lexeme];
+            }
+            temp=temp->parent;
+        }
+        return {};
+    }
+
     void display(std::ofstream& ofs)
     {
         ofs << "Scope : "<< scope <<"\n";
