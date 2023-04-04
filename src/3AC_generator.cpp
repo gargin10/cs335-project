@@ -202,7 +202,7 @@ public:
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
             entry->arg1=root->children[1]->label_entry;
             entry->arg2="load";
-            entry->arg3=to_string(root->size)+"(sp)";
+            entry->arg3=to_string(root->size)+"(stackpointer)";
             entry->comment="// Load parameter from the caller saved stack address";
             root->code_entries.push_back(entry);
 
@@ -219,6 +219,7 @@ public:
             }
             vector<SymbolEntry*> entry= helper->checkvariable(node->identifier,curr_symtable,root->lineno);
             root->label_entry=root->identifier;
+            if(entry.size()>0)
             root->type=entry[0]->type;
         }
         else if(strcmp(root->val,"=")==0)
@@ -750,16 +751,18 @@ public:
                 root->code_entries.push_back(entry);
                 root->size+=8;
             }
-            cout<< root->type<<endl;
+            // cout<< root->type<<endl;
+
+            int return_size = getsize(root->type);
 
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
             entry->type="stack";
             entry->arg1="sub";
             entry->arg2="stackpointer";
-            entry->arg3=to_string(getsize(root->type));
+            entry->arg3=to_string(return_size);
             entry->comment ="// Allocate space in stack for return value";
             root->code_entries.push_back(entry);
-            root->size+=getsize(root->type);
+            root->size+= return_size;
 
             entry= new ThreeAddressCodeEntry();
             entry->type="param";
@@ -787,7 +790,7 @@ public:
             entry= new ThreeAddressCodeEntry();
             entry->arg1=temp;
             entry->arg2="load";
-            entry->arg3="8(sp)";
+            entry->arg3=to_string(8+return_size)+"(stackpointer)";
             root->code_entries.push_back(entry);
 
             // entry= new ThreeAddressCodeEntry();

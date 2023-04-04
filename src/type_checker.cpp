@@ -335,11 +335,30 @@ public:
             }
             for(auto [ele_identifier, ele_dims,ele_type, ele_assign ]: identifier_type_list)
             {
-                // cout << "1" << ele_identifier << " " << ele_type << " " << ele_assign << " " << field_type << endl;
+                // cout << "1" << ele_identifier << " " << ele_type << " " << ele_assign << " " << field_type << ""<<new_used<<endl;
                 // if( ele_type == field_type ) cout << "YES"<< endl;
-                if( field_type != ele_type and validtypes.find(field_type) == validtypes.end() )
+                if(validtypes.find(field_type) == validtypes.end() )
                 {
-                    if( ele_assign ) helper->throwerror("Line number: " +to_string(root->lineno)+ " Type "+field_type+" doesn't match with "+ele_type);
+                    if(ele_type!=field_type && ele_assign ) helper->throwerror("Line number: " +to_string(root->lineno)+ " Type "+field_type+" doesn't match with "+ele_type);
+                    SymbolEntry* entry = new SymbolEntry("OBJECT", ele_identifier);
+                    entry->type=field_type;
+                    entry->modifiers=modifiers;
+                    if(ele_dims>0)
+                    {
+                        entry->entry_type="objectarray";
+                        entry->no_dimensions=ele_dims;
+                        // helper->checktypearrayacess(entry,field_type,root->lineno);
+                        entry->token="OBJECTARRAY";
+                    }
+                    else 
+                    {
+                       if( not new_used )
+                        {
+                           helper->checktypevariable(entry,field_type,root->lineno);
+                        }
+                    }
+                    if(root->val!="FieldDeclaration")
+                        addEntry(entry, root->lineno);
                 } 
                 else 
                 {   
@@ -355,7 +374,7 @@ public:
                     {
                         entry->entry_type="array";
                         entry->no_dimensions=ele_dims;
-                        helper->checktypearrayacess(entry,field_type,root->lineno);
+                        // helper->checktypearrayacess(entry,field_type,root->lineno);
                         entry->token="ARRAY";
                     }
                     else 
@@ -554,7 +573,7 @@ public:
             }
             curr_symtable = curr_symtable -> parent;
         }
-        else if(root->val == "Expression" || root->val  == "Statement")
+        else if(root->val == "Expression" || root->val  == "Statement" || root->val == "UnqualifiedClassInstanceCreationExpression")
         {
             string exp_type="";
             int dims=0;
@@ -630,6 +649,11 @@ public:
                     exp_type = child_node->type;
                     // cout << "EXPERSSION Expression " << exp_type << endl;
                     // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
+                }
+                if(child_node->val == "UnqualifiedClassInstanceCreationExpression")
+                {
+                    exp_type = child_node->type;
+                    new_used=true;
                 }
             }
             if( new_used )
@@ -1372,7 +1396,7 @@ public:
                 // root->identifier=left_node->identifier + "." + right_node->identifier;
                 root->identifier=left_node->identifier;            
             }
-            cout<<root->identifier<<endl;
+            // cout<<root->identifier<<endl;
         }
         else if(root->val=="FieldAccess" || root->val == "ExpressionName")
         {
