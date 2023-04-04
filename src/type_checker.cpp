@@ -1461,7 +1461,8 @@ public:
                 // cout<<"here2 "<< exp_type<<endl;
                 root->type=exp_type;
                 // root->identifier=left_node->identifier + "." + right_node->identifier;
-                root->identifier=left_node->identifier;            
+                root->identifier=left_node->identifier;    
+                root->arguments_type=arguments_type;        
             }
             // cout<<root->identifier<<endl;
         }

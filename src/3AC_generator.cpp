@@ -780,14 +780,21 @@ public:
             entry->arg1 = "PRECALL";
             root->code_entries.push_back(entry);
 
+            int no_params=0;
             for(auto child_node: root-> children)
             {
                 build(child_node);
                 builder->merge_entries(root,child_node->code_entries);
                 if(child_node->val == "ArgumentList")
+                {
                     root->size = child_node->size;
+                    no_params=child_node->arguments_type.size();
+                }
                 if(child_node->val == ".")
+                {
                     root->size = child_node->size;
+                    no_params=child_node->arguments_type.size();
+                }
             }
             root->label_entry=root->identifier;
 
@@ -854,9 +861,10 @@ public:
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="param";
+            entry->type="stack";
             entry->arg1="CALL";
             entry->arg2=root->label_entry;
+            entry->arg3=to_string(no_params);
             root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();
@@ -1166,11 +1174,15 @@ public:
             entry->arg1 = "PRECALL";
             root->code_entries.push_back(entry);
 
+            int no_params=0;
             for(auto child_node: root-> children)
             {
                 build(child_node);
                 if(child_node->val == "ArgumentList")
+                {
                     root->size = child_node->size;
+                    no_params=child_node->arguments_type.size();
+                }
                 builder->merge_entries(root,child_node->code_entries);
             }
 
@@ -1226,9 +1238,10 @@ public:
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="param";
+            entry->type="stack";
             entry->arg1="CALL";
             entry->arg2=root->label_entry;
+            entry->arg3=to_string(no_params);
             root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();
