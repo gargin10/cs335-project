@@ -21,6 +21,8 @@ public:
     int array_size=0;
     string class_scope="";
     string method_file="";
+
+    string currclass_this="";
     ThreeAddressCodeGenerator()
     {
         curr_symtable=NULL;
@@ -126,6 +128,8 @@ public:
             entry->arg3 = to_string(root->size)+"(stackpointer)";
             entry->comment ="// Get object reference, implicit this pointer";
             root->code_entries.push_back(entry);
+
+            currclass_this = temp; //set the this pointer for this function
 
             Node* block;
             for(auto child_node: root-> children)
@@ -1337,11 +1341,20 @@ public:
 
             builder->merge_entries(root,object_access->code_entries);
             builder->merge_entries(root,object_field->code_entries);
+
+            string classname=object_access->label_entry;
+            if(classname.length()>=5 && classname.substr(classname.length()-4,4)=="this")
+                classname="this";
+
+            string object_name=classname;
+            if(object_name=="this")
+                object_name=currclass_this;
+            
             string temp = generatetemp();
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->type="pointer";
             entry->arg1=temp;
-            entry->arg2=object_access->label_entry;
+            entry->arg2=object_name;
             root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();
