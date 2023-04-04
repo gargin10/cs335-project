@@ -686,7 +686,10 @@ public:
             root->identifier=identifier;
             root->arguments_type=arguments_type;
 
-            SymbolEntry* entry= helper->checkmethod(identifier,arguments_type, curr_symtable,root->lineno);
+            if(arguments_type.size()>0)
+                SymbolEntry* entry= helper->checkmethod(identifier,arguments_type, curr_symtable,root->lineno);
+            else
+                SymbolEntry* entry= helper->checkclass(identifier,curr_symtable,root->lineno);
         }
         // else if( root->val == "Assignment" )
         // {
