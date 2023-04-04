@@ -1411,14 +1411,16 @@ public:
                         object_type=entries[0]->type;
                         left_node->type=object_type;
                     }
-                    vector<SymbolEntry*> modifier_entries = curr_symtable->lookup(left_node->lexeme); // symtable->display();
-                    assert(modifier_entries.size()>0);
-                    assert(modifier_entries[0]->symtab != NULL);
-                    vector<SymbolEntry*> ents = modifier_entries[0]->symtab->entries[right_node->lexeme];
-                    assert(ents.size()>0);
-                    for( auto modifier : ents[0]->modifiers ){
-                        if( modifier == "PRIVATE" ) helper->throwerror("Line number: "+to_string(root->lineno)+" Variable declared as private cannot be accessed outside the class.");
-                    }
+                    // vector<SymbolEntry*> modifier_entries = curr_symtable->lookup(left_node->lexeme); // symtable->display();
+                    // if(modifier_entries.size()==0)
+                    //     modifier_entries = curr_symtable->lookupclass(left_node->lexeme);
+                    // assert(modifier_entries.size()>0);
+                    // assert(modifier_entries[0]->symtab != NULL);
+                    // vector<SymbolEntry*> ents = modifier_entries[0]->symtab->entries[right_node->lexeme];
+                    // assert(ents.size()>0);
+                    // for( auto modifier : ents[0]->modifiers ){
+                    //     if( modifier == "PRIVATE" ) helper->throwerror("Line number: "+to_string(root->lineno)+" Variable declared as private cannot be accessed outside the class.");
+                    // }
                 }
                 SymbolEntry* entry= helper->checkfieldaccess(object_type,right_node->identifier,curr_symtable,root->lineno);
                 if(entry)
@@ -1452,14 +1454,16 @@ public:
                         object_type=entries[0]->type;
                         left_node->type=object_type;
                     }
-                    vector<SymbolEntry*> modifier_entries = curr_symtable->lookup(left_node->lexeme);
-                    assert(modifier_entries.size()>0);
-                    assert(modifier_entries[0]->symtab != NULL);
-                    vector<SymbolEntry*> ents = modifier_entries[0]->symtab->entries[right_node->lexeme];
-                    assert(ents.size()>0);
-                    for( auto modifier : ents[0]->modifiers ){
-                        if( modifier == "PRIVATE" ) helper->throwerror("Line number: "+to_string(root->lineno)+" Method declared as private cannot be accessed outside the class.");
-                    }
+                    // vector<SymbolEntry*> modifier_entries = curr_symtable->lookup(left_node->lexeme);
+                    // if(modifier_entries.size()==0)
+                    //     modifier_entries = curr_symtable->lookupclass(left_node->lexeme);
+                    // assert(modifier_entries.size()>0);
+                    // assert(modifier_entries[0]->symtab != NULL);
+                    // vector<SymbolEntry*> ents = modifier_entries[0]->symtab->entries[right_node->lexeme];
+                    // assert(ents.size()>0);
+                    // for( auto modifier : ents[0]->modifiers ){
+                    //     if( modifier == "PRIVATE" ) helper->throwerror("Line number: "+to_string(root->lineno)+" Method declared as private cannot be accessed outside the class.");
+                    // }
                 }
                 // cout<<"here3"<<endl;
                 SymbolEntry* entry= helper->checkmethodaccess(object_type,right_node->identifier,arguments_type,curr_symtable,root->lineno);
