@@ -809,6 +809,12 @@ public:
                             type2=child_node->type;
                         // if( child_node->definite_literal_used == false ) root->definite_literal_used = false;
                     }
+                    if( child_node->val == "MethodInvocation" ){
+                        if(type1=="")
+                            type1=child_node->type;
+                        else
+                            type2=child_node->type;
+                    }
                 }
                 string type = helper->biggertype(type1,type2);
                 if( strcmp(root->val,"/")==0 )
@@ -1327,6 +1333,7 @@ public:
                         if(root->children[0]->children[3]->arguments_type.size()>=2)
                             helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect number of arguments in print function call");
                         root->children[0]->identifier="System.out.print";
+                        build(root->children[0]->children[3]);
                         return;
                     }
                 }
