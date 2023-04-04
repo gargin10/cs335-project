@@ -19,7 +19,9 @@ public:
 
     void output_code_entry(ofstream& ofs)
     {
-        if(this->type=="label")
+        if(this->type == "comment")
+            ofs<<"\t"<<"-----------------"<<this->arg1<<"-----------------";
+        else if(this->type=="label")
             ofs<<this->arg1<<":";
         else if(this->type=="pointer")
             ofs<<"\t*"<<this->arg1<<" = "<<this->arg2;
@@ -35,6 +37,6 @@ public:
             ofs<<"\t"<<this->arg1 << " "<<this->arg2<<" "<< this->arg3;
         else 
             ofs<<"\t"<<this->arg1 << " = "<<this->arg2<<" "<< this->arg3 << " "<< this->arg4;
-        ofs << " "<<this->comment << endl;
+        ofs << "\t\t\t\t"<<this->comment << endl;
     }
 };

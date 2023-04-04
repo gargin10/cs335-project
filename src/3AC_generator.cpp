@@ -114,6 +114,11 @@ public:
 
             root->size = 16 + getsize(root->type);
 
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "PROLOGUE";
+            root->code_entries.push_back(entry);
+
             string temp = generatetemp();
             entry = new ThreeAddressCodeEntry();
             entry->arg1 = temp ;
@@ -173,8 +178,18 @@ public:
             entry->comment ="// Allocate space in stack for saved registers";
             root->code_entries.push_back(entry);
 
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "PROLOGUE";
+            root->code_entries.push_back(entry);
+
             build(block);
             builder->merge_entries(root,block->code_entries);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "EPILOGUE";
+            root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
             entry->arg1="basepointer";
@@ -188,6 +203,11 @@ public:
             entry->arg2="stackpointer";
             entry->arg3="8";
             entry->comment ="// Pop the base pointer pushed to the stack";
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "EPILOGUE";
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
@@ -750,6 +770,12 @@ public:
         }
         else if(root->val=="MethodInvocation")
         {
+
+            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "PRECALL";
+            root->code_entries.push_back(entry);
+
             for(auto child_node: root-> children)
             {
                 build(child_node);
@@ -783,7 +809,7 @@ public:
             }
 
             // cout<< root->type<<endl;
-            ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
+            entry= new ThreeAddressCodeEntry();
             // entry->type="stack";
             // entry->arg1="sub";
             // entry->arg2="stackpointer";
@@ -809,19 +835,29 @@ public:
             entry->comment =" // Push return address to the stack";
             root->code_entries.push_back(entry);
 
-            entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
-            entry->arg1="sub";
-            entry->arg2="stackpointer";
-            entry->arg3="8";
-            entry->comment ="// Allocate space in stack for return address pointer";
-            root->code_entries.push_back(entry);
+            // entry= new ThreeAddressCodeEntry();
+            // entry->type="stack";
+            // entry->arg1="sub";
+            // entry->arg2="stackpointer";
+            // entry->arg3="8";
+            // entry->comment ="// Allocate space in stack for return address pointer";
+            // root->code_entries.push_back(entry);
             root->size+=8;
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "PRECALL";
+            root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
             entry->type="param";
             entry->arg1="CALL";
             entry->arg2=root->label_entry;
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "POSTCALL";
             root->code_entries.push_back(entry);
 
             string temp=generatetemp();
@@ -842,6 +878,11 @@ public:
             entry->arg2="stackpointer";
             entry->arg3=to_string(root->size);
             entry->comment ="// Restore the stack before function call";
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "POSTCALL";
             root->code_entries.push_back(entry);
 
             root->label_entry=temp;
@@ -1044,6 +1085,11 @@ public:
             entry->arg2="size_of_"+node2->lexeme;
             root->code_entries.push_back(entry);
 
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "PRECALL";
+            root->code_entries.push_back(entry);
+            
             entry= new ThreeAddressCodeEntry();
             entry->type="param";
             entry->arg1="push";
@@ -1066,11 +1112,21 @@ public:
             entry->comment =" // Push return address to the stack";
             root->code_entries.push_back(entry);
 
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "PRECALL";
+            root->code_entries.push_back(entry);
+
             entry= new ThreeAddressCodeEntry();
             entry->type="stack";
             entry->arg1="CALL";
             entry->arg2="allocmemory";
             entry->arg3="1";
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "POSTCALL";
             root->code_entries.push_back(entry);
 
             string temp=generatetemp();
@@ -1088,12 +1144,21 @@ public:
             entry->comment ="// Restore the stack after function call";
             root->code_entries.push_back(entry);
 
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "POSTCALL";
+            root->code_entries.push_back(entry);
             // string temp=generatetemp();
             // entry = new ThreeAddressCodeEntry();
             // entry->arg1=temp;
             // entry->arg2="alloc_memory";
             // entry->arg3=size_temp;
             // root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "PRECALL";
+            root->code_entries.push_back(entry);
 
             for(auto child_node: root-> children)
             {
@@ -1149,10 +1214,20 @@ public:
             // root->code_entries.push_back(entry);
             root->size+=8;
 
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "PRECALL";
+            root->code_entries.push_back(entry);
+
             entry= new ThreeAddressCodeEntry();
             entry->type="param";
             entry->arg1="CALL";
             entry->arg2=root->label_entry;
+            root->code_entries.push_back(entry);
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "POSTCALL";
             root->code_entries.push_back(entry);
 
             temp=generatetemp();
@@ -1174,7 +1249,12 @@ public:
             entry->arg3=to_string(root->size);
             entry->comment ="// Restore the stack after function call";
             root->code_entries.push_back(entry);
-            
+
+            entry = new ThreeAddressCodeEntry();
+            entry->type = "comment";
+            entry->arg1 = "POSTCALL";
+            root->code_entries.push_back(entry);
+
             root->label_entry=temp;
         }
         else if(root->val=="DimExprs")
