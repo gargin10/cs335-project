@@ -630,7 +630,7 @@ FormalParameter:
                         vector<Node*> v{$1,$2};
                         $$=createNode( "FormalParameter",v);
                     }
-|   VariableModifier0 UnannType VariableDeclaratorId {
+|   VariableModifier UnannType VariableDeclaratorId {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "FormalParameter",v);
                     }
@@ -641,7 +641,7 @@ VariableArityParameter:
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "VariableArityParameter",v);
                     }
-|   VariableModifier0 UnannType ELLIPSIS IDENTIFIER {
+|   VariableModifier UnannType ELLIPSIS IDENTIFIER {
                         vector<Node*> v{$1,$2,$3,$4};
                         $$=createNode( "VariableArityParameter",v);
                     }
@@ -1064,7 +1064,7 @@ LocalVariableDeclaration:
                         vector<Node*> v{$1,$2};
                         $$=createNode( "LocalVariableDeclaration", v );
                     }
-|   VariableModifier0 LocalVariableType VariableDeclaratorList {
+|   VariableModifier LocalVariableType VariableDeclaratorList {
                         vector<Node*> v{$1,$2,$3};
                         $$=createNode( "LocalVariableDeclaration", v );
                     }
@@ -2589,10 +2589,10 @@ int main(int argc, char *argv[]) {
         }
         if( !strcmp(argv[i], "--help") ) {
             if( argc > i+1 ){
-                printf("ERROR: No manual entry for ./myASTGenerator%s\n", argv[i+1]);
+                printf("ERROR: No manual entry for ./milestone3%s\n", argv[i+1]);
                 return -1;
             }
-            printf("usage: ./myASTGenerator [options] file\n");
+            printf("usage: ./milestone3 [options] file\n");
             printf("Options:\n");
             printf("--help                To print this message.\n"); 
             printf("--input=<file name>   To specify the input file name.\n");
@@ -2657,9 +2657,9 @@ int main(int argc, char *argv[]) {
     builder->build(root); 
     display(builder->curr_symtable);
 
-    ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
-    generator->build(root);
-    generator->builder->display(root,output_file_name);
+    // ThreeAddressCodeGenerator* generator = new ThreeAddressCodeGenerator();
+    // generator->build(root);
+    // generator->builder->display(root,output_file_name);
     
     fclose(yyin);
     return 0;
