@@ -1082,11 +1082,13 @@ public:
         else if(root->val=="UnqualifiedClassInstanceCreationExpression")
         {
             Node* node2=root->children[1];
+            SymbolEntry* sym_entry = root->sym_entry;
 
             string size_temp=generatetemp();
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->arg1=size_temp;
-            entry->arg2="size_of_"+node2->lexeme;
+            entry->arg2=to_string(sym_entry->size);
+            entry->comment=" // Store the size of the object";
             root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();

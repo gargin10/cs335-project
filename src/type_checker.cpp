@@ -707,10 +707,13 @@ public:
             root->identifier=identifier;
             root->arguments_type=arguments_type;
 
+            SymbolEntry* entry;
             if(arguments_type.size()>0)
-                SymbolEntry* entry= helper->checkmethod(identifier,arguments_type, curr_symtable,root->lineno);
+                entry = helper->checkmethod(identifier,arguments_type, curr_symtable,root->lineno);
             else
-                SymbolEntry* entry= helper->checkclass(identifier,curr_symtable,root->lineno);
+                entry = helper->checkclass(identifier,curr_symtable,root->lineno);
+            entry = helper->checkclass(identifier,curr_symtable,root->lineno);
+            root->sym_entry=entry;
         }
         // else if( root->val == "Assignment" )
         // {
