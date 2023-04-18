@@ -84,8 +84,8 @@ public:
             entry->size=8;
         if(entry->entry_type!="method"&& entry->type!="class")
         {
-            entry->offset=class_offset;
             class_offset+=entry->size;
+            entry->offset=class_offset;
         }
         // if(entry->type=="class" || entry->entry_type != "method")
         //     cout<<entry->lexeme<<" "<<entry->offset<<" "<<entry->size<<endl;

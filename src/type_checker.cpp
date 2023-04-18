@@ -84,8 +84,8 @@ public:
             entry->size=8;
         if(entry->entry_type!="method"&& entry->entry_type!="class")
         {
-            entry->offset=offset;
             offset+=entry->size;
+            entry->offset=offset;
         }
         curr_symtable->insert(entry);
     }
@@ -275,7 +275,8 @@ public:
                 entry->token="ARRAY";
             }
             addEntry(entry, root->lineno);
-            offset = 0;
+            // root -> offset = entry -> offset;
+            // offset = 0;
         }
         else if(root->val=="VariableDeclaratorId")
         {

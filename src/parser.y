@@ -5,6 +5,7 @@
     #include "type_checker.cpp"
     #include "type_checker_pass1.cpp"
     #include "3AC_generator.cpp"
+    #include "codegen.cpp"
     
     extern int lineno;
     FILE* dotfile;
@@ -2661,6 +2662,9 @@ int main(int argc, char *argv[]) {
     generator->build(root);
     generator->builder->display(root,output_file_name);
     
+    CodeGenerator* asm_generator = new CodeGenerator("output.s");
+    asm_generator->generate(root);
+
     fclose(yyin);
     return 0;
 }
