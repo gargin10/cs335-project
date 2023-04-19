@@ -2590,10 +2590,10 @@ int main(int argc, char *argv[]) {
         }
         if( !strcmp(argv[i], "--help") ) {
             if( argc > i+1 ){
-                printf("ERROR: No manual entry for ./milestone3%s\n", argv[i+1]);
+                printf("ERROR: No manual entry for ./milestone4%s\n", argv[i+1]);
                 return -1;
             }
-            printf("usage: ./milestone3 [options] file\n");
+            printf("usage: ./milestone4 [options] file\n");
             printf("Options:\n");
             printf("--help                To print this message.\n"); 
             printf("--input=<file name>   To specify the input file name.\n");

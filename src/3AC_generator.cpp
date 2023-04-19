@@ -10,6 +10,9 @@
 #include <cstdio>
 using namespace std;
 
+map<string, int> func_offset; // Stores total offset of local variables for each function.
+int offset_block_function;  // Calculating total offset for all the local+temp variables inside a block.
+
 class ThreeAddressCodeGenerator {
 
 public:
@@ -55,12 +58,14 @@ public:
             return 4;
         else if(type=="DOUBLE" || type=="LONG")
             return 8;
-        else if(type=="CHAR")
+        else if(type=="CHAR" || type=="BYTE")
             return 1;
         else if(type=="BOOLEAN")
             return 1;
         else if(type=="VOID")
             return 0;
+        else if(type=="SHORT")
+            return 2;
         return 8;
     }
     void set_break_gotos(Node* node, string label)
@@ -121,7 +126,7 @@ public:
             entry->arg1.first = "PROLOGUE";
             root->code_entries.push_back(entry);
 
-            string temp = generatetemp();
+            string temp = generatetemp(); offset_block_function += 4;
             entry = new ThreeAddressCodeEntry();
             entry->arg1.first = temp ;
             entry->arg2.first = "load";
@@ -187,8 +192,12 @@ public:
             entry->arg1.first = "PROLOGUE";
             root->code_entries.push_back(entry);
 
+            offset_block_function = 0;
+
             build(block);
             builder->merge_entries(root,block->code_entries);
+
+            func_offset[root->label_entry] = offset_block_function;
 
             entry = new ThreeAddressCodeEntry();
             entry->type = "comment";
@@ -223,11 +232,13 @@ public:
             entry = new ThreeAddressCodeEntry();
             entry->type = "funcend";
             entry->arg1.first = "endfunc";
+            entry->arg2.first = root->type; // endfunc entry return type in arg2.first
             root->code_entries.push_back(entry);
 
             // set_method_file(class_scope+"."+root->identifier);
             // builder->display(root,method_file);
             // root->code_entries.clear();
+            // func_offset[root->label_entry] = root->sym_entry->offset;
         }
         else if(root->val == "MethodDeclarator" || root->val == "ConstructorDeclarator")
         {
@@ -277,6 +288,9 @@ public:
             root->label_entry=root->identifier;
             if(entry.size()>0)
             root->type=entry[0]->type;
+            if( root->type == "BYTE" || root->type == "SHORT" || root->type == "INT" || root->type == "LONG" || root->type == "BOOLEAN" ){
+                offset_block_function += getsize(root->type);
+            }
         }
         else if(strcmp(root->val,"=")==0)
         {
@@ -291,7 +305,7 @@ public:
             if(node2->type!=node1->type && !(node2->token == "LITERAL" && node2->type == "BYTE" && (node1->type=="INT" ||node1->type =="LONG" || node1->type=="SHORT")))
             {
                 // cout<<node1->type << " "<< node2->token << " "<<node2->type<<endl;
-                string temp=generatetemp();
+                string temp = generatetemp(); offset_block_function += 4;
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=temp;
                 entry->arg2.first="cast_to_"+node1->type;
@@ -346,7 +360,7 @@ public:
             entry2->arg1.first="goto";
             entry2->arg2.first=end_label;
 
-            string temp=generatetemp();
+            string temp=generatetemp(); offset_block_function += 4;
             ThreeAddressCodeEntry* entry3= new ThreeAddressCodeEntry();
             entry3->arg1.first=temp;
             entry3->arg2.first=trueexp->label_entry;
@@ -377,7 +391,7 @@ public:
             if(node2->type!=node1->type && !(node2->token == "LITERAL" && node2->type == "BYTE" && (node1->type=="INT" ||node1->type =="LONG" || node1->type=="SHORT")))
             {
                 // cout<<node1->type << " "<< node2->token << " "<<node2->type<<endl;
-                string temp=generatetemp();
+                string temp=generatetemp(); offset_block_function += 4;
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=temp;
                 entry->arg2.first="cast_to_"+node1->type;
@@ -385,7 +399,7 @@ public:
                 root->code_entries.push_back(entry);
 
                 entry = new ThreeAddressCodeEntry();
-                string label1=generatetemp();
+                string label1=generatetemp(); offset_block_function += 4;
                 entry->arg1.first=label1;
                 entry->arg2.first=temp;
                 root->code_entries.push_back(entry);
@@ -393,14 +407,18 @@ public:
                 entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=node1->label_entry;
                 entry->arg2.first=label1;
-                entry->arg3.first=root->val[0];
+                string op = "";
+                int i = 0;
+                while( root->val[i] != '=' ) op += root->val[i++];
+                // entry->arg3.first=root->val[0];
+                entry->arg3.first=op;
                 entry->arg4.first=node2->label_entry;
                 root->code_entries.push_back(entry);
             }
             else
             {
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-                string label1=generatetemp();
+                string label1=generatetemp(); offset_block_function += 4;
                 entry->arg1.first=label1;
                 entry->arg2.first=node1->label_entry;
 
@@ -409,7 +427,11 @@ public:
                 entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=node1->label_entry;
                 entry->arg2.first=label1;
-                entry->arg3.first=root->val[0];
+                string op = "";
+                int i = 0;
+                while( root->val[i] != '=' ) op += root->val[i++];
+                // entry->arg3.first=root->val[0];
+                entry->arg3.first=op;
                 entry->arg4.first=node2->label_entry;
                 root->code_entries.push_back(entry);
             }      
@@ -427,7 +449,7 @@ public:
                 Node* node=root->children[0];
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
 
-                string label=generatetemp();
+                string label=generatetemp(); offset_block_function += 4;
                 entry->arg1.first=label;
                 entry->arg2.first=root->val;
                 entry->arg3.first=node->label_entry;
@@ -445,7 +467,7 @@ public:
             {
                 // cout<<"Node1: "<<node1->type << "big "<< bigger_type<<endl;
                 
-                string temp=generatetemp();
+                string temp=generatetemp(); offset_block_function += 4;
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=temp;
                 entry->arg2.first="cast_to_"+bigger_type;
@@ -462,7 +484,7 @@ public:
             {
                 // cout<<"Node2: "<<node2->type << "nig "<< bigger_type<<endl;
                 
-                string temp=generatetemp();
+                string temp=generatetemp(); offset_block_function += 4;
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=temp;
                 entry->arg2.first="cast_to_"+bigger_type;
@@ -476,7 +498,7 @@ public:
             }
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
 
-            string label=generatetemp();
+            string label=generatetemp(); offset_block_function += 4;
             entry->arg1.first=label;
             entry->arg2.first=node1->label_entry;
             entry->arg3.first=root->val;
@@ -874,7 +896,7 @@ public:
             entry->arg1.first = "POSTCALL";
             root->code_entries.push_back(entry);
 
-            string temp=generatetemp();
+            string temp=generatetemp(); offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
             entry->arg1.first=temp;
             entry->arg2.first="load";
@@ -934,7 +956,7 @@ public:
             Node* node = root->children[0];
 
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            string label1=generatetemp();
+            string label1=generatetemp(); offset_block_function += 4;
             entry->arg1.first=label1;
             entry->arg2.first=node->label_entry;
 
@@ -958,7 +980,7 @@ public:
             Node* node = root->children[1];
 
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            string label1=generatetemp();
+            string label1=generatetemp(); offset_block_function += 4;
             entry->arg1.first=label1;
             entry->arg2.first=node->label_entry;
 
@@ -1015,7 +1037,7 @@ public:
                 // cout<<"here2"<<endl;
 
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-                string ans=generatetemp();
+                string ans=generatetemp(); offset_block_function += 4;
                 entry->arg1.first=ans;
                 entry->arg2.first=identifier->lexeme;
                 entry->type="pointer";
@@ -1026,7 +1048,7 @@ public:
                 for(int i=0;i<sym_entry->no_dimensions;i++)
                 {
                     entry = new ThreeAddressCodeEntry();
-                    string t2=generatetemp();
+                    string t2=generatetemp(); offset_block_function += 4;
                     entry->arg1.first=t2;
                     entry->arg2.first=root->array_invocation[i];
                     entry->arg3.first="*";
@@ -1043,7 +1065,7 @@ public:
                     if(i<sym_entry->no_dimensions-1)
                     {
                         entry = new ThreeAddressCodeEntry();
-                        string t3=generatetemp();
+                        string t3=generatetemp(); offset_block_function += 4;
                         entry->arg1.first=t3;
                         entry->arg2.first=root->array_invocation[i];
                         entry->arg3.first="*";
@@ -1072,7 +1094,7 @@ public:
             Node* node2=root->children[1];
             int size=getsize(node2->type);
 
-            string size_temp=generatetemp();
+            string size_temp=generatetemp(); offset_block_function += 4;
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->arg1.first=size_temp;
             entry->arg2.first=node1->label_entry;
@@ -1080,7 +1102,7 @@ public:
             entry->arg4.first=to_string(size);
             root->code_entries.push_back(entry);
 
-            string token=generatetemp();
+            string token=generatetemp(); offset_block_function += 4;
             entry = new ThreeAddressCodeEntry();
             entry->arg1.first=token;
             entry->arg2.first="alloc_memory";
@@ -1094,7 +1116,7 @@ public:
             Node* node2=root->children[1];
             SymbolEntry* sym_entry = root->sym_entry;
 
-            string size_temp=generatetemp();
+            string size_temp=generatetemp(); offset_block_function += 4;
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->arg1.first=size_temp;
             entry->arg2.first=to_string(sym_entry->size);
@@ -1145,7 +1167,7 @@ public:
             entry->arg1.first = "POSTCALL";
             root->code_entries.push_back(entry);
 
-            string temp=generatetemp();
+            string temp=generatetemp(); offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
             entry->arg1.first=temp;
             entry->arg2.first="load";
@@ -1251,7 +1273,7 @@ public:
             entry->arg1.first = "POSTCALL";
             root->code_entries.push_back(entry);
 
-            temp=generatetemp();
+            temp=generatetemp(); offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
             entry->arg1.first=temp;
             entry->arg2.first="load";
@@ -1293,7 +1315,7 @@ public:
                 node2=root->children[1];
 
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-                string temp=generatetemp();
+                string temp=generatetemp(); offset_block_function += 4;
                 entry->arg1.first=temp;
                 entry->arg2.first=node1->label_entry;
                 entry->arg3.first="*";
@@ -1306,7 +1328,7 @@ public:
             {
                 node1=root->children[0];
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-                string temp=generatetemp();
+                string temp=generatetemp(); offset_block_function += 4;
                 entry->arg1.first=temp;
                 entry->arg2.first=node1->label_entry;
 
@@ -1325,7 +1347,7 @@ public:
             Node* exp=root->children[1];
             string cast_string="cast_to_"+final_type->lexeme;
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            string temp=generatetemp();
+            string temp=generatetemp(); offset_block_function += 4;
             entry->arg1.first=temp;
             entry->arg2.first=cast_string;
             entry->arg3.first=exp->label_entry;
@@ -1367,7 +1389,7 @@ public:
             if(object_name=="this")
                 object_name=currclass_this;
             
-            string temp = generatetemp();
+            string temp = generatetemp(); offset_block_function += 4;
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->type="pointer";
             entry->arg1.first=temp;
