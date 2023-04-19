@@ -1,5 +1,9 @@
 bool check_literal(string s){
-    if( s[0] >= '1' and s[0] <= '9' ) return true;
+    if( s[0] >= '0' and s[0] <= '9' ) return true;
+    return false;
+}
+bool check_char(string s){
+    if( s[0] == '\'' ) return true;
     return false;
 }
 string getaddr(string arg, ThreeAddressCodeEntry* entry, map<string, set<string>>& address_descriptor, int func_total_offset, int& func_curr_offset){
@@ -23,6 +27,10 @@ string getaddr(string arg, ThreeAddressCodeEntry* entry, map<string, set<string>
         if( check_literal( entry->arg2.first ) ){
             s += '$';
             s += entry->arg2.first;
+        }  else if( check_char( entry->arg2.first ) ){
+            s += '$';
+            s += to_string((int)entry->arg2.first[1]);
+            // cout << s << endl;
         } else {
             if( address_descriptor.find(entry->arg2.first) == address_descriptor.end() ){
                 address_descriptor[entry->arg2.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");

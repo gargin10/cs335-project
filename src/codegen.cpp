@@ -11,17 +11,23 @@ public:
     map<string, set<pair<string, SymbolEntry*>>> reg_desc; // register descriptio
     map<SymbolEntry*, set<string>> addr_desc;   // address description of a variable
     map<string, set<string>> address_descriptor;
+    map<string, map<string, set<string>>> func_addr_desc;
     int func_total_offset = -1; // The total offset for local variables in function.
     int func_curr_offset = -1; // The current offset being specified for local variables at the time of going through the function.
     string latest_conditional_op = "";
+    string var_latest_conditional_op = "";
+    string latest_func_name = "";
     ofstream asm_out;
     int no_callee_params;
     int no_caller_params;
+    int stack_caller_params;
     int callee_params_offset;
+    bool scope_print = 0;
     CodeGenerator(string filename) {
         no_callee_params=0;
         no_caller_params = 0;
         callee_params_offset = 0;
+        stack_caller_params = 0;
         asm_out.open(filename,ios::out | std::ofstream::trunc);
     }
 
@@ -32,23 +38,44 @@ public:
     string get_arg_reg()
     {
         if(no_callee_params == 1)
-            return "%rdi";
+            return "%edi";
         else if(no_callee_params == 2)
-            return "%rsi";
+            return "%esi";
         else if(no_callee_params == 3)
-            return "%rdx";
+            return "%edx";
         else if(no_callee_params == 4)
-            return "%rcx";
+            return "%ecx";
         else if(no_callee_params == 5)
-            return "%r8";
+            return "%r8d";
         else if(no_callee_params == 6)
-            return "%r9";
+            return "%r9d";
+        else 
+            return "stack";
+    }
+    string get_formalparam_reg(ThreeAddressCodeEntry* entry)
+    {
+        int param_index=entry->param_index;
+        if(param_index> 6)
+            param_index-=6;
+        if(param_index == 1)
+            return "%edi";
+        else if(param_index == 2)
+            return "%esi";
+        else if(param_index == 3)
+            return "%edx";
+        else if(param_index == 4)
+            return "%ecx";
+        else if(param_index == 5)
+            return "%r8d";
+        else if(param_index == 6)
+            return "%r9d";
         else 
             return "stack";
     }
     void generate (Node* root)
     {
-        asm_out << "\t" << ".text" << endl;
+        asm_out << ".printint:" << endl;
+        asm_out << "\t" << ".string " << "\"%d \\n\"" << endl;
         for(auto entry: root->code_entries)
         {
             if(entry->type == "")
@@ -70,10 +97,72 @@ public:
             } else if( entry->type == "goto" ){
                 branch_goto(entry);
             }
+            else if(entry->type == "param" || entry ->type == "param_stack")
+            {
+                push_param(entry);
+            }
+            else if (entry->type == "call")
+            {
+                if(entry->arg2.first == "System.out.print" || entry->arg2.first == "System.out.println")
+                {
+                    asm_out << "\t" << "leaq    .printint(%rip), %rax" << endl;
+                    asm_out << "\t" << "movq    %rax, %rdi" << endl;
+                    asm_out << "\t" << "call    " << "printf@PLT" << endl;
+                }
+                else 
+                {
+                    asm_out << "\t" << "call    " << entry->arg2.first << endl;
+                    if(stack_caller_params > 0)
+                        asm_out << "\t" << "addq    " << "$" << to_string(8*stack_caller_params) << ", %rsp" << endl;
+                }
+            }
+            else if (entry->type == "precall")
+            {
+                if(entry -> is_print == 1)
+                    scope_print = 1;
+            }
+            else if (entry->type == "postcall")
+            {
+                if(entry -> is_print == 1)
+                    scope_print = 0;
+            }
+            else if(entry->type == "localvar_allocate")
+            {
+                asm_out << "\tsubq    " << "$" << to_string(64+2*func_total_offset) << ", %rsp" << endl;
+            }
+            else if(entry->type == "localvar_deallocate")
+            {
+                asm_out << "\taddq    " << "$" << to_string(64+2*func_total_offset) << ", %rsp" << endl;
+            }
+            // else
+            //     asm_out << "\tnop" << endl;
         }
+    }
+    void push_param(ThreeAddressCodeEntry* entry)
+    {
+        string src = getaddr("arg2", entry, address_descriptor, func_total_offset, func_curr_offset);
+        if(scope_print)
+        {
+            asm_out << "\t" << "movl    " << src << ", %esi" << endl;
+            return;
+        }
+        if(entry -> type == "param_stack")
+        {
+            stack_caller_params ++;
+            asm_out << "\t" << "pushl   " << src << endl;
+        }
+        else
+        {
+            string dest = get_formalparam_reg(entry);
+            asm_out << "\t" << "movl    " << src << ", " << dest << endl;
+        }
+        // asm_out << "\t" << "movl    " << src << ", %eax" << endl;
+        // asm_out << "\t" << "movl    " << "%eax" << ", " << dest << endl;
     }
     void func_decl(ThreeAddressCodeEntry* entry)
     {
+        latest_func_name = entry->arg1.first;
+        asm_out << "\t" << ".text" << endl;
         asm_out << "\t" << ".globl  " << entry->arg1.first << endl;
         asm_out << "\t" << ".type   " << entry->arg1.first << ", @function"<< endl;
         asm_out << entry->arg1.first << ": " << endl;
@@ -85,8 +174,10 @@ public:
 
     void func_param(ThreeAddressCodeEntry* entry)
     {
-        // no_callee_params++;
-        // string src = get_arg_reg();
+        no_callee_params++;
+        string src = get_arg_reg();
+        func_addr_desc[latest_func_name][entry->arg1.first].insert(src);
+        address_descriptor = func_addr_desc[latest_func_name];
         // int stack_offset = entry->arg1.second->offset;
         // string dest = "-" +to_string( stack_offset )+ "(%rbp)";
         // asm_out << "\t" << "movq    " << src << ", "<< dest << endl;
@@ -104,6 +195,7 @@ public:
         asm_out << "\t" << "movq    %rbp, %rsp" << endl;
         asm_out << "\t" << "popq    %rbp" << endl;
         // asm_out << "\t" << "leave" << endl;
+        asm_out << "\t" << "movl	$0, %eax" << endl;
         asm_out << "\t" << "ret" << endl;
     }
 
@@ -116,7 +208,7 @@ public:
             string arg2 = getaddr("arg2", entry, address_descriptor, func_total_offset, func_curr_offset);
             // int stack_offset = entry->arg1.second->offset;
             // string dest = "-" +to_string( stack_offset )+ "(%rbp)";
-            if( !check_literal(entry->arg1.first) and !check_literal(entry->arg2.first) ){
+            if( !check_char(entry->arg2.first) and !check_literal(entry->arg2.first) ){
                 asm_out << "\t" << "movl    " << arg2 << ", %eax" << endl;
                 asm_out << "\t" << "movl    " << "%eax, " << arg1 << endl;
             } else {
@@ -148,8 +240,8 @@ public:
                 string arg4 = getaddr("arg4", entry, address_descriptor, func_total_offset, func_curr_offset);
                 string reg1 = "%edx";
                 string reg2 = "%eax";
-                asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                 if( entry->arg3.first == "<<" ){
+                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "sall    " << arg4 << ", " << reg1 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
@@ -158,6 +250,7 @@ public:
                     asm_out << "\t" << "movl    " << reg1 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                 }
                 if( entry->arg3.first == ">>" ){
+                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "sarl    " << arg4 << ", " << reg1 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
@@ -172,7 +265,14 @@ public:
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
                     }
-                    asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    if( (entry->arg4.first[0] >= '0' and entry->arg4.first[0] <= '9') and (entry->arg1.first == entry->arg2.first) ){
+                        asm_out << "\t" << "addl    " << "$" << entry->arg4.first << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    } else {
+                        asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
+                        asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
+                        asm_out << "\t" << "addl    " << reg1 << ", " << reg2 << endl;
+                        asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    }
                 }
                 if( entry->arg3.first == "-" ){
                     asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
@@ -181,9 +281,17 @@ public:
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
                     }
-                    asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    if( (entry->arg4.first[0] >= '0' and entry->arg4.first[0] <= '9') and (entry->arg1.first == entry->arg2.first) ){
+                        asm_out << "\t" << "subl    " << "$" << entry->arg4.first << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    } else {
+                        asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
+                        asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
+                        asm_out << "\t" << "subl    " << reg1 << ", " << reg2 << endl;
+                        asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    }
                 }
                 if( entry->arg3.first == "*" ){
+                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
                     asm_out << "\t" << "imull   " << reg1 << ", " << reg2 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
@@ -193,6 +301,7 @@ public:
                     asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                 }
                 if( entry->arg3.first == "/" ){
+                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
                     asm_out << "\t" << "idivl   " << reg1 << ", " << reg2 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
@@ -202,6 +311,7 @@ public:
                     asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                 }
                 if( entry->arg3.first == "^" ){
+                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
                     asm_out << "\t" << "xorl    " << reg1 << ", " << reg2 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
@@ -211,6 +321,7 @@ public:
                     asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                 }
                 if( entry->arg3.first == "|" ){
+                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
                     asm_out << "\t" << "orl     " << reg1 << ", " << reg2 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
@@ -220,6 +331,7 @@ public:
                     asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                 }
                 if( entry->arg3.first == "&" ){
+                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
                     asm_out << "\t" << "andl    " << reg1 << ", " << reg2 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
@@ -229,20 +341,30 @@ public:
                     asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                 }
                 if( entry->arg3.first == ">" || entry->arg3.first == "<" || entry->arg3.first == ">=" || entry->arg3.first == "<=" ){
-                    asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
-                    asm_out << "\t" << "cmpl    " << reg2 << ", " << reg1 << endl;
+                    if( address_descriptor.find(entry->arg2.first) == address_descriptor.end() ){
+                        address_descriptor[entry->arg2.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
+                        func_curr_offset -= 4;
+                    }
+                    if( (entry->arg4.first[0] >= '0' and entry->arg4.first[0] <= '9') ){
+                        asm_out << "\t" << "cmpl    " << "$" << entry->arg4.first << ", " << *(address_descriptor[entry->arg2.first].begin()) << endl;
+                    } else {
+                        asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
+                        asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
+                        asm_out << "\t" << "cmpl    " << reg2 << ", " << reg1 << endl;
+                    }
                     latest_conditional_op = entry->arg3.first;
                 }  
                 if( entry->arg3.first == ">>>" ){
+                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "sarl    " << arg4 << ", " << reg1 << endl;
                     asm_out << "\t" << "cmpl    " << "$0" << ", " << reg1 << endl;
-                    asm_out << "\t" << "jge     " << "$Lurs" + to_string(digit()) << endl;
+                    asm_out << "\t" << "jge     " << ".Lurs" + to_string(digit()) << endl;
                     // add 2 << ~ arg4
                     asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
                     asm_out << "\t" << "notl    " << reg2 << endl;
                     asm_out << "\t" << "sall    " << reg2 << ", " << "$2" << endl;
                     asm_out << "\t" << "addl    " << reg2 << ", " << reg1 << endl;
-                    asm_out << "$Lurs" + to_string(univ_counter) + ":" << endl;
+                    asm_out << ".Lurs" + to_string(univ_counter) + ":" << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
@@ -258,6 +380,8 @@ public:
         if( latest_conditional_op == ">=" ) asm_out << "\t" << "jl      " << entry->arg4.first << endl;
         if( latest_conditional_op == "<=" ) asm_out << "\t" << "jg      " << entry->arg4.first << endl;
         if( latest_conditional_op == "<" ) asm_out << "\t" << "jge     " << entry->arg4.first << endl;
+        latest_conditional_op = "";
+        var_latest_conditional_op = "";
     }
 
     void branch_goto(ThreeAddressCodeEntry* entry){

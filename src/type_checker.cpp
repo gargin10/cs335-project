@@ -1334,6 +1334,7 @@ public:
                         if(root->children[0]->children[3]->arguments_type.size()>=2)
                             helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect number of arguments in print function call");
                         root->children[0]->identifier="System.out.print";
+                        root->identifier ="System.out.print";
                         build(root->children[0]->children[3]);
                         return;
                     }

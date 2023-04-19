@@ -2662,7 +2662,7 @@ int main(int argc, char *argv[]) {
     generator->build(root);
     generator->builder->display(root,output_file_name);
     
-    CodeGenerator* asm_generator = new CodeGenerator("output.s");
+    CodeGenerator* asm_generator = new CodeGenerator("code_gen.s");
     asm_generator->generate(root);
 
     fclose(yyin);

@@ -42,7 +42,7 @@ public:
     string generatelabel()
     {
         co_labels++;
-        string temp="$L"+to_string(co_labels);
+        string temp=".L"+to_string(co_labels);
         return temp;
     }
 
@@ -126,7 +126,7 @@ public:
             entry->arg1.first = "PROLOGUE";
             root->code_entries.push_back(entry);
 
-            string temp = generatetemp(); offset_block_function += 4;
+            string temp = generatetemp(); // offset_block_function += 4;
             entry = new ThreeAddressCodeEntry();
             entry->arg1.first = temp ;
             entry->arg2.first = "load";
@@ -172,7 +172,7 @@ public:
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
+            entry->type="localvar_allocate";
             entry->arg1.first="sub";
             entry->arg2.first="stackpointer";
             entry->arg3.first=to_string(root->sym_entry->offset);
@@ -288,7 +288,7 @@ public:
             root->label_entry=root->identifier;
             if(entry.size()>0)
             root->type=entry[0]->type;
-            if( root->type == "BYTE" || root->type == "SHORT" || root->type == "INT" || root->type == "LONG" || root->type == "BOOLEAN" ){
+            if( root->type == "CHAR" || root->type == "BYTE" || root->type == "SHORT" || root->type == "INT" || root->type == "LONG" || root->type == "BOOLEAN" ){
                 offset_block_function += getsize(root->type);
             }
         }
@@ -308,8 +308,9 @@ public:
                 string temp = generatetemp(); offset_block_function += 4;
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=temp;
-                entry->arg2.first="cast_to_"+node1->type;
-                entry->arg3.first=node2->label_entry;
+                // entry->arg2.first="cast_to_"+node1->type;
+                // entry->arg3.first=node2->label_entry;
+                entry->arg2.first=node2->label_entry;
                 root->code_entries.push_back(entry);
 
                 entry = new ThreeAddressCodeEntry();
@@ -394,8 +395,9 @@ public:
                 string temp=generatetemp(); offset_block_function += 4;
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=temp;
-                entry->arg2.first="cast_to_"+node1->type;
-                entry->arg3.first=node2->label_entry;
+                // entry->arg2.first="cast_to_"+node1->type;
+                // entry->arg3.first=node2->label_entry;
+                entry->arg2.first=node2->label_entry;
                 root->code_entries.push_back(entry);
 
                 entry = new ThreeAddressCodeEntry();
@@ -470,8 +472,9 @@ public:
                 string temp=generatetemp(); offset_block_function += 4;
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=temp;
-                entry->arg2.first="cast_to_"+bigger_type;
-                entry->arg3.first=node1->label_entry;
+                // entry->arg2.first="cast_to_"+bigger_type;
+                // entry->arg3.first=node1->label_entry;
+                entry->arg2.first=node1->label_entry;
                 root->code_entries.push_back(entry);
 
                 entry = new ThreeAddressCodeEntry();
@@ -487,8 +490,9 @@ public:
                 string temp=generatetemp(); offset_block_function += 4;
                 ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
                 entry->arg1.first=temp;
-                entry->arg2.first="cast_to_"+bigger_type;
-                entry->arg3.first=node2->label_entry;
+                // entry->arg2.first="cast_to_"+bigger_type;
+                // entry->arg3.first=node2->label_entry;
+                entry->arg2.first=node2->label_entry;
                 root->code_entries.push_back(entry);
 
                 entry = new ThreeAddressCodeEntry();
@@ -659,16 +663,16 @@ public:
 
             ThreeAddressCodeEntry* entry1= new ThreeAddressCodeEntry();
             entry1->type="if";
-            entry1->arg1.first="IfTrue";
+            entry1->arg1.first="IfFalse";
             entry1->arg2.first=expression->label_entry;
             entry1->arg3.first="goto";
-            entry1->arg4.first=label2;
+            entry1->arg4.first=label3;
 
-            ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
-            entry2->type="if";
-            entry2->arg1.first="Else";
-            entry2->arg2.first="goto";
-            entry2->arg3.first=label3;
+            // ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
+            // entry2->type="if";
+            // entry2->arg1.first="Else";
+            // entry2->arg2.first="goto";
+            // entry2->arg3.first=label3;
 
             ThreeAddressCodeEntry* entry3= new ThreeAddressCodeEntry();
             entry3->type="goto";
@@ -681,7 +685,7 @@ public:
             root->code_entries.push_back(label_entry_1);
             builder->merge_entries(root,expression->code_entries);
             root->code_entries.push_back(entry1);
-            root->code_entries.push_back(entry2);
+            // root->code_entries.push_back(entry2);
             root->code_entries.push_back(label_entry_2);
             set_break_gotos(statement,label3);
             set_continue_gotos(statement,label1);
@@ -737,16 +741,16 @@ public:
 
             ThreeAddressCodeEntry* entry1= new ThreeAddressCodeEntry();
             entry1->type="if";
-            entry1->arg1.first="IfTrue";
+            entry1->arg1.first="IfFalse";
             entry1->arg2.first=expression->label_entry;
             entry1->arg3.first="goto";
-            entry1->arg4.first=label2;
+            entry1->arg4.first=label3;
 
-            ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
-            entry2->type="if";
-            entry2->arg1.first="Else";
-            entry2->arg2.first="goto";
-            entry2->arg3.first=label3;
+            // ThreeAddressCodeEntry* entry2= new ThreeAddressCodeEntry();
+            // entry2->type="if";
+            // entry2->arg1.first="Else";
+            // entry2->arg2.first="goto";
+            // entry2->arg3.first=label3;
 
             ThreeAddressCodeEntry* entry3= new ThreeAddressCodeEntry();
             entry3->type="goto";
@@ -756,7 +760,7 @@ public:
             root->code_entries.push_back(label_entry_1);
             builder->merge_entries(root,expression->code_entries);
             root->code_entries.push_back(entry1);
-            root->code_entries.push_back(entry2);
+            // root->code_entries.push_back(entry2);
             root->code_entries.push_back(label_entry_2);
             set_break_gotos(statement,label3);
             set_continue_gotos(statement,label1);
@@ -768,6 +772,7 @@ public:
         {
             reverse(root->children.begin(),root->children.end());
             Node* expression;
+            int argument_count=root->children.size();
             for(auto child_node: root-> children)
             {
                 build(child_node);
@@ -780,9 +785,15 @@ public:
                     entry->arg1.first="push";
                     entry->arg2.first=expression->label_entry;
                     entry->comment =" // Push formal parameter to the stack";
+                    entry->param_index = argument_count;
                     root->code_entries.push_back(entry);
 
                     int size = getsize(expression->type);
+                    if(entry->param_index > 6)
+                    {
+                        entry->type = "param_stack";
+                        offset_block_function += 4;
+                    }
                     // cout<< expression->type<<endl;
                     // entry= new ThreeAddressCodeEntry();
                     // entry->type="stack";
@@ -793,6 +804,7 @@ public:
                     // root->code_entries.push_back(entry);
 
                     root->size +=size;
+                    argument_count--;
                 }            
             }
         }
@@ -800,7 +812,7 @@ public:
         {
 
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            entry->type = "comment";
+            entry->type = "precall";
             entry->arg1.first = "PRECALL";
             root->code_entries.push_back(entry);
 
@@ -821,13 +833,16 @@ public:
                 }
             }
             root->label_entry=root->identifier;
-
+            if(root->children[0]->identifier == "System.out.print" || root->children[0]->identifier == "System.out.println" )
+            {
+                entry->is_print = 1;
+            }
             if(root->children[0]->val==".")
             {
                 root->label_entry=root->children[0]->label_entry;
 
                 ThreeAddressCodeEntry*  entry= new ThreeAddressCodeEntry();
-                entry->type="param";
+                entry->type="object_func";
                 entry->arg1.first="push";
                 entry->arg2.first="*"+root->children[0]->identifier;
                 entry->comment =" // Push object address to the stack";
@@ -836,7 +851,7 @@ public:
             else
             {
                 ThreeAddressCodeEntry*  entry= new ThreeAddressCodeEntry();
-                entry->type="param";
+                entry->type="object_func";
                 entry->arg1.first="push";
                 entry->arg2.first="*this";
                 entry->comment =" // Push curr class object address to the stack";
@@ -864,7 +879,7 @@ public:
             root->size+= return_size;
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="param";
+            entry->type="return_address";
             entry->arg1.first="push";
             entry->arg2.first="*ra";
             entry->comment =" // Push return address to the stack";
@@ -880,23 +895,27 @@ public:
             root->size+=8;
 
             entry = new ThreeAddressCodeEntry();
-            entry->type = "comment";
+            entry->type = "precall";
             entry->arg1.first = "PRECALL";
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
+            entry->type="call";
             entry->arg1.first="CALL";
-            entry->arg2.first=root->label_entry;
+            entry->arg2.first=root->identifier;
             entry->arg3.first=to_string(no_params);
             root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();
-            entry->type = "comment";
+            entry->type = "postcall";
             entry->arg1.first = "POSTCALL";
+            if(root->children[0]->identifier == "System.out.print" || root->children[0]->identifier == "System.out.println" )
+            {
+                entry->is_print = 0;
+            }
             root->code_entries.push_back(entry);
 
-            string temp=generatetemp(); offset_block_function += 4;
+            string temp=generatetemp(); // offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
             entry->arg1.first=temp;
             entry->arg2.first="load";
@@ -909,7 +928,7 @@ public:
             // root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
+            entry->type="localvar_deallocate";
             entry->arg1.first="add";
             entry->arg2.first="stackpointer";
             entry->arg3.first=to_string(root->size);
@@ -955,21 +974,22 @@ public:
             }
             Node* node = root->children[0];
 
+            // ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            // string label1=generatetemp(); offset_block_function += 4;
+            // entry->arg1.first=label1;
+            // entry->arg2.first=node->label_entry;
+
+            // root->code_entries.push_back(entry);
+
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            string label1=generatetemp(); offset_block_function += 4;
-            entry->arg1.first=label1;
-            entry->arg2.first=node->label_entry;
-
-            root->code_entries.push_back(entry);
-
-            entry = new ThreeAddressCodeEntry();
             entry->arg1.first=node->label_entry;
-            entry->arg2.first=label1;
-            entry->arg3.first="+";
+            entry->arg2.first=node->label_entry;
+            if(root->val=="PostIncrementExpression") entry->arg3.first="+";
+            else entry->arg3.first="-";
             entry->arg4.first="1";
 
             root->code_entries.push_back(entry);
-            root->label_entry=node->label_entry;
+            // root->label_entry=node->label_entry;
         }
          else if(root->val=="PreIncrementExpression"|| root->val=="PreDecrementExpression")
         {
@@ -979,21 +999,22 @@ public:
             }
             Node* node = root->children[1];
 
+            // ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            // string label1=generatetemp(); offset_block_function += 4;
+            // entry->arg1.first=label1;
+            // entry->arg2.first=node->label_entry;
+
+            // root->code_entries.push_back(entry);
+
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            string label1=generatetemp(); offset_block_function += 4;
-            entry->arg1.first=label1;
-            entry->arg2.first=node->label_entry;
-
-            root->code_entries.push_back(entry);
-
-            entry = new ThreeAddressCodeEntry();
             entry->arg1.first=node->label_entry;
-            entry->arg2.first=label1;
-            entry->arg3.first="+";
+            entry->arg2.first=node->label_entry;
+            if(root->val=="PreIncrementExpression") entry->arg3.first="+";
+            else entry->arg3.first="-";
             entry->arg4.first="1";
 
             root->code_entries.push_back(entry);
-            root->label_entry=label1;
+            // root->label_entry=label1;
         }
         else if(root->val=="ArrayAccess")
         {
@@ -1116,7 +1137,7 @@ public:
             Node* node2=root->children[1];
             SymbolEntry* sym_entry = root->sym_entry;
 
-            string size_temp=generatetemp(); offset_block_function += 4;
+            string size_temp=generatetemp(); // offset_block_function += 4;
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             entry->arg1.first=size_temp;
             entry->arg2.first=to_string(sym_entry->size);
@@ -1124,7 +1145,7 @@ public:
             root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();
-            entry->type = "comment";
+            entry->type = "precall";
             entry->arg1.first = "PRECALL";
             root->code_entries.push_back(entry);
             
@@ -1144,19 +1165,19 @@ public:
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="param";
+            entry->type="return_address";
             entry->arg1.first="push";
             entry->arg2.first="*ra";
             entry->comment =" // Push return address to the stack";
             root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();
-            entry->type = "comment";
+            entry->type = "precall";
             entry->arg1.first = "PRECALL";
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
+            entry->type="call";
             entry->arg1.first="CALL";
             entry->arg2.first="allocmemory";
             entry->arg3.first="1";
@@ -1167,7 +1188,7 @@ public:
             entry->arg1.first = "POSTCALL";
             root->code_entries.push_back(entry);
 
-            string temp=generatetemp(); offset_block_function += 4;
+            string temp=generatetemp(); // offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
             entry->arg1.first=temp;
             entry->arg2.first="load";
@@ -1194,7 +1215,7 @@ public:
             // root->code_entries.push_back(entry);
 
             entry = new ThreeAddressCodeEntry();
-            entry->type = "comment";
+            entry->type = "precall";
             entry->arg1.first = "PRECALL";
             root->code_entries.push_back(entry);
 
@@ -1209,11 +1230,11 @@ public:
                 }
                 builder->merge_entries(root,child_node->code_entries);
             }
-
+            entry -> param_index = no_params;
             root->label_entry=root->identifier;
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="param";
+            entry->type="object_func";
             entry->arg1.first="push";
             entry->arg2.first=temp;
             entry->comment =" // Push curr class object address to the stack";
@@ -1241,7 +1262,7 @@ public:
             root->size+= return_size;
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="param";
+            entry->type="return_address";
             entry->arg1.first="push";
             entry->arg2.first="*ra";
             entry->comment =" // Push return address to the stack";
@@ -1257,12 +1278,12 @@ public:
             root->size+=8;
 
             entry = new ThreeAddressCodeEntry();
-            entry->type = "comment";
+            entry->type = "precall";
             entry->arg1.first = "PRECALL";
             root->code_entries.push_back(entry);
 
             entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
+            entry->type="call";
             entry->arg1.first="CALL";
             entry->arg2.first=root->label_entry;
             entry->arg3.first=to_string(no_params);
@@ -1273,7 +1294,7 @@ public:
             entry->arg1.first = "POSTCALL";
             root->code_entries.push_back(entry);
 
-            temp=generatetemp(); offset_block_function += 4;
+            temp=generatetemp(); // offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
             entry->arg1.first=temp;
             entry->arg2.first="load";
@@ -1349,8 +1370,9 @@ public:
             ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
             string temp=generatetemp(); offset_block_function += 4;
             entry->arg1.first=temp;
-            entry->arg2.first=cast_string;
-            entry->arg3.first=exp->label_entry;
+            // entry->arg2.first=cast_string;
+            // entry->arg3.first=exp->label_entry;
+            entry->arg2.first=exp->label_entry;
 
             root->code_entries.push_back(entry);
             root->label_entry=temp;
@@ -1389,25 +1411,28 @@ public:
             if(object_name=="this")
                 object_name=currclass_this;
             
-            string temp = generatetemp(); offset_block_function += 4;
-            ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
-            entry->type="pointer";
-            entry->arg1.first=temp;
-            entry->arg2.first=object_name;
-            root->code_entries.push_back(entry);
+            // string temp = generatetemp(); 
+            // offset_block_function += 4;
+            // ThreeAddressCodeEntry* entry = new ThreeAddressCodeEntry();
+            // entry->type="pointer";
+            // entry->arg1.first=temp;
+            // entry->arg2.first=object_name;
+            // root->code_entries.push_back(entry);
 
-            entry = new ThreeAddressCodeEntry();
-            entry->arg1.first=temp;
-            entry->arg2.first=temp;
-            entry->arg3.first="+";
-            entry->arg4.first="OFFSET_"+object_field->identifier;
-            root->code_entries.push_back(entry);
+            // entry = new ThreeAddressCodeEntry();
+            // entry->type = "offset";
+            // entry->arg1.first=temp;
+            // entry->arg2.first=temp;
+            // entry->arg3.first="+";
+            // entry->arg4.first="OFFSET_"+object_field->identifier;
+            // root->code_entries.push_back(entry);
 
             if(root->children.size()>=5)
             {
                 builder->merge_entries(root,root->children[3]->code_entries);
             }
-            root->label_entry=temp;
+            // root->label_entry=temp;
+            // root->label_entry=root->val;
         }
         else if(root->token=="LITERAL")
         {
