@@ -1,7 +1,0 @@
-Scope : main
-args	ARRAY	STRING	255	8	8	1	
-
-Scope : Block Line number 255
-a	IDENTIFIER	INT	256	4	12	
-b	IDENTIFIER	INT	257	4	16	
-

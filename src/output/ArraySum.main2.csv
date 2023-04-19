@@ -1,7 +1,0 @@
-Scope : main
-
-Scope : Block Line number 2
-a	IDENTIFIER	INT	4	4	0	
-b	IDENTIFIER	INT	5	4	4	
-c	IDENTIFIER	INT	6	4	8	
-
