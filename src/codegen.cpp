@@ -276,7 +276,8 @@ public:
                 string reg4 = "%ecx";
                 if( entry->arg3.first == "<<" ){
                     asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
-                    asm_out << "\t" << "sall    " << arg4 << ", " << reg1 << endl;
+                    asm_out << "\t" << "movl    " << arg4 << ", " << "%ecx" << endl;
+                    asm_out << "\t" << "sall    " << "%cl" << ", " << reg1 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
@@ -285,7 +286,8 @@ public:
                 }
                 if( entry->arg3.first == ">>" ){
                     asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
-                    asm_out << "\t" << "sarl    " << arg4 << ", " << reg1 << endl;
+                    asm_out << "\t" << "movl    " << arg4 << ", " << "%ecx" << endl;
+                    asm_out << "\t" << "sarl    " << "%cl" << ", " << reg1 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
