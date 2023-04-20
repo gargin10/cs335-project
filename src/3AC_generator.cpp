@@ -136,6 +136,8 @@ public:
 
             currclass_this = temp; //set the this pointer for this function
 
+            offset_block_function = 0;
+
             Node* block;
             for(auto child_node: root-> children)
             {
@@ -192,7 +194,7 @@ public:
             entry->arg1.first = "PROLOGUE";
             root->code_entries.push_back(entry);
 
-            offset_block_function = 0;
+            // offset_block_function = 0;
 
             build(block);
             builder->merge_entries(root,block->code_entries);
@@ -271,6 +273,7 @@ public:
             entry->arg2.first="load";
             entry->arg3.first=to_string(root->size)+"(stackpointer)";
             entry->comment="// Load parameter from the caller saved stack address";
+            offset_block_function += 4;
             root->code_entries.push_back(entry);
 
         }
@@ -911,16 +914,18 @@ public:
             entry->arg1.first = "POSTCALL";
             if(root->children[0]->identifier == "System.out.print" || root->children[0]->identifier == "System.out.println" )
             {
-                entry->is_print = 0;
+                entry->is_print = 1;
             }
             root->code_entries.push_back(entry);
 
-            string temp=generatetemp(); // offset_block_function += 4;
+            string temp=generatetemp(); offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
+            entry->type = "return_assign";
             entry->arg1.first=temp;
             entry->arg2.first="load";
             entry->arg3.first=to_string(8+return_size)+"(stackpointer)";
             root->code_entries.push_back(entry);
+            
 
             // entry= new ThreeAddressCodeEntry();
             // entry->type="param";
@@ -950,6 +955,7 @@ public:
                 build(child_node);
                 if(child_node->val=="Expression")
                     expression=child_node;
+                builder->merge_entries(root,child_node->code_entries);
             }
 
             // ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
@@ -959,7 +965,7 @@ public:
             // root->code_entries.push_back(entry);
 
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
-            entry->type="stack";
+            entry->type="return_value";
             entry->arg1.first="store";
             entry->arg2.first=to_string(8+getsize(expression->type)) +"(basepointer)";
             entry->arg3.first=expression->label_entry;
@@ -1188,7 +1194,7 @@ public:
             entry->arg1.first = "POSTCALL";
             root->code_entries.push_back(entry);
 
-            string temp=generatetemp(); // offset_block_function += 4;
+            string temp=generatetemp();  offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
             entry->arg1.first=temp;
             entry->arg2.first="load";
@@ -1294,7 +1300,7 @@ public:
             entry->arg1.first = "POSTCALL";
             root->code_entries.push_back(entry);
 
-            temp=generatetemp(); // offset_block_function += 4;
+            temp=generatetemp(); offset_block_function += 4;
             entry= new ThreeAddressCodeEntry();
             entry->arg1.first=temp;
             entry->arg2.first="load";

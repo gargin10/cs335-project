@@ -85,6 +85,9 @@ public:
                 func_decl(entry);
                 func_total_offset = func_offset[entry->arg1.first];
                 func_curr_offset = func_total_offset;
+                int size = func_total_offset;
+                int x = ceil(size/(float)16);
+                asm_out << "\tsubq    " << "$" << to_string(x*16) << ", %rsp" << endl;
             } else if(entry->type == "funcend"){
                 func_end(entry);
                 address_descriptor.clear();
@@ -107,6 +110,7 @@ public:
                 {
                     asm_out << "\t" << "leaq    .printint(%rip), %rax" << endl;
                     asm_out << "\t" << "movq    %rax, %rdi" << endl;
+                    asm_out << "\t" << "movl    $0, %eax" << endl;
                     asm_out << "\t" << "call    " << "printf@PLT" << endl;
                 }
                 else 
@@ -126,17 +130,27 @@ public:
                 if(entry -> is_print == 1)
                     scope_print = 0;
             }
-            else if(entry->type == "localvar_allocate")
+            else if(entry-> type == "return_value")
             {
-                asm_out << "\tsubq    " << "$" << to_string(64+2*func_total_offset) << ", %rsp" << endl;
+                handle_return_value(entry);
             }
-            else if(entry->type == "localvar_deallocate")
+            else if(entry->type == "return_assign")
             {
-                asm_out << "\taddq    " << "$" << to_string(64+2*func_total_offset) << ", %rsp" << endl;
+                string src = getaddr("arg1", entry, address_descriptor, func_total_offset, func_curr_offset);
+                asm_out << "\t" << "movl    "<< "%eax, " << src << endl;
             }
+            // else if(entry->type == "localvar_deallocate")
+            // {
+            //     asm_out << "\taddq    " << "$" << to_string(64+2*func_total_offset) << ", %rsp" << endl;
+            // }
             // else
             //     asm_out << "\tnop" << endl;
         }
+    }
+    void handle_return_value(ThreeAddressCodeEntry* entry)
+    {
+        string src = getaddr("arg3", entry, address_descriptor, func_total_offset, func_curr_offset);
+        asm_out << "\t" << "movl    "<< src << ", %eax" << endl;
     }
     void push_param(ThreeAddressCodeEntry* entry)
     {
@@ -176,7 +190,10 @@ public:
     {
         no_callee_params++;
         string src = get_arg_reg();
-        func_addr_desc[latest_func_name][entry->arg1.first].insert(src);
+        string dest = "-"+to_string(func_curr_offset)+"(%rbp)";
+        func_curr_offset -= 4;
+        asm_out << "\tmovl    " << src << ", " << dest << endl;
+        func_addr_desc[latest_func_name][entry->arg1.first].insert(dest);
         address_descriptor = func_addr_desc[latest_func_name];
         // int stack_offset = entry->arg1.second->offset;
         // string dest = "-" +to_string( stack_offset )+ "(%rbp)";
@@ -187,15 +204,14 @@ public:
 
     void func_end(ThreeAddressCodeEntry* entry)
     {
-        if( entry->arg2.first == "VOID" ){
-            asm_out << "\t" << "nop" << endl;
-        } else {
-            asm_out << "\t" << "movq    $0, %rax" << endl;
-        }
+        
         asm_out << "\t" << "movq    %rbp, %rsp" << endl;
         asm_out << "\t" << "popq    %rbp" << endl;
         // asm_out << "\t" << "leave" << endl;
-        asm_out << "\t" << "movl	$0, %eax" << endl;
+        // asm_out << "\t" << "movl	$0, %eax" << endl;
+        if( entry->arg2.first == "VOID" ){
+            asm_out << "\t" << "movq    $0, %rax" << endl;
+        }
         asm_out << "\t" << "ret" << endl;
     }
 
@@ -259,8 +275,6 @@ public:
                     asm_out << "\t" << "movl    " << reg1 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                 }
                 if( entry->arg3.first == "+" ){
-                    asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
-                    asm_out << "\t" << "addl    " << reg1 << ", " << reg2 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
@@ -275,8 +289,6 @@ public:
                     }
                 }
                 if( entry->arg3.first == "-" ){
-                    asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
-                    asm_out << "\t" << "subl    " << reg1 << ", " << reg2 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
