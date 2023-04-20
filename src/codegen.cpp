@@ -256,6 +256,8 @@ public:
                 string arg4 = getaddr("arg4", entry, address_descriptor, func_total_offset, func_curr_offset);
                 string reg1 = "%edx";
                 string reg2 = "%eax";
+                string reg3 = "%esi";
+                string reg4 = "%ecx";
                 if( entry->arg3.first == "<<" ){
                     asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                     asm_out << "\t" << "sall    " << arg4 << ", " << reg1 << endl;
@@ -281,6 +283,8 @@ public:
                     }
                     if( (entry->arg4.first[0] >= '0' and entry->arg4.first[0] <= '9') and (entry->arg1.first == entry->arg2.first) ){
                         asm_out << "\t" << "addl    " << "$" << entry->arg4.first << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    }  else if( check_literal(entry->arg2.first) and check_literal(entry->arg4.first) ){
+                        asm_out << "\t" << "movl    $" << to_string(stoi(entry->arg2.first)+stoi(entry->arg4.first)) << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                     } else {
                         asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                         asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
@@ -295,32 +299,50 @@ public:
                     }
                     if( (entry->arg4.first[0] >= '0' and entry->arg4.first[0] <= '9') and (entry->arg1.first == entry->arg2.first) ){
                         asm_out << "\t" << "subl    " << "$" << entry->arg4.first << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    } else if( check_literal(entry->arg2.first) and check_literal(entry->arg4.first) ){
+                        asm_out << "\t" << "movl    $" << to_string(stoi(entry->arg2.first)-stoi(entry->arg4.first)) << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                     } else {
                         asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                         asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
-                        asm_out << "\t" << "subl    " << reg1 << ", " << reg2 << endl;
-                        asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                        asm_out << "\t" << "subl    " << reg2 << ", " << reg1 << endl;
+                        asm_out << "\t" << "movl    " << reg1 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                     }
                 }
                 if( entry->arg3.first == "*" ){
-                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
-                    asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
-                    asm_out << "\t" << "imull   " << reg1 << ", " << reg2 << endl;
-                    if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
+                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
                     }
-                    asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    if( check_literal(entry->arg2.first) and check_literal(entry->arg4.first) ){
+                        asm_out << "\t" << "movl    $" << to_string(stoi(entry->arg2.first)*stoi(entry->arg4.first)) << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    } else {
+                        asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
+                        asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
+                        asm_out << "\t" << "imull   " << reg1 << ", " << reg2 << endl;
+                        asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    }
                 }
                 if( entry->arg3.first == "/" ){
-                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
-                    asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
-                    asm_out << "\t" << "idivl   " << reg1 << ", " << reg2 << endl;
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
                     }
-                    asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    if( check_literal(entry->arg2.first) and check_literal(entry->arg4.first) ){
+                        asm_out << "\t" << "movl    $" << to_string(stoi(entry->arg2.first)/stoi(entry->arg4.first)) << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    } else if( !check_literal(entry->arg4.first) ){
+                        asm_out << "\t" << "movl    " << arg2 << ", " << reg2 << endl;
+                        asm_out << "\t" << "cltd" << endl;
+                        asm_out << "\t" << "idivl   " << arg4 << endl;
+                        // asm_out << "\t" << "idivl   " << reg1 << ", " << reg2 << endl;
+                        asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                    } else {
+                        string addr1 = *(address_descriptor[entry->arg1.first].begin());
+                        asm_out << "\t" << "movl    " << arg2 << ", " << reg2 << endl;
+                        asm_out << "\t" << "movl    " << arg4 << ", " << addr1 << endl;
+                        asm_out << "\t" << "cltd" << endl;
+                        asm_out << "\t" << "idivl   " << addr1 << endl;
+                        asm_out << "\t" << "movl    " << reg2 << ", " << addr1 << endl;
+                    }
                 }
                 if( entry->arg3.first == "^" ){
                     asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
@@ -366,23 +388,26 @@ public:
                     }
                     latest_conditional_op = entry->arg3.first;
                 }  
-                if( entry->arg3.first == ">>>" ){
-                    asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
-                    asm_out << "\t" << "sarl    " << arg4 << ", " << reg1 << endl;
-                    asm_out << "\t" << "cmpl    " << "$0" << ", " << reg1 << endl;
-                    asm_out << "\t" << "jge     " << ".Lurs" + to_string(digit()) << endl;
-                    // add 2 << ~ arg4
-                    asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
-                    asm_out << "\t" << "notl    " << reg2 << endl;
-                    asm_out << "\t" << "sall    " << reg2 << ", " << "$2" << endl;
-                    asm_out << "\t" << "addl    " << reg2 << ", " << reg1 << endl;
-                    asm_out << ".Lurs" + to_string(univ_counter) + ":" << endl;
-                    if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
-                        address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
-                        func_curr_offset -= 4;
-                    }
-                    asm_out << "\t" << "movl    " << reg1 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
-                }
+                // if( entry->arg3.first == ">>>" ){
+                //     asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
+                //     asm_out << "\t" << "sarl    " << arg4 << ", " << reg1 << endl;
+                //     asm_out << "\t" << "cmpl    " << "$0" << ", " << reg1 << endl;
+                //     asm_out << "\t" << "jge     " << ".Lurs" + to_string(digit()) << endl;
+                //     // add 2 << ~ arg4
+                //     asm_out << "\t" << "movl    " << arg4 << ", " << reg2 << endl;
+                //     asm_out << "\t" << "notl    " << reg2 << endl;
+                //     asm_out << "\t" << "movl    " << "$2" << ", " << reg3 << endl;
+                //     asm_out << "\t" << "movl    " << reg2 << ", " << reg4 << endl;
+                //     asm_out << "\t" << "sall    " << "%cl" << ", " << reg3 << endl;
+                //     asm_out << "\t" << "movl    " << reg3 << ", " << reg2 << endl;
+                //     asm_out << "\t" << "addl    " << reg1 << ", " << reg2 << endl;
+                //     asm_out << ".Lurs" + to_string(univ_counter) + ":" << endl;
+                //     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
+                //         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
+                //         func_curr_offset -= 4;
+                //     }
+                //     asm_out << "\t" << "movl    " << "%eax" << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                // }
             }
         }
     }
