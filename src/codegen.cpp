@@ -418,6 +418,28 @@ public:
                     asm_out << "\t" << "cmpl    " << arg2 << ", " << reg1 << endl;
                     latest_conditional_op = entry->arg3.first;
                 }
+                if( entry->arg3.first == ">>>" ){
+                    asm_out << "\t" << "movl    " << arg4 << ", " << "%eax" << endl;
+                    asm_out << "\t" << "movl    " << arg2 << ", " << "%edx" << endl;
+                    asm_out << "\t" << "movl    " << "%eax" << ", " << "%ecx" << endl;
+                    asm_out << "\t" << "sarl    " << "%cl" << ", " << "%edx" << endl;
+                    asm_out << "\t" << "cmpl    " << "$0" << ", " << "%edx" << endl;
+                    asm_out << "\t" << "jge     " << ".Lurs" + to_string(digit()) << endl;
+                    // add 2 << ~ arg4
+                    asm_out << "\t" << "movl    " << arg4 << ", " << "%eax" << endl;
+                    asm_out << "\t" << "notl    " << "%eax" << endl;
+                    asm_out << "\t" << "movl    " << "$2" << ", " << "%esi" << endl;
+                    asm_out << "\t" << "movl    " << "%eax" << ", " << "%ecx" << endl;
+                    asm_out << "\t" << "sall    " << "%cl" << ", " << "%esi" << endl;
+                    asm_out << "\t" << "movl    " << "%esi" << ", " << "%eax" << endl;
+                    asm_out << "\t" << "addl    " << "%eax" << ", " << "%edx" << endl;
+                    asm_out << ".Lurs" + to_string(univ_counter) + ":" << endl;
+                    if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
+                        address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
+                        func_curr_offset -= 4;
+                    }
+                    asm_out << "\t" << "movl    " << "%edx" << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                }
                 // if( entry->arg3.first == ">>>" ){
                 //     asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                 //     asm_out << "\t" << "sarl    " << arg4 << ", " << reg1 << endl;
