@@ -40,7 +40,7 @@ public:
             ofs<<"\t"<<this->arg1.first << " "<<this->arg2.first<<" "<< this->arg3.first << " "<< this->arg4.first;
         else if(this->type=="else")
             ofs<<"\t"<<this->arg1.first << " "<<this->arg2.first<<" "<< this->arg3.first;
-        else if(this->type=="stack" || this->type == "return_value" || this->type == "call" || this->type == "funcend" || this->type == "localvar_allocate" || this->type == "localvar_deallocate")
+        else if(this->type=="stack" || this->type == "return_value" || this->type == "call" || this->type == "funcend" || this->type == "funcreturn" || this->type == "localvar_allocate" || this->type == "localvar_deallocate")
             ofs<<"\t"<<this->arg1.first << " "<<this->arg2.first<<" "<< this->arg3.first;
         else if(this -> type == "funcparam" || this->type == "return_assign" || this->type == "offset" || this -> type == "")
             ofs<<"\t"<<this->arg1.first << " = "<<this->arg2.first<<" "<< this->arg3.first << " "<< this->arg4.first;

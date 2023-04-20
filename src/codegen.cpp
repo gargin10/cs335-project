@@ -74,8 +74,14 @@ public:
     }
     void generate (Node* root)
     {
-        asm_out << ".printint:" << endl;
+        asm_out << ".printlnint:" << endl;
         asm_out << "\t" << ".string " << "\"%d \\n\"" << endl;
+        asm_out << ".printint:" << endl;
+        asm_out << "\t" << ".string " << "\"%d \"" << endl;
+        asm_out << ".printlnchar:" << endl;
+        asm_out << "\t" << ".string " << "\"%c \\n\"" << endl;
+        asm_out << ".printchar:" << endl;
+        asm_out << "\t" << ".string " << "\"%c \"" << endl;
         for(auto entry: root->code_entries)
         {
             if(entry->type == "")
@@ -88,7 +94,10 @@ public:
                 int size = func_total_offset;
                 int x = ceil(size/(float)16);
                 asm_out << "\tsubq    " << "$" << to_string(x*16) << ", %rsp" << endl;
-            } else if(entry->type == "funcend"){
+            } 
+            else if ( entry -> type == "funcreturn")
+                func_end(entry);
+            else if(entry->type == "funcend"){
                 func_end(entry);
                 address_descriptor.clear();
             } else if(entry -> type == "funcparam")
@@ -106,9 +115,16 @@ public:
             }
             else if (entry->type == "call")
             {
-                if(entry->arg2.first == "System.out.print" || entry->arg2.first == "System.out.println")
+                if(entry->arg2.first == "System.out.print")
                 {
                     asm_out << "\t" << "leaq    .printint(%rip), %rax" << endl;
+                    asm_out << "\t" << "movq    %rax, %rdi" << endl;
+                    asm_out << "\t" << "movl    $0, %eax" << endl;
+                    asm_out << "\t" << "call    " << "printf@PLT" << endl;
+                }
+                else if(entry->arg2.first == "System.out.println")
+                {
+                    asm_out << "\t" << "leaq    .printlnint(%rip), %rax" << endl;
                     asm_out << "\t" << "movq    %rax, %rdi" << endl;
                     asm_out << "\t" << "movl    $0, %eax" << endl;
                     asm_out << "\t" << "call    " << "printf@PLT" << endl;
@@ -322,26 +338,29 @@ public:
                         asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                     }
                 }
-                if( entry->arg3.first == "/" ){
+                if( entry->arg3.first == "/" || entry->arg3.first == "%" ){
                     if( address_descriptor.find(entry->arg1.first) == address_descriptor.end() ){
                         address_descriptor[entry->arg1.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
                         func_curr_offset -= 4;
                     }
                     if( check_literal(entry->arg2.first) and check_literal(entry->arg4.first) ){
-                        asm_out << "\t" << "movl    $" << to_string(stoi(entry->arg2.first)/stoi(entry->arg4.first)) << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                        if(  entry->arg3.first == "/" ) asm_out << "\t" << "movl    $" << to_string(stoi(entry->arg2.first)/stoi(entry->arg4.first)) << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                        else asm_out << "\t" << "movl    $" << to_string(stoi(entry->arg2.first)%stoi(entry->arg4.first)) << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                     } else if( !check_literal(entry->arg4.first) ){
                         asm_out << "\t" << "movl    " << arg2 << ", " << reg2 << endl;
                         asm_out << "\t" << "cltd" << endl;
                         asm_out << "\t" << "idivl   " << arg4 << endl;
                         // asm_out << "\t" << "idivl   " << reg1 << ", " << reg2 << endl;
-                        asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                        if(  entry->arg3.first == "/" ) asm_out << "\t" << "movl    " << reg2 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
+                        else asm_out << "\t" << "movl    " << reg1 << ", " << *(address_descriptor[entry->arg1.first].begin()) << endl;
                     } else {
                         string addr1 = *(address_descriptor[entry->arg1.first].begin());
                         asm_out << "\t" << "movl    " << arg2 << ", " << reg2 << endl;
                         asm_out << "\t" << "movl    " << arg4 << ", " << addr1 << endl;
                         asm_out << "\t" << "cltd" << endl;
                         asm_out << "\t" << "idivl   " << addr1 << endl;
-                        asm_out << "\t" << "movl    " << reg2 << ", " << addr1 << endl;
+                        if(  entry->arg3.first == "/" ) asm_out << "\t" << "movl    " << reg2 << ", " << addr1 << endl;
+                        else asm_out << "\t" << "movl    " << reg1 << ", " << addr1 << endl;
                     }
                 }
                 if( entry->arg3.first == "^" ){
@@ -387,7 +406,16 @@ public:
                         asm_out << "\t" << "cmpl    " << reg2 << ", " << reg1 << endl;
                     }
                     latest_conditional_op = entry->arg3.first;
-                }  
+                }
+                if( entry->arg3.first == "==" || entry->arg3.first == "!=" ){
+                    if( address_descriptor.find(entry->arg2.first) == address_descriptor.end() ){
+                        address_descriptor[entry->arg2.first].insert("-"+to_string(func_curr_offset)+"(%rbp)");
+                        func_curr_offset -= 4;
+                    }
+                    asm_out << "\t" << "movl    " << arg4 << ", " << reg1 << endl;
+                    asm_out << "\t" << "cmpl    " << arg2 << ", " << reg1 << endl;
+                    latest_conditional_op = entry->arg3.first;
+                }
                 // if( entry->arg3.first == ">>>" ){
                 //     asm_out << "\t" << "movl    " << arg2 << ", " << reg1 << endl;
                 //     asm_out << "\t" << "sarl    " << arg4 << ", " << reg1 << endl;
@@ -417,6 +445,8 @@ public:
         if( latest_conditional_op == ">=" ) asm_out << "\t" << "jl      " << entry->arg4.first << endl;
         if( latest_conditional_op == "<=" ) asm_out << "\t" << "jg      " << entry->arg4.first << endl;
         if( latest_conditional_op == "<" ) asm_out << "\t" << "jge     " << entry->arg4.first << endl;
+        if( latest_conditional_op == "==" ) asm_out << "\t" << "jne     " << entry->arg4.first << endl;
+        if( latest_conditional_op == "!=" ) asm_out << "\t" << "je     " << entry->arg4.first << endl;
         latest_conditional_op = "";
         var_latest_conditional_op = "";
     }

@@ -1,76 +1,22 @@
-public class Example1 {
-	int x;
-    double y;
-
-    Example1(int x, double y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public static void main(String args[] /*so that we can compile with javac*/) {
-        Example1 a = new Example1(2,3.14);
-        int c=a.x;
-        System.out.println(a.x);
-        System.out.println(a.y);
-    }
-}
-
-class Tree {
-    public int climb;
-}
-
-class Flower {
-    int petal = 0;
-    double t=0.0;
-    char ch;
-    int a = 5;
-    int getPollen(int bee)
+class Division{
+    public static int main()
     {
-        return bee * 10;
+      int a = 6;
+      int b = 48;
+      int c = b/a;
+      int x = c << 2; 
+      int d = 23/5;
+      System.out.println(a);
+      c++;
+      int e = 5/a;
+      c++;
+      int f = a/5;
+      System.out.println(b);
+      System.out.println(c);
+      System.out.println(d);
+      System.out.println(e);
+      System.out.println(f);
+      System.out.println(x);
+      return 0;
     }
-    public int getPetal() { return petal; }
-    void setPetal(int newPetal) { petal = newPetal; }
-}
-
-public class Main {
-    public static void main(String args[]) {
-        Tree obj1 =  new Tree();
-        obj1.climb = 8;
-        Flower flow = new Flower();
-        System.out.print(flow.getPollen(10));
-        System.out.println("I got " + flow.getPollen(10) + " pollen.");
-        flow.setPetal(10);
-        System.out.println("I got " + flow.getPetal() + " petals.");
-    }
-}
-
-class Animal
-{
-    int x;
-
-    int print(int a, int b)
-    {
-        System.out.println(a+b);
-        return 0;
-    }
-}
-
-class Foo{
-
-    float func(int x, int y, int z, Animal r){
-        int p  = x;
-        float g = 90 + y;
-        double t = x;
-        return g;
-    }
-    int main(){
-        int a = 3;
-        int b = 6;
-        int c = a+ b;
-        
-        Animal obj = new Animal();
-        int y = obj.print(a,b);
-        int x2= obj.x;
-        float x = func(a, b, 0,obj);
-    }   
-}
+  }

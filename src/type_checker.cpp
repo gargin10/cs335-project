@@ -1333,8 +1333,17 @@ public:
                         // cout<<"here 1"<<endl;
                         if(root->children[0]->children[3]->arguments_type.size()>=2)
                             helper->throwerror("Line number: "+to_string(root->lineno)+" Incorrect number of arguments in print function call");
-                        root->children[0]->identifier="System.out.print";
-                        root->identifier ="System.out.print";
+                        if(root->children[0]->children[1]->identifier=="println")
+                        {
+                            root->children[0]->identifier="System.out.println";
+                            root->identifier ="System.out.println";
+                        }
+                        else
+                        {
+                            root->children[0]->identifier="System.out.print";
+                            root->identifier ="System.out.print";
+                        }
+                        
                         build(root->children[0]->children[3]);
                         return;
                     }

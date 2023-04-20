@@ -949,12 +949,15 @@ public:
         }
         else if(root->val=="ReturnStatement")
         {
-            Node* expression;
+            Node* expression = NULL;
             for(auto child_node: root-> children)
             {
                 build(child_node);
                 if(child_node->val=="Expression")
+                {
+                    // cout << "here1" << endl;
                     expression=child_node;
+                }
                 builder->merge_entries(root,child_node->code_entries);
             }
 
@@ -965,12 +968,33 @@ public:
             // root->code_entries.push_back(entry);
 
             ThreeAddressCodeEntry* entry= new ThreeAddressCodeEntry();
-            entry->type="return_value";
-            entry->arg1.first="store";
-            entry->arg2.first=to_string(8+getsize(expression->type)) +"(basepointer)";
-            entry->arg3.first=expression->label_entry;
-            entry->comment="// Store the returned value at the return address";
-            root->code_entries.push_back(entry);
+            if(!expression)
+            {
+                entry = new ThreeAddressCodeEntry();
+                entry->type = "funcreturn";
+                entry->arg1.first = "endfunc";
+                entry->arg2.first = "void"; // endfunc entry return type in arg2.first
+                root->code_entries.push_back(entry);
+            }
+            else
+            {
+                // cout<< expression->type <<endl;
+                // cout << expression->label_entry << endl;
+                entry->type="return_value";
+                entry->arg1.first="store";
+                entry->arg2.first=to_string(8+getsize(expression->type)) +"(basepointer)";
+                entry->arg3.first=expression->label_entry;
+                entry->comment="// Store the returned value at the return address";
+                root->code_entries.push_back(entry);
+
+                entry = new ThreeAddressCodeEntry();
+                entry->type = "funcreturn";
+                entry->arg1.first = "endfunc";
+                entry->arg2.first = expression->type; // endfunc entry return type in arg2.first
+                root->code_entries.push_back(entry);
+            }
+
+
         }
         else if(root->val=="PostIncrementExpression"|| root->val=="PostDecrementExpression")
         {
@@ -995,7 +1019,7 @@ public:
             entry->arg4.first="1";
 
             root->code_entries.push_back(entry);
-            // root->label_entry=node->label_entry;
+            root->label_entry=node->label_entry;
         }
          else if(root->val=="PreIncrementExpression"|| root->val=="PreDecrementExpression")
         {
@@ -1020,7 +1044,7 @@ public:
             entry->arg4.first="1";
 
             root->code_entries.push_back(entry);
-            // root->label_entry=label1;
+            root->label_entry=node->label_entry;
         }
         else if(root->val=="ArrayAccess")
         {
